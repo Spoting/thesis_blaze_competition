@@ -1,0 +1,8 @@
+{# templates/admin/main_dashboard.html.twig #}
+{# {% extends '@EasyAdmin/layout.html.twig' %} #}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+{% block main %}
+    Welcome
+    {# {{ app.user.roles.0 }} #}
+    {{ app.user.userIdentifier }}
+{% endblock main %}

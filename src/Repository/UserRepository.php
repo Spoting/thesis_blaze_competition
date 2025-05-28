@@ -33,6 +33,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
+    public function findUserIdsByRole(string $role): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = 'SELECT id FROM "user" WHERE roles::jsonb @> :role';
+        $stmt = $conn->prepare($sql);
+        $resultSet = $stmt->executeQuery(['role' => json_encode([$role])]);
+
+        // Return just the IDs
+        return array_column($resultSet->fetchAllAssociative(), 'id');
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */

@@ -12,9 +12,5 @@
     </head>
     <body>
         {% block body %}{% endblock %}
-
-        {% if is_granted('IS_IMPERSONATOR') %}
-            <a href="{{ impersonation_exit_path(path('homepage')) }}">Exit impersonation</a>
-        {% endif %}
     </body>
 </html>
