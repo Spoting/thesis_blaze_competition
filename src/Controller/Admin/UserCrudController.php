@@ -17,15 +17,12 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Http\SecurityEvents;
 
 class UserCrudController extends AbstractCrudController
 {
@@ -77,15 +74,12 @@ class UserCrudController extends AbstractCrudController
             ->setCssClass('btn btn-sm text-info mr-1'); // Optional: for styling    
         $actions->add(Crud::PAGE_INDEX, $impersonateAction);
 
-        if ($this->isGranted('ROLE_ADMIN')) {
-            // Admins can do everything
-            return $actions;
-        }
-
+        // if ($this->isGranted('ROLE_ADMIN')) {
+        //     // Admins can do everything
+        //     return $actions;
+        // }
         if ($this->isGranted('ROLE_MANAGER_ADMIN')) {
-            // Remove DELETE and EDIT for organizer creators
-            return $actions
-                ->disable(Action::DELETE, Action::EDIT, Action::NEW);
+            return $actions;
         }
 
         // Default fallback — very limited
@@ -113,7 +107,8 @@ class UserCrudController extends AbstractCrudController
         $rolesField = ChoiceField::new('roles')
             ->setChoices($this->roles)
             ->allowMultipleChoices()
-            ->renderExpanded();
+            ->renderExpanded()
+            ->setSortable(false);
 
         if ($this->isGranted('ROLE_ADMIN')) {
             yield $rolesField;
