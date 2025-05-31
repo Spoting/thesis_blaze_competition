@@ -13,7 +13,7 @@ security:
 
     role_hierarchy:
         ROLE_COMPETITION_MANAGER: ROLE_USER
-        ROLE_MANAGER_ADMIN: ROLE_COMPETITION_MANAGER 
+        ROLE_MANAGER_ADMIN: [ROLE_COMPETITION_MANAGER, ROLE_ALLOWED_TO_SWITCH]
         ROLE_ADMIN: [ROLE_MANAGER_ADMIN, ROLE_ALLOWED_TO_SWITCH]
 
     firewalls:
@@ -36,12 +36,10 @@ security:
                 # where to redirect after logout
                 # target: app_any_route
 
-    # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/admin/user, roles: ROLE_MANAGER_ADMIN }
         - { path: ^/admin, roles: ROLE_COMPETITION_MANAGER }
-        # - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
     security:

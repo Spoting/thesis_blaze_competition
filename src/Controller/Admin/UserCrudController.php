@@ -44,7 +44,6 @@ class UserCrudController extends AbstractCrudController
         $this->userPasswordHasher = $userPasswordHasher;
         $this->userRepository = $userRepository;
         $this->urlGenerator = $urlGenerator;
-
     }
 
     public static function getEntityFqcn(): string
@@ -56,6 +55,27 @@ class UserCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $actions = parent::configureActions($actions);
+
+        // Define the impersonate action
+        $impersonateAction = Action::new('impersonate', 'Impersonate', 'fa fa-user-secret')
+            ->linkToUrl(function (User $user) {
+                // Generate a URL to the admin dashboard with the _switch_user parameter.
+                // Symfony's SwitchUserListener will handle the actual switch.
+                return $this->urlGenerator->generate('admin_dashboard', [
+                    '_switch_user' => $user->getUserIdentifier(),
+                ]);
+            })
+            ->displayIf(function (?User $user) {
+                // Ensure there is a target user and the current user has the permission
+                if (!$user || !$this->isGranted('ROLE_ALLOWED_TO_SWITCH')) {
+                    return false;
+                }
+                $currentUser = $this->getUser();
+                // Ensure there is a current user and don't show for the current user themselves
+                return $currentUser && ($user->getUserIdentifier() !== $currentUser->getUserIdentifier());
+            })
+            ->setCssClass('btn btn-sm text-info mr-1'); // Optional: for styling    
+        $actions->add(Crud::PAGE_INDEX, $impersonateAction);
 
         if ($this->isGranted('ROLE_ADMIN')) {
             // Admins can do everything
