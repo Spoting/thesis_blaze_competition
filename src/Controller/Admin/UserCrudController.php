@@ -73,23 +73,21 @@ class UserCrudController extends AbstractCrudController
             })
             ->setCssClass('btn btn-sm text-info mr-1'); // Optional: for styling    
         $actions->add(Crud::PAGE_INDEX, $impersonateAction);
+        
 
-        // if ($this->isGranted('ROLE_ADMIN')) {
-        //     // Admins can do everything
-        //     return $actions;
-        // }
+        // Admins and Manager Admins can do Everything.
         if ($this->isGranted('ROLE_MANAGER_ADMIN')) {
             return $actions;
         }
 
-        // Default fallback — very limited
+        // Default fallback
         return $actions
             ->disable(Action::DELETE, Action::EDIT, Action::NEW);
     }
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id')->onlyOnIndex();
+        yield IdField::new('id')->onlyOnForms()->setDisabled();
         yield EmailField::new('email');
         yield TextField::new('plainPassword', 'Password')
             ->setFormType(RepeatedType::class)
@@ -152,6 +150,9 @@ class UserCrudController extends AbstractCrudController
     // Used for Handling Password Field
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
+        if (!$entityInstance instanceof User) {
+            return;
+        }
         $plainPassword = $entityInstance->getPlainPassword();
 
         if (!empty($plainPassword)) {
