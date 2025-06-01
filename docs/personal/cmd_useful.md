@@ -1,3 +1,4 @@
+## Services Parameters
 php bin/console debug:container --parameters
 
 
@@ -17,3 +18,12 @@ when@dev:
         type:     php
         prefix:   /_error
 ```
+
+
+
+## Migrations
+php bin/console doctrine:migrations:diff
+
+php bin/console make:migration
+
+php bin/console doctrine:migrations:migrate
