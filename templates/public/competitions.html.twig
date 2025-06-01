@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ενεργοί Διαγωνισμοί{% endblock %}
+
+{% block body %}
+    <h1>Ενεργοί Διαγωνισμοί</h1>
+
+    {% if competitions is empty %}
+        <p>Δεν υπάρχουν ενεργοί διαγωνισμοί αυτή τη στιγμή.</p>
+    {% else %}
+        <ul>
+            {% for competition in competitions %}
+                <li>
+                    <h2>{{ competition.title }}</h2>
+                    <p>Έπαθλα: {{ competition.prizes }}</p>
+                    <p>Λήξη συμμετοχών: {{ competition.endDate|date('d/m/Y H:i') }}</p>
+                    {% if competition.maxParticipants %}
+                        <p>Μέγιστος αριθμός συμμετοχών: {{ competition.maxParticipants }}</p>
+                    {% endif %}
+                    {# <p><a href="{{ path('public_submit_form', {'id': competition.id}) }}">Δήλωση Συμμετοχής</a></p> #}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}
