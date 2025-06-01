@@ -55,6 +55,15 @@ services:
       # - ./docker/db/data:/var/lib/postgresql/data:rw
 ###< doctrine/doctrine-bundle ###
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
 volumes:
   caddy_data:
   caddy_config:
