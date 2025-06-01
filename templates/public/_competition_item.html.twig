@@ -1,0 +1,6 @@
+<h2>{{ competition.title }}</h2>
+<p>Έπαθλα: {{ competition.prizes }}</p>
+<p>Λήξη συμμετοχών: {{ competition.endDate|date('d/m/Y H:i') }}</p>
+{% if competition.maxParticipants %}
+    <p>Μέγιστος αριθμός συμμετοχών: {{ competition.maxParticipants }}</p>
+{% endif %}

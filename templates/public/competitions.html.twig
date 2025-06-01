@@ -11,13 +11,8 @@
         <ul>
             {% for competition in competitions %}
                 <li>
-                    <h2>{{ competition.title }}</h2>
-                    <p>Έπαθλα: {{ competition.prizes }}</p>
-                    <p>Λήξη συμμετοχών: {{ competition.endDate|date('d/m/Y H:i') }}</p>
-                    {% if competition.maxParticipants %}
-                        <p>Μέγιστος αριθμός συμμετοχών: {{ competition.maxParticipants }}</p>
-                    {% endif %}
-                    {# <p><a href="{{ path('public_submit_form', {'id': competition.id}) }}">Δήλωση Συμμετοχής</a></p> #}
+                    {% include 'public/_competition_item.html.twig' with {'competition': competition} %}
+                    <p><a href="{{ path('public_submit_form', {'id': competition.id}) }}">Δήλωση Συμμετοχής</a></p>
                 </li>
             {% endfor %}
         </ul>

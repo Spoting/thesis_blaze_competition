@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ competition.title }} - Δήλωση Συμμετοχής{% endblock %}
+
+{% block body %}
+    <h1>{{ competition.title }} - Δήλωση Συμμετοχής</h1>
+
+    {% include 'public/_competition_item.html.twig' with {'competition': competition} %}
+
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        {# <button type="submit" class="btn btn-primary">Υποβολή Συμμετοχής</button> #}
+    {{ form_end(form) }}
+
+    <p><a href="{{ path('public_competitions') }}">Επιστροφή στη λίστα διαγωνισμών</a></p>
+{% endblock %}
