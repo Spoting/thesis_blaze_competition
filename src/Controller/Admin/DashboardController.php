@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Competition;
 use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
@@ -51,6 +52,7 @@ class DashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
         yield MenuItem::linkToCrud('Users', 'fas fa-list', User::class)->setPermission('ROLE_MANAGER_ADMIN');
+        yield MenuItem::linkToCrud('Competitions', 'fas fa-trophy', Competition::class)->setPermission('ROLE_COMPETITION_MANAGER');
         yield MenuItem::linkToExitImpersonation('Exit impersonation', 'fas fa-sign-out-alt')->setPermission('IS_IMPERSONATOR');
     }
 }
