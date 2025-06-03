@@ -25,6 +25,23 @@ services:
       - host.docker.internal:host-gateway
     tty: true
 
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    restart: always
+    ports:
+      - "5540:5540"
+    # volumes:
+    #   - ./redisinsight-data:/data
+    depends_on:
+      - redis
+    environment:
+      - RI_REDIS_HOST=${REDIS_HOST:-redis}
+      - RI_REDIS_PORT=${REDIS_PORT:-6379}
+    #   - RI_REDIS_ALIAS=MyLocalRedis
+    #   - RI_REDIS_USERNAME=default
+    #   - RI_REDIS_PASSWORD=your_strong_password
+
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
 
