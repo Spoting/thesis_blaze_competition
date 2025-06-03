@@ -13,20 +13,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class PublicCompetitionController extends AbstractController
 {
     private MessageBusInterface $messageBus;
+    private CacheInterface $cache;
 
-    public function __construct(MessageBusInterface $messageBus)
-    {
+    public function __construct(
+        MessageBusInterface $messageBus,
+        CacheInterface $cache
+    ) {
         $this->messageBus = $messageBus;
+        $this->cache = $cache;
     }
 
     #[Route('/', name: 'public_competitions', methods: ['GET'])]
-    public function index(EntityManagerInterface $entityManager,  Request $request): Response
+    public function index(EntityManagerInterface $entityManager): Response
     {
         $now = new \DateTimeImmutable();
+        // TODO: move function to Repository
         $competitions = $entityManager->getRepository(Competition::class)
             ->createQueryBuilder('c')
             // ->where('c.startDate <= :now')
@@ -38,42 +45,6 @@ class PublicCompetitionController extends AbstractController
         $response = $this->render('public/competitions.html.twig', [
             'competitions' => $competitions,
         ]);
-
-        // Determine the latest end date of the displayed competitions
-        $lastModified = null;
-        if (!empty($competitions)) {
-            $latestEndDate = null;
-            foreach ($competitions as $competition) {
-                if ($latestEndDate === null || $competition->getEndDate() > $latestEndDate) {
-                    $latestEndDate = $competition->getEndDate();
-                }
-            }
-            // Use the latest end date of an *active* competition
-            // Or, consider the latest modification date of *any* competition if that's more relevant
-            $lastModified = $latestEndDate; // Or get a general last modified timestamp from your competition data
-        }
-
-        // Set Cache-Control headers
-        $response->setPublic(); // Indicates the response can be cached by shared caches (proxies)
-        $response->setMaxAge(600); // Cache for 10 minutes (600 seconds)
-        $response->setSharedMaxAge(3600); // Shared caches can cache for 1 hour
-
-        // Set Last-Modified header
-        if ($lastModified) {
-            $response->setLastModified($lastModified);
-        }
-
-        // Handle ETag (optional, but good for robust caching)
-        // An ETag should change whenever the content changes.
-        // For a list of competitions, a hash of the competition IDs and their end dates could work.
-        $etag = md5(json_encode(array_map(fn($c) => ['id' => $c->getId(), 'endDate' => $c->getEndDate()->getTimestamp()], $competitions)));
-        $response->setEtag($etag);
-
-        // Check if the client's cache is still fresh
-        if ($response->isNotModified($request)) {
-            // Return 304 Not Modified response
-            return $response;
-        }
 
         return $response;
     }
@@ -107,26 +78,46 @@ class PublicCompetitionController extends AbstractController
 
         $form->handleRequest($request);
 
-        $priorityKey = $this->identifyPriorityKey($competition);
-
+        
         if ($form->isSubmitted() && $form->isValid()) {
             $formData = $form->getData();
-
-            $competition_id = $competition->getId(); // Use the ID from the fetched entity
+            // Extract Data
+            $competition_id = $competition->getId();
             $email = $formData['email'] ?? '';
             $phoneNumber = $formData['phoneNumber'] ?? '';
             $formFields = $formData;
             unset($formFields['email']);
             unset($formFields['phoneNumber']);
 
-            $message = new SubmitCompetitionEntryMessage($formData, $competition_id, $email, $phoneNumber);
-            $this->messageBus->dispatch(
-                $message,
-                [new AmqpStamp($priorityKey)]
-            );
+            // Check if this a new Submission ( from Cache Redis )
+            $newSubmission = false;
+            $submissionKey = "submission_key_" . md5("$competition_id-$email-$phoneNumber");
+            $this->cache->get($submissionKey, function (ItemInterface $item) use ($competition, &$newSubmission): void {
 
-            $this->addFlash('success', 'Your submission has been received!');
-            return $this->redirectToRoute('public_competitions');
+                // Calculate when to Expire this key. This is used to avoid multiple Submissions by the same person.                
+                $now = new \DateTimeImmutable();
+                $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
+                // Cache until the competition ends
+                $item->expiresAfter($timeRemaining)->set(true);
+                // $item->tag($competition->getId()); // Throws Error : comes from a non tag-aware pool: you cannot tag it.
+                $newSubmission = true;
+            });
+
+            if ($newSubmission) {
+                // Identify Priority
+                $priorityKey = $this->identifyPriorityKey($competition);
+                // Produce Message to RabbitMQ 
+                $message = new SubmitCompetitionEntryMessage($formData, $competition_id, $email, $phoneNumber);
+                $this->messageBus->dispatch(
+                    $message,
+                    [new AmqpStamp($priorityKey)]
+                );
+                $this->addFlash('success', 'Your submission has been received!');
+            } else {
+                $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
+            }
+
+            // return $this->redirectToRoute('public_competitions');
         }
 
         return $this->render('public/submit_form.html.twig', [
@@ -135,7 +126,8 @@ class PublicCompetitionController extends AbstractController
         ]);
     }
 
-    private function validateCompetition(Competition $competition) {
+    private function validateCompetition(Competition $competition)
+    {
         if (
             !$competition instanceof Competition
             || $competition->getEndDate() < new \DateTimeImmutable()
@@ -144,7 +136,8 @@ class PublicCompetitionController extends AbstractController
         }
     }
 
-    private function identifyPriorityKey(Competition $competition) {
+    private function identifyPriorityKey(Competition $competition)
+    {
         // TODO: Add Algorithm for determining priority
         $priorityKey = 'high';
         // $now = new \DateTimeImmutable();

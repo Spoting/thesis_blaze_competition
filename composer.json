@@ -16,6 +16,7 @@
         "easycorp/easyadmin-bundle": "^4.24",
         "runtime/frankenphp-symfony": "^0.2.0",
         "symfony/amqp-messenger": "7.2.*",
+        "symfony/cache": "7.2.*",
         "symfony/console": "7.2.*",
         "symfony/dotenv": "7.2.*",
         "symfony/flex": "^2.7",

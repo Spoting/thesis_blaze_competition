@@ -1,19 +1,33 @@
+## TODO Check Doctrine Cache
 framework:
     cache:
         # Unique name of your app: used to compute stable namespaces for cache keys.
-        #prefix_seed: your_vendor_name/app_name
+        # prefix_seed: your_vendor_name/app_name
 
         # The "app" cache stores to the filesystem by default.
         # The data in this cache should persist between deploys.
         # Other options include:
+        app: cache.adapter.redis  ## This is used for setting our cache keys
+        # system: cache.adapter.redis ## TODO: check what this is used for
 
-        # Redis
-        #app: cache.adapter.redis
-        #default_redis_provider: redis://localhost
+        default_redis_provider: 'redis://%env(REDIS_HOST)%:%env(REDIS_PORT)%'
 
-        # APCu (not recommended with heavy random-write workloads as memory fragmentation can cause perf issues)
-        #app: cache.adapter.apcu
 
-        # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        ## TODO Double Check this
+        # pools:
+        #     doctrine.metadata_cache:
+        #         adapter: cache.adapter.redis
+        #         # provider: default_redis_provider
+        #         # Metadata doesn't expire often, but giving it a long TTL is safe
+        #         default_lifetime: 86400 # 24 hours (or even longer)
+
+        #     doctrine.query_cache:
+        #         adapter: cache.adapter.redis
+        #         # provider: default_redis_provider
+        #         default_lifetime: 3600 # 1 hour
+
+        #     doctrine.result_cache:
+        #         adapter: cache.adapter.redis
+        #         # provider: default_redis_provider
+        #         # Results typically expire faster as data changes
+        #         default_lifetime: 600 # 10 minutes (adjust based on data freshness needs)
