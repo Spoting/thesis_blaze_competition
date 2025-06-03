@@ -63,6 +63,25 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck: # Docker's healthcheck for the RabbitMQ service
+      test: ["CMD", "rabbitmq-diagnostics", "status"] # Checks RabbitMQ's internal status
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s # Gives RabbitMQ a grace period to start up initially
+    # volumes:
+    #   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+  # RabbitMQ Setup Service
+  rabbitmq_setup:
+    image: rabbitmq:4-management # This image contains the 'rabbitmqadmin' tool
+    depends_on:
+      rabbitmq:
+        condition: service_healthy # This is CRITICAL: Ensures RabbitMQ is fully up and ready
+    volumes:
+      # Mount your setup script into the container, making it executable
+      - ./rabbitmq/setup_rabbitmq.sh:/usr/local/bin/setup_rabbitmq.sh:ro
+    command: /usr/local/bin/setup_rabbitmq.sh # Execute the script
 
 volumes:
   caddy_data:

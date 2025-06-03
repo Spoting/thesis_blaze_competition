@@ -5,13 +5,29 @@ framework:
 
         transports:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
-            async: '%env(MESSENGER_TRANSPORT_DSN)%'
-            # failed: 'doctrine://default?queue_name=failed'
-            # sync: 'sync://'
+            submission_amqp:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: submission_exchange
+                        type: direct
+                    queues:
+                        submission_high_priority_queue:
+                            binding_keys: [high]
+                        submission_medium_priority_queue:
+                            binding_keys: [medium]
+                        submission_low_priority_queue:
+                            binding_keys: [low]
+
+            # --- AMQP Alternative for Failed Messages ---
+            # Define a separate DSN for the failed transport, pointing to your RabbitMQ.
+            # The 'queue_name' parameter tells Messenger which queue to send failed messages to.
+            failed: '%env(MESSENGER_TRANSPORT_DSN)%?queue_name=failed_messages'
 
         routing:
             # Route your messages to the transports
-            App\Message\SubmitCompetitionEntryMessage: async
+            App\Message\SubmitCompetitionEntryMessage: submission_amqp
+
 
 # when@test:
 #    framework:
