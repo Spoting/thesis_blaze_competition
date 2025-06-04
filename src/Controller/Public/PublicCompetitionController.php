@@ -16,21 +16,15 @@ use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 
 class PublicCompetitionController extends AbstractController
 {
     private MessageBusInterface $messageBus;
-    private CacheInterface $cache;
-
-
 
     public function __construct(
         MessageBusInterface $messageBus,
-        CacheInterface $cache,
     ) {
         $this->messageBus = $messageBus;
-        $this->cache = $cache;
     }
 
     #[Route('/', name: 'public_competitions', methods: ['GET'], stateless: true)]
@@ -83,8 +77,12 @@ class PublicCompetitionController extends AbstractController
             // Check if this a new Submission ( from Redis )
             $submissionKey = CompetitionConstants::REDIS_PREFIX_SUBMISSION_KEY . md5("$competition_id-$email-$phoneNumber");
             $newSubmission = false;
+
+            
             if (!$redisManager->getValue($submissionKey)) {
-                $redisManager->setValue($submissionKey, true);
+                $now = new \DateTimeImmutable();
+                $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
+                $redisManager->setValue($submissionKey, true, $timeRemaining);
                 $newSubmission = true;
             }
 
