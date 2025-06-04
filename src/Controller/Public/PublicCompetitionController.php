@@ -29,11 +29,11 @@ class PublicCompetitionController extends AbstractController
         $this->cache = $cache;
     }
 
-    #[Route('/', name: 'public_competitions', methods: ['GET'])]
+    #[Route('/', name: 'public_competitions', methods: ['GET'], stateless: true)]
     public function index(EntityManagerInterface $entityManager): Response
     {
+        // TODO: move functionality inside Repository
         $now = new \DateTimeImmutable();
-        // TODO: move function to Repository
         $competitions = $entityManager->getRepository(Competition::class)
             ->createQueryBuilder('c')
             // ->where('c.startDate <= :now')
@@ -45,6 +45,9 @@ class PublicCompetitionController extends AbstractController
         $response = $this->render('public/competitions.html.twig', [
             'competitions' => $competitions,
         ]);
+
+        $response->setPublic();
+        // $response->setMaxAge(30);
 
         return $response;
     }
@@ -62,6 +65,7 @@ class PublicCompetitionController extends AbstractController
         return $this->render('public/submit_form.html.twig', [
             'competition' => $competition,
             'form' => $form->createView(),
+            'message' => '',
         ]);
     }
 
@@ -112,9 +116,12 @@ class PublicCompetitionController extends AbstractController
                     $message,
                     [new AmqpStamp($priorityKey)]
                 );
-                $this->addFlash('success', 'Your submission has been received!');
+
+                // $this->addFlash('success', 'Your submission has been received!');
+                $message = 'Your submission has been received!';
             } else {
-                $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
+                // $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
+                $message = 'Your submission is ALREADY been received! Chill...';
             }
 
             // return $this->redirectToRoute('public_competitions');
@@ -123,6 +130,7 @@ class PublicCompetitionController extends AbstractController
         return $this->render('public/submit_form.html.twig', [
             'competition' => $competition,
             'form' => $form->createView(),
+            'message' => $message,
         ]);
     }
 
