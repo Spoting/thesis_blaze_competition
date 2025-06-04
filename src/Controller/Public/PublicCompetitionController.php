@@ -101,7 +101,7 @@ class PublicCompetitionController extends AbstractController
                 // Identify Priority
                 $priorityKey = $this->identifyPriorityKey($competition);
                 // Produce Message to RabbitMQ 
-                $message = new CompetitionSubmittionMessage($formData, $competition_id, $email, $phoneNumber);
+                $message = new CompetitionSubmittionMessage($formFields, $competition_id, $email, $phoneNumber);
                 $this->messageBus->dispatch(
                     $message,
                     [new AmqpStamp($priorityKey)]
