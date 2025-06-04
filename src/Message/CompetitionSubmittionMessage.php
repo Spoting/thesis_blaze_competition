@@ -2,7 +2,7 @@
 
 namespace App\Message;
 
-class SubmitCompetitionEntryMessage
+class CompetitionSubmittionMessage
 {
     private array $formData;
     private int $competitionId;
