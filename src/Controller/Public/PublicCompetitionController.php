@@ -3,9 +3,11 @@
 // src/Controller/Public/PublicCompetitionController.php
 namespace App\Controller\Public;
 
+use App\Constants\CompetitionConstants;
 use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
-use App\Message\SubmitCompetitionEntryMessage;
+use App\Message\CompetitionSubmittionMessage;
+use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,9 +23,11 @@ class PublicCompetitionController extends AbstractController
     private MessageBusInterface $messageBus;
     private CacheInterface $cache;
 
+
+
     public function __construct(
         MessageBusInterface $messageBus,
-        CacheInterface $cache
+        CacheInterface $cache,
     ) {
         $this->messageBus = $messageBus;
         $this->cache = $cache;
@@ -52,37 +56,20 @@ class PublicCompetitionController extends AbstractController
         return $response;
     }
 
-    #[Route('/competition/{id}/submit', name: 'public_competition_submit_show', methods: ['GET'])]
-    public function displaySubmitForm(Competition $competition): Response
+    #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
+    public function handleSubmitForm(Competition $competition, Request $request, RedisManager $redisManager): Response
     {
         $this->validateCompetition($competition);
 
         $form = $this->createForm(SubmissionType::class, null, [
-            'competition_id' => $competition->getId(), // Use the ID from the fetched entity
-            'form_fields' => $competition->getFormFields(),
-        ]);
-
-        return $this->render('public/submit_form.html.twig', [
-            'competition' => $competition,
-            'form' => $form->createView(),
-            'message' => '',
-        ]);
-    }
-
-    #[Route('/competition/{id}/submit', name: 'public_competition_submit_handle', methods: ['POST'])]
-    // Same here, the Competition object is automatically available
-    public function handleSubmitForm(Competition $competition, Request $request): Response
-    {
-        $this->validateCompetition($competition);
-
-        $form = $this->createForm(SubmissionType::class, null, [
-            'competition_id' => $competition->getId(), // Use the ID from the fetched entity
+            'competition_id' => $competition->getId(),
             'form_fields' => $competition->getFormFields(),
         ]);
 
         $form->handleRequest($request);
 
-        
+
+        $message = '';
         if ($form->isSubmitted() && $form->isValid()) {
             $formData = $form->getData();
             // Extract Data
@@ -93,32 +80,28 @@ class PublicCompetitionController extends AbstractController
             unset($formFields['email']);
             unset($formFields['phoneNumber']);
 
-            // Check if this a new Submission ( from Cache Redis )
+            // Check if this a new Submission ( from Redis )
+            $submissionKey = CompetitionConstants::REDIS_PREFIX_SUBMISSION_KEY . md5("$competition_id-$email-$phoneNumber");
             $newSubmission = false;
-            $submissionKey = "submission_key_" . md5("$competition_id-$email-$phoneNumber");
-            $this->cache->get($submissionKey, function (ItemInterface $item) use ($competition, &$newSubmission): void {
-
-                // Calculate when to Expire this key. This is used to avoid multiple Submissions by the same person.                
-                $now = new \DateTimeImmutable();
-                $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
-                // Cache until the competition ends
-                $item->expiresAfter($timeRemaining)->set(true);
-                // $item->tag($competition->getId()); // Throws Error : comes from a non tag-aware pool: you cannot tag it.
+            if (!$redisManager->getValue($submissionKey)) {
+                $redisManager->setValue($submissionKey, true);
                 $newSubmission = true;
-            });
+            }
 
             if ($newSubmission) {
                 // Identify Priority
                 $priorityKey = $this->identifyPriorityKey($competition);
                 // Produce Message to RabbitMQ 
-                $message = new SubmitCompetitionEntryMessage($formData, $competition_id, $email, $phoneNumber);
+                $message = new CompetitionSubmittionMessage($formData, $competition_id, $email, $phoneNumber);
                 $this->messageBus->dispatch(
                     $message,
                     [new AmqpStamp($priorityKey)]
                 );
 
+                $total_count = $redisManager->incrementValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competition_id);
+
                 // $this->addFlash('success', 'Your submission has been received!');
-                $message = 'Your submission has been received!';
+                $message = 'Your submission has been received! ' . $total_count;
             } else {
                 // $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
                 $message = 'Your submission is ALREADY been received! Chill...';

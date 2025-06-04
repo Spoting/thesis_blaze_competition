@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Service;
+
+use Redis; // For phpredis
+
+class RedisManager
+{
+    private Redis $redisClient; # type: ignore
+
+    public function __construct(
+        \Redis $redisClient
+    ) {
+        $this->redisClient = $redisClient;
+    }
+
+    public function incrementValue(string $key, int $amount = 1): int
+    {
+        // Use the native Redis INCRBY command for atomic increment
+        return $this->redisClient->incrBy($key, $amount);
+    }
+
+    public function getValue(string $key): ?string
+    {
+        // Use the native Redis GET command
+        return $this->redisClient->get($key);
+    }
+
+    public function setValue(string $key, string $value, int $ttl = 0): bool
+    {
+        // Use the native Redis SET command with optional expiration
+        if ($ttl > 0) {
+            return $this->redisClient->setex($key, $ttl, $value);
+        }
+        return $this->redisClient->set($key, $value);
+    }
+
+    public function deleteKey(string $key): int
+    {
+        return $this->redisClient->del($key);
+    }
+
+    public function addToList(string $listKey, string $value): int
+    {
+        return $this->redisClient->rpush($listKey, $value);
+    }
+
+    public function getList(string $listKey): array
+    {
+        return $this->redisClient->lrange($listKey, 0, -1);
+    }
+}

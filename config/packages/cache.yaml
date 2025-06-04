@@ -15,6 +15,11 @@ framework:
 
         ## TODO Double Check this
         # pools:
+        #     my_redis_counter_cache: # A specific pool for counters, if you want
+        #         adapter: cache.adapter.redis
+        #         provider: 'redis://%env(REDIS_HOST)%:%env(REDIS_PORT)%'
+        #         default_lifetime: 0 # Optional: Set a default lifetime (0 for no expiration)
+                
         #     doctrine.metadata_cache:
         #         adapter: cache.adapter.redis
         #         # provider: default_redis_provider
