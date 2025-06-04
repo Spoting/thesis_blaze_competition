@@ -17,4 +17,18 @@
             {% endfor %}
         </ul>
     {% endif %}
+
+
+<script type="text/javascript">
+    const mercureTopic = `http://example.com/books/1`;
+
+    const eventSource = new EventSource(`https://symfony.localhost/.well-known/mercure?topic=${mercureTopic}`);
+
+    eventSource.onmessage = (event) => {
+        console.log("Received Mercure update for book:", JSON.parse(event.data));
+        // alert("Niaouuu", JSON.parse(event.data));
+        // You might update a specific part of the page here, e.g.:
+        document.getElementById('competition-7').innerText = JSON.parse(event.data).status;
+    };
+</script>
 {% endblock %}
