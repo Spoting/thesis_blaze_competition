@@ -9,6 +9,7 @@ parameters:
         manager_admin: 'ROLE_MANAGER_ADMIN'
         admin: 'ROLE_ADMIN'
         user: 'ROLE_USER'
+    app.mercure.public_url: '%env(MERCURE_PUBLIC_URL)%'
 
 services:
     # default configuration for services in *this* file
@@ -29,3 +30,7 @@ services:
     # please note that last definitions always *replace* previous ones
 
     Redis: '@snc_redis.default'
+
+twig:
+    globals:
+        mercure_public_url: '%app.mercure.public_url%'

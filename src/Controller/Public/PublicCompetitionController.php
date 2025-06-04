@@ -15,19 +15,21 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\Cache\CacheInterface;
 
 class PublicCompetitionController extends AbstractController
 {
     private MessageBusInterface $messageBus;
+    private RedisManager $redisManager;
 
     public function __construct(
         MessageBusInterface $messageBus,
+        RedisManager $redisManager
     ) {
         $this->messageBus = $messageBus;
+        $this->redisManager = $redisManager;
     }
 
-    #[Route('/', name: 'public_competitions', methods: ['GET'], stateless: true)]
+    #[Route('/', name: 'public_competitions', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): Response
     {
         // TODO: move functionality inside Repository
@@ -40,6 +42,15 @@ class PublicCompetitionController extends AbstractController
             // ->orderBy('c.endDate', 'ASC')
             ->getQuery()
             ->getResult();
+
+        // /** @var Competition $competition */
+        // foreach ($competitions as $competition) {
+        //     $competitionId = $competition->getId();
+        //     $submissionCount = (int) $this->redisManager->getValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competitionId);
+
+        //     $competition->setTotalSubmissions($submissionCount);
+        // }
+
         $response = $this->render('public/competitions.html.twig', [
             'competitions' => $competitions,
         ]);
@@ -51,7 +62,7 @@ class PublicCompetitionController extends AbstractController
     }
 
     #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
-    public function handleSubmitForm(Competition $competition, Request $request, RedisManager $redisManager): Response
+    public function handleSubmitForm(Competition $competition, Request $request): Response
     {
         $this->validateCompetition($competition);
 
@@ -79,10 +90,10 @@ class PublicCompetitionController extends AbstractController
             $newSubmission = false;
 
             
-            if (!$redisManager->getValue($submissionKey)) {
+            if (!$this->redisManager->getValue($submissionKey)) {
                 $now = new \DateTimeImmutable();
                 $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
-                $redisManager->setValue($submissionKey, true, $timeRemaining);
+                $this->redisManager->setValue($submissionKey, true, $timeRemaining);
                 $newSubmission = true;
             }
 
@@ -96,7 +107,7 @@ class PublicCompetitionController extends AbstractController
                     [new AmqpStamp($priorityKey)]
                 );
 
-                $total_count = $redisManager->incrementValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competition_id);
+                $total_count = $this->redisManager->incrementValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competition_id);
 
                 // $this->addFlash('success', 'Your submission has been received!');
                 $message = 'Your submission has been received! ' . $total_count;
@@ -104,7 +115,6 @@ class PublicCompetitionController extends AbstractController
                 // $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
                 $message = 'Your submission is ALREADY been received! Chill...';
             }
-
             // return $this->redirectToRoute('public_competitions');
         }
 

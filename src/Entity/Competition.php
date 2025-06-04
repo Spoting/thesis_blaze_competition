@@ -46,6 +46,7 @@ class Competition
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 
+    // private ?int $totalSubmissions = null;
 
     public const DEFAULT_FORM_FIELDS = [
         'email' => [
@@ -189,8 +190,19 @@ class Competition
         return $this;
     }
 
+    // public function getTotalSubmissions(): ?int
+    // {
+    //     return $this->totalSubmissions;
+    // }
 
-        /**
+    // public function setTotalSubmissions(int $totalSubmissions): static
+    // {
+    //     $this->totalSubmissions = $totalSubmissions;
+
+    //     return $this;
+    // }
+
+    /**
      * @ORM\PrePersist
      */
     #[ORM\PrePersist]
