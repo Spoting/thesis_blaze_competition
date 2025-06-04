@@ -12,7 +12,7 @@
             {% for competition in competitions %}
                 <li>
                     {% include 'public/_competition_item.html.twig' with {'competition': competition} %}
-                    <p><a href="{{ path('public_competition_submit_handle', {'id': competition.id}) }}">Δήλωση Συμμετοχής</a></p>
+                    <p><a href="{{ path('public_competition_submit', {'id': competition.id}) }}">Δήλωση Συμμετοχής</a></p>
                 </li>
             {% endfor %}
         </ul>
