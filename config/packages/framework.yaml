@@ -4,7 +4,10 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session: true
-
+    ## To fix Mercure Issue (?)
+    http_client:
+        default_options:
+            verify_peer: false
     #esi: true
     #fragments: true
 
