@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class PublicCompetitionController extends AbstractController
 {
@@ -23,15 +24,19 @@ class PublicCompetitionController extends AbstractController
 
     public function __construct(
         MessageBusInterface $messageBus,
-        RedisManager $redisManager
+        RedisManager $redisManager,
     ) {
         $this->messageBus = $messageBus;
-        $this->redisManager = $redisManager;
+        $this->redisManager = $redisManager;  
     }
 
     #[Route('/', name: 'public_competitions', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): Response
     {
+        // cache:pool:clear
+        // $resultCache = $entityManager->getConfiguration()->getResultCache();
+        // $resultCache->deleteItem('competition_list_current');
+
         // TODO: move functionality inside Repository
         $now = new \DateTimeImmutable();
         $competitions = $entityManager->getRepository(Competition::class)
@@ -39,24 +44,21 @@ class PublicCompetitionController extends AbstractController
             // ->where('c.startDate <= :now')
             // ->andWhere('c.endDate > :now')
             // ->setParameter('now', $now)
-            // ->orderBy('c.endDate', 'ASC')
+            ->orderBy('c.endDate', 'ASC')
+            // ->setMaxResults(1)
             ->getQuery()
+            // ->enableResultCache()
+            // ->setResultCacheId('competition_list_current')
             ->getResult();
-
-        // /** @var Competition $competition */
-        // foreach ($competitions as $competition) {
-        //     $competitionId = $competition->getId();
-        //     $submissionCount = (int) $this->redisManager->getValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competitionId);
-
-        //     $competition->setTotalSubmissions($submissionCount);
-        // }
 
         $response = $this->render('public/competitions.html.twig', [
             'competitions' => $competitions,
         ]);
-
+            
+        
         $response->setPublic();
-        // $response->setMaxAge(30);
+        // $response->setMaxAge(3600);
+        // $response->setSharedMaxAge(3600);
 
         return $response;
     }
