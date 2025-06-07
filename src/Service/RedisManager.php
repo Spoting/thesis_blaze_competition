@@ -6,10 +6,12 @@ use Redis; // For phpredis
 
 class RedisManager
 {
-    private Redis $redisClient; # type: ignore
+    /** @disregard P1009 */
+    private Redis $redisClient; 
 
+    /** @disregard P1009 */
     public function __construct(
-        \Redis $redisClient
+        \Redis $redisClient  
     ) {
         $this->redisClient = $redisClient;
     }
