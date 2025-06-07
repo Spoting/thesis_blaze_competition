@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "google.geminicodeassist",
+    "bmewburn.vscode-intelephense-client", // Example for a Python project
+    "donjayamanne.githistory",
+    "mhutchie.git-graph",
+    "waderyan.gitblame",
+    "whatwedo.twig",
+    "zainchen.json",
+    "redhat.vscode-yaml",
+    "zamerick.vscode-caddyfile-syntax",
+    // "gulajavaministudio.mayukaithemevsc",
+    // "pkief.material-icon-theme"
+  ]
+}
