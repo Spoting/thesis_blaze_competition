@@ -15,14 +15,16 @@ framework:
                 options:
                     exchange:
                         name: submission_exchange
-                        type: direct
+                        type: direct # Or 'topic' if more flexible routing needed
                     queues:
-                        submission_high_priority_queue:
-                            binding_keys: [high]
-                        submission_medium_priority_queue:
-                            binding_keys: [medium]
-                        submission_low_priority_queue:
-                            binding_keys: [low]
+                        # Define your Normal queue
+                        submission_normal_queue:
+                            binding_keys: [normal]
+                            arguments: { 'x-max-priority': 10 }
+                        # Define your Premium queue
+                        submission_premium_queue:
+                            binding_keys: [premium]
+                            arguments: { 'x-max-priority': 10 }
 
             # --- AMQP Alternative for Failed Messages ---
             # Define a separate DSN for the failed transport, pointing to your RabbitMQ.

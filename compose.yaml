@@ -76,16 +76,16 @@ services:
     # volumes:
     #   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
-  # RabbitMQ Setup Service
-  rabbitmq_setup:
+  # RabbitMQ Topology Declaration Service
+  rabbitmq_topology:
     image: rabbitmq:4-management # This image contains the 'rabbitmqadmin' tool
     depends_on:
       rabbitmq:
         condition: service_healthy # This is CRITICAL: Ensures RabbitMQ is fully up and ready
     volumes:
       # Mount your setup script into the container, making it executable
-      - ./rabbitmq/setup_rabbitmq.sh:/usr/local/bin/setup_rabbitmq.sh:ro
-    command: /usr/local/bin/setup_rabbitmq.sh # Execute the script
+      - ./rabbitmq/rabbitmq_topology.sh:/usr/local/bin/rabbitmq_topology.sh:ro
+    command: /usr/local/bin/rabbitmq_topology.sh # Execute the script
   
   redis:
     image: redis:7-alpine

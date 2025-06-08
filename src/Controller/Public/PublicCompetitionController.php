@@ -106,7 +106,7 @@ class PublicCompetitionController extends AbstractController
                 $message = new CompetitionSubmittionMessage($formFields, $competition_id, $email, $phoneNumber);
                 $this->messageBus->dispatch(
                     $message,
-                    [new AmqpStamp($priorityKey)]
+                    [new AmqpStamp('normal', attributes: ['priority' => $priorityKey]) ]
                 );
 
                 $total_count = $this->redisManager->incrementValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competition_id);
@@ -137,19 +137,27 @@ class PublicCompetitionController extends AbstractController
         }
     }
 
+    // TODO: 
     private function identifyPriorityKey(Competition $competition)
     {
-        // TODO: Add Algorithm for determining priority
-        $priorityKey = 'high';
-        // $now = new \DateTimeImmutable();
-        // $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
-        // if ($timeRemaining < (3600 * 24 * 7)) {
-        //     $priorityKey = 'high';
-        // } elseif ($timeRemaining < (3600 * 24 * 30)) {
-        //     $priorityKey = 'medium';
-        // } else {
-        //     $priorityKey = 'normal';
-        // }
-        return $priorityKey;
+
+        return 8;
+        $now = new \DateTimeImmutable();
+        $endDate = $competition->getEndDate();
+        $timeRemainingSeconds = $endDate->getTimestamp() - $now->getTimestamp();
+
+        // Map time remaining to a 0-10 priority scale (adjust values and tiers as needed)
+        // Ensure this aligns with the 'x-max-priority' set in messenger.yaml
+        if ($timeRemainingSeconds <= 3600) { // Less than 1 hour
+            return 10;
+        } elseif ($timeRemainingSeconds <= 21600) { // Less than 6 hours
+            return 8;
+        } elseif ($timeRemainingSeconds <= 86400) { // Less than 1 day
+            return 5;
+        } elseif ($timeRemainingSeconds <= 259200) { // Less than 3 days
+            return 3;
+        } else {
+            return 1; // Default low priority for competitions far in the future
+        }
     }
 }
