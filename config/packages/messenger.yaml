@@ -26,6 +26,22 @@ framework:
                             binding_keys: [premium]
                             arguments: { 'x-max-priority': 10 }
 
+            winner_trigger_amqp:
+                # Use the same DSN as your main RabbitMQ connection
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    # This transport publishes to the special x-delayed-message exchange
+                    exchange:
+                        name: delayed_winner_exchange
+                        type: x-delayed-message 
+                        # durable: true is implicitly true for named exchanges here
+
+                    queues:
+                        # Define the queue that the delayed exchange will route messages to AFTER delay.
+                        # This queue will be consumed by your Celery winner generation worker.
+                        competition_winner_generation_queue: # Matches bash script's WINNER_TRIGGER_QUEUE_NAME
+                            binding_keys: [winner_trigger]
+
             # --- AMQP Alternative for Failed Messages ---
             # Define a separate DSN for the failed transport, pointing to your RabbitMQ.
             # The 'queue_name' parameter tells Messenger which queue to send failed messages to.
@@ -34,6 +50,7 @@ framework:
         routing:
             # Route your messages to the transports
             App\Message\CompetitionSubmittionMessage: submission_amqp
+            App\Message\WinnerTriggerMessage: winner_trigger_amqp
 
 
 # when@test:

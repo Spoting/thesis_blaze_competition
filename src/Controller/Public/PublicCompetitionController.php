@@ -7,6 +7,7 @@ use App\Constants\CompetitionConstants;
 use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
 use App\Message\CompetitionSubmittionMessage;
+use App\Message\WinnerTriggerMessage;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,7 +28,7 @@ class PublicCompetitionController extends AbstractController
         RedisManager $redisManager,
     ) {
         $this->messageBus = $messageBus;
-        $this->redisManager = $redisManager;  
+        $this->redisManager = $redisManager;
     }
 
     #[Route('/', name: 'public_competitions', methods: ['GET'])]
@@ -54,8 +55,8 @@ class PublicCompetitionController extends AbstractController
         $response = $this->render('public/competitions.html.twig', [
             'competitions' => $competitions,
         ]);
-            
-        
+
+
         $response->setPublic();
         // $response->setMaxAge(3600);
         // $response->setSharedMaxAge(3600);
@@ -91,7 +92,7 @@ class PublicCompetitionController extends AbstractController
             $submissionKey = CompetitionConstants::REDIS_PREFIX_SUBMISSION_KEY . md5("$competition_id-$email-$phoneNumber");
             $newSubmission = false;
 
-            
+
             if (!$this->redisManager->getValue($submissionKey)) {
                 $now = new \DateTimeImmutable();
                 $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
@@ -106,7 +107,23 @@ class PublicCompetitionController extends AbstractController
                 $message = new CompetitionSubmittionMessage($formFields, $competition_id, $email, $phoneNumber);
                 $this->messageBus->dispatch(
                     $message,
-                    [new AmqpStamp('normal', attributes: ['priority' => $priorityKey]) ]
+                    [new AmqpStamp('normal', attributes: ['priority' => $priorityKey])]
+                );
+
+                // Create the message object that will be dispatched.
+                $message = new WinnerTriggerMessage($competition->getId());
+
+                  $amqpStamp = new AmqpStamp(
+                            'winner_trigger',
+                            attributes: ['headers' => ['x-delay' => 20000]]
+                   );
+                // Dispatch the message with the AmqpStamp to add the x-delay header.
+                // The AmqpStamp constructor: new AmqpStamp(string $routingKey = null, int $priority = null, array $headers = [])
+                $this->messageBus->dispatch(
+                    $message,
+                    [
+                        $amqpStamp
+                    ]
                 );
 
                 $total_count = $this->redisManager->incrementValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competition_id);

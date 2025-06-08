@@ -60,7 +60,7 @@ services:
 ###< doctrine/doctrine-bundle ###
 
   rabbitmq:
-    image: rabbitmq:4-management
+    image: heidiks/rabbitmq-delayed-message-exchange:latest
     ports:
       - "5672:5672" # AMQP port
       - "15672:15672" # Management UI port
@@ -78,14 +78,13 @@ services:
 
   # RabbitMQ Topology Declaration Service
   rabbitmq_topology:
-    image: rabbitmq:4-management # This image contains the 'rabbitmqadmin' tool
+    image: heidiks/rabbitmq-delayed-message-exchange:latest
     depends_on:
       rabbitmq:
-        condition: service_healthy # This is CRITICAL: Ensures RabbitMQ is fully up and ready
+        condition: service_healthy
     volumes:
-      # Mount your setup script into the container, making it executable
       - ./rabbitmq/rabbitmq_topology.sh:/usr/local/bin/rabbitmq_topology.sh:ro
-    command: /usr/local/bin/rabbitmq_topology.sh # Execute the script
+    command: /usr/local/bin/rabbitmq_topology.sh
   
   redis:
     image: redis:7-alpine
