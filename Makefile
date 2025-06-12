@@ -6,6 +6,7 @@ DOCKER_COMP = docker compose
 
 # Docker containers
 PHP_CONT = $(DOCKER_COMP) exec -u appuser php
+# WORKER_CONT = $(DOCKER_COMP) exec worker
 
 # Executables
 PHP      = $(PHP_CONT) php
@@ -20,7 +21,7 @@ SYMFONY  = $(PHP) bin/console
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help build up start down logs sh composer vendor sf cc test
+.PHONY        : help build up start down logs composer vendor sf cc test
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -39,13 +40,10 @@ up: ## Start the docker hub in detached mode (no logs)
 down: ## Stop the docker hub
 	@$(DOCKER_COMP) down --remove-orphans
 
-logs: ## Show live logs
-	@$(DOCKER_COMP) logs --tail=10 --follow
+# sh: ## Connect to the FrankenPHP container
+# 	@$(PHP_CONT) sh
 
-sh: ## Connect to the FrankenPHP container
-	@$(PHP_CONT) sh
-
-bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
+php-bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
 	@$(PHP_CONT) bash
 
 test: ## Start tests with phpunit, pass the parameter "c=" to add options to phpunit, example: make test c="--group e2e --stop-on-failure"
@@ -53,6 +51,16 @@ test: ## Start tests with phpunit, pass the parameter "c=" to add options to php
 	@$(DOCKER_COMP) exec -e APP_ENV=test php bin/phpunit $(c)
 
 
+logs: ## Show live logs. You can add argument for specific container
+	@$(DOCKER_COMP) logs --tail=30 --follow $(filter-out $@,$(MAKECMDGOALS))
+
+shell: ## Connect to specified container ( bash )
+	@$(eval CONTAINER_TO_CONNECT = $(filter-out $@,$(MAKECMDGOALS)))
+	@if [ "$(CONTAINER_TO_CONNECT)" = "php" ]; then \
+		$(DOCKER_COMP) exec -u appuser $(CONTAINER_TO_CONNECT) /bin/bash; \
+	else \
+		$(DOCKER_COMP) exec $(CONTAINER_TO_CONNECT) /bin/bash; \
+	fi
 
 ## —— Composer 🧙 ——————————————————————————————————————————————————————————————
 composer: ## Run composer, pass the parameter "c=" to run a given command, example: make composer c='req symfony/orm-pack'
@@ -71,7 +79,7 @@ sf: ## List all Symfony commands or pass the parameter "c=" to run a given comma
 cc: c=c:c ## Clear the cache
 cc: sf
 
-fix-perms: ## Fix permissions of all files
+fix-perms: ## Fix permissions of all files in php
 	@$(DOCKER_COMP) exec -e --rm php chown -R 1000:1000 /app
 
 # ## —— Coding standards ✨ ——————————————————————————————————————————————————————
