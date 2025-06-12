@@ -10,21 +10,21 @@ framework:
         app: cache.adapter.redis_tag_aware  ## This is used for setting our cache keys
         system: cache.adapter.redis_tag_aware ## check what this is used for
 
-        default_redis_provider: 'redis://%env(REDIS_HOST)%:%env(REDIS_PORT)%'
+        default_redis_provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
 
         pools:
             # This pool will be specifically for Doctrine's caches
             doctrine.result_cache_pool:
                 adapter: cache.adapter.redis # Use the Redis adapter
-                provider: 'redis://%env(REDIS_HOST)%:%env(REDIS_PORT)%'
+                provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
                 # namespace: 'doctrine_results'
 
             doctrine.query_cache_pool:
                 adapter: cache.adapter.redis
-                provider: 'redis://%env(REDIS_HOST)%:%env(REDIS_PORT)%'
+                provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
                 # namespace: 'doctrine_queries'
 
             doctrine.metadata_cache_pool:
                 adapter: cache.adapter.redis
-                provider: 'redis://%env(REDIS_HOST)%:%env(REDIS_PORT)%'
+                provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
                 # namespace: 'doctrine_metadata'
