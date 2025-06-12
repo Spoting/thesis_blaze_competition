@@ -109,7 +109,11 @@ class PublicCompetitionController extends AbstractController
                     $message,
                     [new AmqpStamp(
                         CompetitionConstants::AMPQ_ROUTING['normal_submission'],
-                        attributes: ['priority' => $priorityKey]
+                        attributes: [
+                            'priority' => $priorityKey,
+                            'content_type' => 'application/json',
+                            'content_encoding' => 'utf-8',
+                        ]
                     )]
                 );
 
@@ -118,7 +122,11 @@ class PublicCompetitionController extends AbstractController
 
                 $amqpStamp = new AmqpStamp(
                     CompetitionConstants::AMPQ_ROUTING['winner_trigger'],
-                    attributes: ['headers' => ['x-delay' => 20000]]
+                    attributes: [
+                        'headers' => ['x-delay' => 20000],
+                        'content_type' => 'application/json',
+                        'content_encoding' => 'utf-8',
+                    ]
                 );
                 // Dispatch the message with the AmqpStamp to add the x-delay header.
                 // The AmqpStamp constructor: new AmqpStamp(string $routingKey = null, int $priority = null, array $headers = [])
@@ -160,8 +168,6 @@ class PublicCompetitionController extends AbstractController
     // TODO: 
     private function identifyPriorityKey(Competition $competition)
     {
-
-        return 8;
         $now = new \DateTimeImmutable();
         $endDate = $competition->getEndDate();
         $timeRemainingSeconds = $endDate->getTimestamp() - $now->getTimestamp();

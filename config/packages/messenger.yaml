@@ -2,10 +2,7 @@ framework:
     messenger:
         # failure_transport: failed
         serializer:
-            default_serializer: messenger.transport.symfony_serializer
-            symfony_serializer:
-                format: json
-                context: {}
+            default_serializer: App\Messenger\CelerySerializer
 
         transports:
             submission_amqp:
@@ -17,10 +14,10 @@ framework:
                     queues:
                         submission_normal_queue:
                             binding_keys: [normal_submission]
-                            arguments: { "x-max-priority": 10 }
+                            arguments: { "x-max-priority": "%app.messenger.max_priority%" }
                         submission_premium_queue:
                             binding_keys: [premium_submission]
-                            arguments: { "x-max-priority": 10 }
+                            arguments: { "x-max-priority": "%app.messenger.max_priority%" }
 
             winner_trigger_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
