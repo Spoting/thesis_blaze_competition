@@ -18,4 +18,6 @@ class WinnerTriggerMessage
     {
         return $this->competitionId;
     }
+
+    // TODO: Winners Count?
 }

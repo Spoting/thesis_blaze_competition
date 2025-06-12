@@ -107,16 +107,19 @@ class PublicCompetitionController extends AbstractController
                 $message = new CompetitionSubmittionMessage($formFields, $competition_id, $email, $phoneNumber);
                 $this->messageBus->dispatch(
                     $message,
-                    [new AmqpStamp('normal', attributes: ['priority' => $priorityKey])]
+                    [new AmqpStamp(
+                        CompetitionConstants::AMPQ_ROUTING['normal_submission'],
+                        attributes: ['priority' => $priorityKey]
+                    )]
                 );
 
                 // Create the message object that will be dispatched.
                 $message = new WinnerTriggerMessage($competition->getId());
 
-                  $amqpStamp = new AmqpStamp(
-                            'winner_trigger',
-                            attributes: ['headers' => ['x-delay' => 20000]]
-                   );
+                $amqpStamp = new AmqpStamp(
+                    CompetitionConstants::AMPQ_ROUTING['winner_trigger'],
+                    attributes: ['headers' => ['x-delay' => 20000]]
+                );
                 // Dispatch the message with the AmqpStamp to add the x-delay header.
                 // The AmqpStamp constructor: new AmqpStamp(string $routingKey = null, int $priority = null, array $headers = [])
                 $this->messageBus->dispatch(

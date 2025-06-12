@@ -18,19 +18,16 @@ class RedisManager
 
     public function incrementValue(string $key, int $amount = 1): int
     {
-        // Use the native Redis INCRBY command for atomic increment
         return $this->redisClient->incrBy($key, $amount);
     }
 
     public function getValue(string $key): ?string
     {
-        // Use the native Redis GET command
         return $this->redisClient->get($key);
     }
 
     public function setValue(string $key, string $value, int $ttl = 0): bool
     {
-        // Use the native Redis SET command with optional expiration
         if ($ttl > 0) {
             return $this->redisClient->setex($key, $ttl, $value);
         }
