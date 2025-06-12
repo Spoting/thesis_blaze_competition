@@ -94,6 +94,50 @@ services:
     # volumes:
     #   - redis_data:/data
 
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    command: "/bin/bash -c 'tail -f /dev/null'"
+    environment:
+      RABBITMQ_HOST: rabbitmq    
+      REDIS_HOST: redis          
+      POSTGRES_HOST: database    
+      POSTGRES_DB: ${POSTGRES_DB:-app} 
+      POSTGRES_USER: ${POSTGRES_USER:-app} 
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!} 
+    depends_on:
+      - rabbitmq
+      - database
+      - redis
+      - rabbitmq_topology 
+    volumes:
+      - ./worker:/usr/src
+
+  ## TODO:
+  # submission_worker:
+  #   build: ./worker
+  #   command: celery -A app.celery_app:app worker -Q high_load -n high_worker@%h --concurrency=4
+  #   depends_on:
+  #     - rabbitmq
+  #     - database
+  #     - redis
+  #     - rabbitmq_topology 
+
+  ## TODO:
+  # winner_worker:
+  #   build: .
+  #   command: celery -A app.celery_app:app worker -Q low_load -n low_worker@%h --concurrency=1
+  #   depends_on:
+  #     - rabbitmq
+  #     - database
+  #     - redis
+  #     - rabbitmq_topology 
+
+  ## TODO:
+  # premium_submission_worker:
+
 volumes:
   caddy_data:
   caddy_config:
