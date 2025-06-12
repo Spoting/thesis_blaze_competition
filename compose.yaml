@@ -11,8 +11,8 @@ services:
       # Run "composer require symfony/orm-pack" to install and configure Doctrine ORM
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
       # Run "composer require symfony/mercure-bundle" to install and configure the Mercure integration
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      # REDIS_HOST: redis
+      # REDIS_PORT: 6379
       MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
@@ -93,6 +93,50 @@ services:
       - "6379:6379"
     # volumes:
     #   - redis_data:/data
+
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    command: "/bin/bash -c 'tail -f /dev/null'"
+    # environment:
+    #   RABBITMQ_HOST: rabbitmq    
+    #   REDIS_HOST: redis          
+    #   POSTGRES_HOST: database    
+    #   POSTGRES_DB: ${POSTGRES_DB:-app} 
+    #   POSTGRES_USER: ${POSTGRES_USER:-app} 
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!} 
+    depends_on:
+      - rabbitmq
+      - database
+      - redis
+      - rabbitmq_topology 
+    volumes:
+      - ./worker:/usr/src
+
+  ## TODO:
+  # submission_worker:
+  #   build: ./worker
+  #   command: celery -A app.celery_app:app worker -Q high_load -n high_worker@%h --concurrency=4
+  #   depends_on:
+  #     - rabbitmq
+  #     - database
+  #     - redis
+  #     - rabbitmq_topology 
+
+  ## TODO:
+  # winner_worker:
+  #   build: .
+  #   command: celery -A app.celery_app:app worker -Q low_load -n low_worker@%h --concurrency=1
+  #   depends_on:
+  #     - rabbitmq
+  #     - database
+  #     - redis
+  #     - rabbitmq_topology 
+
+  ## TODO:
+  # premium_submission_worker:
 
 volumes:
   caddy_data:

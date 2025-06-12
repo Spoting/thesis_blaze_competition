@@ -5,7 +5,7 @@ namespace App\Message;
 /**
  * Message dispatched to trigger the winner generation for a specific competition.
  */
-class WinnerTriggerMessage
+class WinnerTriggerMessage extends AbstractMessage
 {
     private int $competitionId;
 
@@ -18,4 +18,6 @@ class WinnerTriggerMessage
     {
         return $this->competitionId;
     }
+
+    // TODO: Winners Count?
 }

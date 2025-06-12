@@ -1,0 +1,5 @@
+celery==5.3.6
+redis==5.0.0
+psycopg2-binary==2.9.9 # PSQL
+python-dotenv==1.0.1 
+# SQLAlchemy==2.0.30
