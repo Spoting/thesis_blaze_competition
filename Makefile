@@ -21,7 +21,7 @@ SYMFONY  = $(PHP) bin/console
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help build up start down logs composer vendor sf cc test
+.PHONY        : help build up start down logs composer vendor sf cc test worker-logs shell
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -40,27 +40,29 @@ up: ## Start the docker hub in detached mode (no logs)
 down: ## Stop the docker hub
 	@$(DOCKER_COMP) down --remove-orphans
 
-# sh: ## Connect to the FrankenPHP container
-# 	@$(PHP_CONT) sh
-
 php-bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
 	@$(PHP_CONT) bash
 
-test: ## Start tests with phpunit, pass the parameter "c=" to add options to phpunit, example: make test c="--group e2e --stop-on-failure"
+test: ## Start tests with phpunit, pass the parameter "c=" to add options. example: make test c="--group e2e --stop-on-failure"
 	@$(eval c ?=)
 	@$(DOCKER_COMP) exec -e APP_ENV=test php bin/phpunit $(c)
 
-
-logs: ## Show live logs. You can add argument for specific container
+logs: ## Show live logs. You can add argument(s) for specific container(s)
 	@$(DOCKER_COMP) logs --tail=30 --follow $(filter-out $@,$(MAKECMDGOALS))
+
+worker-logs: ## Show live logs for workers
+	@$(DOCKER_COMP) logs --tail=30 --follow worker_submission_normal worker_competition_winner_generation worker_submission_premium
 
 shell: ## Connect to specified container ( bash )
 	@$(eval CONTAINER_TO_CONNECT = $(filter-out $@,$(MAKECMDGOALS)))
 	@if [ "$(CONTAINER_TO_CONNECT)" = "php" ]; then \
 		$(DOCKER_COMP) exec -u appuser $(CONTAINER_TO_CONNECT) /bin/bash; \
+	elif [ "$(CONTAINER_TO_CONNECT)" = "database" ]; then \
+		$(DOCKER_COMP) exec $(CONTAINER_TO_CONNECT) psql -h localhost -p 5432 -U app -d app; \
 	else \
 		$(DOCKER_COMP) exec $(CONTAINER_TO_CONNECT) /bin/bash; \
 	fi
+
 
 ## —— Composer 🧙 ——————————————————————————————————————————————————————————————
 composer: ## Run composer, pass the parameter "c=" to run a given command, example: make composer c='req symfony/orm-pack'
