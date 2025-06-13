@@ -2,6 +2,10 @@ from .celery import app
 import time
 import datetime
 import json
+# from . import config
+from . import db_helper
+from . import redis_helper
+
 
 @app.task(bind=True)
 def process_normal_submission(self, payload_json: str):
@@ -14,6 +18,11 @@ def process_normal_submission(self, payload_json: str):
         print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
               f"Processing normal submission {submission_id} with data: '{payload}'")
         time.sleep(2)
+        
+        query = f"select * from competition LIMIT 1;"
+        result = db_helper.execute_db_query(query, fetch_one=True)
+        print(f"DB Query Result: {result}")
+        
         print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
               f"Finished normal submission {submission_id}")
         return f"Normal submission {submission_id} processed successfully."
@@ -49,6 +58,13 @@ def trigger_winner_generation(self, payload_json: str):
         print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
               f"Triggering winner generation for competition {competition_id} (Delayed Task)")
         time.sleep(3)
+        
+        # --- Redis Usage Example ---
+        redis_key = f"count_competition_submittions_{competition_id}"
+        count = redis_helper.get_key(redis_key)
+        print(f"[{datetime.datetime.now()}] {redis_key} : {count} in Redis.")
+
+        
         print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
               f"Winner generation completed for competition {competition_id}")
         return f"Winner generation for competition {competition_id} triggered successfully."
