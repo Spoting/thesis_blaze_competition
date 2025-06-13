@@ -1,12 +1,13 @@
 framework:
     messenger:
         # failure_transport: failed
-        serializer:
-            default_serializer: App\Messenger\CelerySerializer
+        # serializer:
+        #     default_serializer: App\Messenger\CelerySerializer
 
         transports:
             submission_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                serializer: App\Messenger\CelerySerializer
                 options:
                     exchange:
                         name: submission_exchange
@@ -21,6 +22,7 @@ framework:
 
             winner_trigger_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
                         name: delayed_winner_exchange

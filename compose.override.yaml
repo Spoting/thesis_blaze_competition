@@ -13,8 +13,6 @@ services:
       #- /app/vendor
       - ./frankenphp/certs:/etc/caddy/certs:ro
     environment:
-      SERVER_NAME: symfony.localhost
-      # , php:443
       CADDY_SERVER_EXTRA_DIRECTIVES: "tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key"
       FRANKENPHP_WORKER_CONFIG: watch
       MERCURE_EXTRA_DIRECTIVES: demo
@@ -23,7 +21,6 @@ services:
       APP_ENV: "${APP_ENV:-dev}"
       # CADDY_GLOBAL_OPTIONS: "auto_https off"
     extra_hosts:
-      # Ensure that host.docker.internal is correctly defined on Linux
       - host.docker.internal:host-gateway
     tty: true
 
