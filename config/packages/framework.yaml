@@ -3,13 +3,16 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
+        
     ## To fix Mercure Issue (?)
     http_client:
         default_options:
             verify_peer: false
     #esi: true
     #fragments: true
+
 
 when@test:
     framework:
