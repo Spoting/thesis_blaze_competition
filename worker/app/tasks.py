@@ -48,26 +48,26 @@ def process_premium_submission(self, payload_json: str):
         print(f"[{datetime.datetime.now()}] Error processing premium submission: {e}")
         raise self.retry(exc=e, countdown=10, max_retries=5)
 
-@app.task(bind=True)
-def trigger_winner_generation(self, payload_json: str):
-    """Triggers winner generation for a competition."""
-    try:
-        payload = json.loads(payload_json)
-        competition_id = payload.get("competitionId")
+# @app.task(bind=True)
+# def trigger_winner_generation(self, payload_json: str):
+#     """Triggers winner generation for a competition."""
+#     try:
+#         payload = json.loads(payload_json)
+#         competition_id = payload.get("competitionId")
 
-        print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
-              f"Triggering winner generation for competition {competition_id} (Delayed Task)")
-        time.sleep(3)
+#         print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
+#               f"Triggering winner generation for competition {competition_id} (Delayed Task)")
+#         time.sleep(3)
         
-        # --- Redis Usage Example ---
-        redis_key = f"count_competition_submittions_{competition_id}"
-        count = redis_helper.get_key(redis_key)
-        print(f"[{datetime.datetime.now()}] {redis_key} : {count} in Redis.")
+#         # --- Redis Usage Example ---
+#         redis_key = f"count_competition_submittions_{competition_id}"
+#         count = redis_helper.get_key(redis_key)
+#         print(f"[{datetime.datetime.now()}] {redis_key} : {count} in Redis.")
 
         
-        print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
-              f"Winner generation completed for competition {competition_id}")
-        return f"Winner generation for competition {competition_id} triggered successfully."
-    except Exception as e:
-        print(f"[{datetime.datetime.now()}] Error triggering winner generation: {e}")
-        raise self.retry(exc=e, countdown=15, max_retries=3)
+#         print(f"[{datetime.datetime.now()}] Worker {self.request.hostname} - "
+#               f"Winner generation completed for competition {competition_id}")
+#         return f"Winner generation for competition {competition_id} triggered successfully."
+#     except Exception as e:
+#         print(f"[{datetime.datetime.now()}] Error triggering winner generation: {e}")
+#         raise self.retry(exc=e, countdown=15, max_retries=3)
