@@ -18,7 +18,6 @@ class WinnerTriggerMessageHandler
         // For example:
         // $this->winnerService->generateWinners($competitionId);
 
-        // Just a debug log or dump for demo:
         dump(sprintf('Winner generation triggered for competition: %s', $competitionId));
     }
 }

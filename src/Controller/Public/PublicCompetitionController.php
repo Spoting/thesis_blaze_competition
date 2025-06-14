@@ -8,6 +8,7 @@ use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
 use App\Message\CompetitionSubmittionMessage;
 use App\Message\WinnerTriggerMessage;
+use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,13 +23,16 @@ class PublicCompetitionController extends AbstractController
 {
     private MessageBusInterface $messageBus;
     private RedisManager $redisManager;
+    private RedisKeyBuilder $redisKeyBuilder;
 
     public function __construct(
         MessageBusInterface $messageBus,
         RedisManager $redisManager,
+        RedisKeyBuilder $redisKeyBuilder,
     ) {
         $this->messageBus = $messageBus;
         $this->redisManager = $redisManager;
+        $this->redisKeyBuilder = $redisKeyBuilder;
     }
 
     #[Route('/', name: 'public_competitions', methods: ['GET'])]
@@ -89,10 +93,8 @@ class PublicCompetitionController extends AbstractController
             unset($formFields['phoneNumber']);
 
             // Check if this a new Submission ( from Redis )
-            $submissionKey = CompetitionConstants::REDIS_PREFIX_SUBMISSION_KEY . md5("$competition_id-$email-$phoneNumber");
+            $submissionKey = $this->redisKeyBuilder->getCompetitionSubmissionKey($competition_id, $email, $phoneNumber);
             $newSubmission = false;
-
-
             if (!$this->redisManager->getValue($submissionKey)) {
                 $now = new \DateTimeImmutable();
                 $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
@@ -137,13 +139,12 @@ class PublicCompetitionController extends AbstractController
                     ]
                 );
 
-                $total_count = $this->redisManager->incrementValue(CompetitionConstants::REDIS_PREFIX_COUNT_SUBMITTIONS . $competition_id);
+                $count_key = $this->redisKeyBuilder->getCompetitionCountKey($competition_id);
+                $total_count = $this->redisManager->incrementValue($count_key);
 
-                // $this->addFlash('success', 'Your submission has been received!');
-                $message = 'Your submission has been received! ' . $total_count;
+                $this->addFlash('success', 'Your submission has been received!' . $total_count);
             } else {
-                // $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
-                $message = 'Your submission is ALREADY been received! Chill...';
+                $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
             }
             // return $this->redirectToRoute('public_competitions');
         }
@@ -151,7 +152,6 @@ class PublicCompetitionController extends AbstractController
         return $this->render('public/submit_form.html.twig', [
             'competition' => $competition,
             'form' => $form->createView(),
-            'message' => $message,
         ]);
     }
 
