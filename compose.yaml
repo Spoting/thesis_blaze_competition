@@ -10,6 +10,7 @@ services:
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       # Run "composer require symfony/orm-pack" to install and configure Doctrine ORM
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
+      RUN_MIGRATIONS: true
       # Run "composer require symfony/mercure-bundle" to install and configure the Mercure integration
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
       # REDIS_HOST: redis
@@ -73,7 +74,7 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
-      start_period: 10s # Gives RabbitMQ a grace period to start up initially
+      start_period: 5s
     # volumes:
     #   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
@@ -177,6 +178,7 @@ services:
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
+      RUN_MIGRATIONS: false
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
       MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
@@ -187,16 +189,21 @@ services:
       # - caddy_config:/config
       - .:/srv/app
     depends_on:
-      - redis
-      - rabbitmq
-      - database
-      - php
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      php:
+        condition: service_started
     command: php bin/console messenger:consume winner_trigger_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
     healthcheck:
       test: ["CMD", "php", "bin/console", "about"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s
 
 
 

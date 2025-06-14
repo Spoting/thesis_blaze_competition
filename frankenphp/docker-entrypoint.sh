@@ -52,9 +52,15 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 			echo 'The database is now ready and reachable'
 		fi
 
-		if [ "$( find ./migrations -iname '*.php' -print -quit )" ]; then
-			php bin/console doctrine:migrations:migrate --no-interaction --all-or-nothing
+		if [ "$RUN_MIGRATIONS" = "true" ]; then
+		    echo "RUN_MIGRATIONS is set. Checking for migrations..."
+			if [ "$( find ./migrations -iname '*.php' -print -quit )" ]; then
+				php bin/console doctrine:migrations:migrate --no-interaction --all-or-nothing
+			fi
+		else
+    		echo "RUN_MIGRATIONS is not set or is empty. Skipping migrations."
 		fi
+		
 	fi
 
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
