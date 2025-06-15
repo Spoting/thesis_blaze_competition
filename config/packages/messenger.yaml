@@ -27,8 +27,8 @@ framework:
                     exchange:
                         name: delayed_winner_exchange
                         type: x-delayed-message
-                        # arguments:
-                        #     x-delayed-type: direct
+                        arguments:
+                            x-delayed-type: direct
                     queues:
                         competition_winner_generation_queue:
                             binding_keys: [winner_trigger]

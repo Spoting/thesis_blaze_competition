@@ -97,6 +97,7 @@ services:
     #   - redis_data:/data
 
   worker_submission_normal:
+    scale: 2
     build:
       context: ./worker
       dockerfile: Dockerfile
@@ -200,8 +201,8 @@ services:
     command: php bin/console messenger:consume winner_trigger_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
     healthcheck:
       test: ["CMD", "php", "bin/console", "about"]
-      interval: 30s
-      timeout: 10s
+      interval: 3s
+      timeout: 15s
       retries: 3
       start_period: 15s
 
