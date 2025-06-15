@@ -147,6 +147,11 @@ services:
     volumes:
       - ./worker:/usr/src
 
+  # worker_celery:
+  #   build:
+  #     context: ./worker
+  #     dockerfile: Dockerfile
+
   # worker_competition_winner_generation:
   #   build:
   #     context: ./worker
@@ -173,9 +178,13 @@ services:
   #     - ./worker:/usr/src
 
   worker_competition_winner_generation:
-    image: ${IMAGES_PREFIX:-}app-php
+    image: ${IMAGES_PREFIX:-}app-php-worker
+    build:
+      context: .
+      target: frankenphp_dev
     restart: unless-stopped
     environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost} #, php:80 
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
@@ -184,11 +193,10 @@ services:
       MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-    working_dir: /srv/app
+    # working_dir: /srv/app
     volumes:
-      # - caddy_data:/data
-      # - caddy_config:/config
-      - .:/srv/app
+      - ./:/app
+      - /app/var/
     depends_on:
       redis:
         condition: service_started
@@ -206,6 +214,44 @@ services:
       retries: 3
       start_period: 15s
 
+
+  worker_email:
+    image: ${IMAGES_PREFIX:-}app-php-worker
+    build:
+      context: .
+      target: frankenphp_dev
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost} #, php:80
+      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
+      RUN_MIGRATIONS: false
+      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
+      MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
+      MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
+      MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+    # working_dir: /srv/app
+    volumes:
+      - ./:/app
+      - /app/var/
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      php:
+        condition: service_started
+    command: php bin/console messenger:consume email_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
+    healthcheck:
+      test: ["CMD", "php", "bin/console", "about"]
+      interval: 3s
+      timeout: 15s
+      retries: 3
+      start_period: 15s
+  # https://github.com/k-37/dolphin-is-symfony-ddd-experiment/
 
 
 volumes:

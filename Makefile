@@ -51,7 +51,7 @@ logs: ## Show live logs. You can add argument(s) for specific container(s)
 	@$(DOCKER_COMP) logs --tail=30 --follow $(filter-out $@,$(MAKECMDGOALS))
 
 worker-logs: ## Show live logs for workers
-	@$(DOCKER_COMP) logs --tail=30 --follow worker_submission_normal worker_competition_winner_generation worker_submission_premium
+	@$(DOCKER_COMP) logs --tail=30 --follow worker_submission_normal worker_competition_winner_generation worker_submission_premium worker_email
 
 shell: ## Connect to specified container ( bash )
 	@$(eval CONTAINER_TO_CONNECT = $(filter-out $@,$(MAKECMDGOALS)))
