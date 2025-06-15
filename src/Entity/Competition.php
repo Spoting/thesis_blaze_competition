@@ -190,17 +190,17 @@ class Competition
         return $this;
     }
 
-    // public function getTotalSubmissions(): ?int
-    // {
-    //     return $this->totalSubmissions;
-    // }
+   
+    // TODO: 
+// Competition Status:
 
-    // public function setTotalSubmissions(int $totalSubmissions): static
-    // {
-    //     $this->totalSubmissions = $totalSubmissions;
+// - Scheduled
+// - Running
+// - Submissions_Ended
+// - Winner_Announced
+// - Archived
+// - Cancelled
 
-    //     return $this;
-    // }
 
     /**
      * @ORM\PrePersist

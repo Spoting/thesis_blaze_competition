@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Submission Successful!{% endblock %}
+
+{% block body %}
+    <div class="container text-center mt-5">
+        <h1 class="display-4 text-success">Submission Confirmed!</h1>
+        <p class="lead">Thank you for verifying your email. Your entry has been successfully recorded.</p>
+        <p>You can now close this page.</p>
+        {# Optionally, add a link back to the homepage or competition details #}
+        {# <a href="{{ path('app_homepage') }}" class="btn btn-primary mt-3">Go to Homepage</a> #}
+    </div>
+{% endblock %}

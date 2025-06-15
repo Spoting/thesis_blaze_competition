@@ -1,13 +1,11 @@
 <?php
 
-// src/Controller/Public/PublicCompetitionController.php
 namespace App\Controller\Public;
 
 use App\Constants\CompetitionConstants;
 use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
-use App\Message\CompetitionSubmittionMessage;
-use App\Message\WinnerTriggerMessage;
+use App\Message\SendVerificationEmailMessage;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,7 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Component\Uid\Factory\UuidFactory;
+// use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class PublicCompetitionController extends AbstractController
 {
@@ -69,7 +68,7 @@ class PublicCompetitionController extends AbstractController
     }
 
     #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
-    public function handleSubmitForm(Competition $competition, Request $request): Response
+    public function handleSubmitForm(Competition $competition, Request $request, UuidFactory $uuidFactory): Response
     {
         $this->validateCompetition($competition);
 
@@ -80,72 +79,95 @@ class PublicCompetitionController extends AbstractController
 
         $form->handleRequest($request);
 
-
         $message = '';
         if ($form->isSubmitted() && $form->isValid()) {
             $formData = $form->getData();
             // Extract Data
-            $competition_id = $competition->getId();
-            $email = $formData['email'] ?? '';
+            $competitionId = $competition->getId();
+            $receiverEmail = $formData['email'] ?? '';
             $phoneNumber = $formData['phoneNumber'] ?? '';
             $formFields = $formData;
             unset($formFields['email']);
             unset($formFields['phoneNumber']);
 
+
+
             // Check if this a new Submission ( from Redis )
-            $submissionKey = $this->redisKeyBuilder->getCompetitionSubmissionKey($competition_id, $email, $phoneNumber);
-            $newSubmission = false;
-            if (!$this->redisManager->getValue($submissionKey)) {
-                $now = new \DateTimeImmutable();
-                $timeRemaining = $competition->getEndDate()->getTimestamp() - $now->getTimestamp();
-                $this->redisManager->setValue($submissionKey, true, $timeRemaining);
-                $newSubmission = true;
+            $submissionKey = $this->redisKeyBuilder->getCompetitionSubmissionKey($competitionId, $receiverEmail);
+            $submissionKeyData = $this->redisManager->getValue($submissionKey);
+            $submissionKeyData = json_decode($submissionKeyData, true);
+            // User Already Submitted form. Either he is pending email approval or already confirmed.
+            if (!empty($submissionKeyData)) {
+                if ($submissionKeyData['status'] == RedisKeyBuilder::VERIFICATION_PENDING_VALUE) {
+                    $this->addFlash('warning', 'You have recently attempted to submit for this competition. Please check your email for a verification link.');
+                } else {
+                    $this->addFlash('warning', 'Your submission is ALREADY been received and verified! Chill while we process it...');
+                }
+                return $this->render('public/submit_form.html.twig', [
+                    'competition' => $competition,
+                    'form' => $form->createView(),
+                ]);
             }
 
-            if ($newSubmission) {
-                // Identify Priority
-                $priorityKey = $this->identifyPriorityKey($competition);
-                // Produce Message to RabbitMQ 
-                $message = new CompetitionSubmittionMessage($formFields, $competition_id, $email, $phoneNumber);
+            // return $this->redirectToRoute('public_competition_submit');
+            try {
+                // Set the initial submission key with a short TTL (for pending verification)
+                $newSubmissionKeyData = [
+                    'competition_id' => $competitionId,
+                    'status' => 'pending_verification',
+                    'formData' => $formData, // Store all form data for later processing
+                    'competition_ended_at' => $competition->getEndDate()->getTimestamp(),
+                ];
+                $this->redisManager->setValue($submissionKey, json_encode($newSubmissionKeyData), RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS);
+
+
+                // Generate Verification Token.
+                $verificationToken = $uuidFactory->create()->toRfc4122();
+                $emailTokenExpirationDateTime = (new \DateTimeImmutable())
+                    ->modify('+' . RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS . ' seconds');
+
+                //  Store a new key Token to Redis
+                $verificationData = [
+                    'email' => $receiverEmail,
+                    'competition_id' => $competitionId,
+                    // 'created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+                    'email_token_expires_at' => $emailTokenExpirationDateTime->getTimestamp(),
+                    // 'competition_ends_at' => $competition->getEndDate()->getTimestamp(),
+                ];
+                $verificationKey = $this->redisKeyBuilder->getVerificationTokenKey($verificationToken);
+                $this->redisManager->setValue($verificationKey, json_encode($verificationData), RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS);
+
+
+                
+                // Send the email and token to the verification_email queue.
+                $emailTokenExpirationString = $emailTokenExpirationDateTime->format('Y-m-d H:i:s');
+                $message = new SendVerificationEmailMessage(
+                    $verificationToken,
+                    $receiverEmail,
+                    $emailTokenExpirationString,
+                );
                 $this->messageBus->dispatch(
                     $message,
                     [new AmqpStamp(
-                        CompetitionConstants::AMPQ_ROUTING['normal_submission'],
+                        CompetitionConstants::AMPQ_ROUTING['email_verification'],
                         attributes: [
-                            'priority' => $priorityKey,
                             'content_type' => 'application/json',
                             'content_encoding' => 'utf-8',
                         ]
                     )]
                 );
 
-                // Create the message object that will be dispatched.
-                $message = new WinnerTriggerMessage($competition->getId());
+                $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
+                return $this->redirectToRoute('app_verification_form', ['email' => $receiverEmail]);
 
-                $amqpStamp = new AmqpStamp(
-                    CompetitionConstants::AMPQ_ROUTING['winner_trigger'],
-                    attributes: [
-                        'headers' => ['x-delay' => 20000],
-                        'content_type' => 'application/json',
-                        'content_encoding' => 'utf-8',
-                    ]
-                );
-                // Dispatch the message with the AmqpStamp to add the x-delay header.
-                // The AmqpStamp constructor: new AmqpStamp(string $routingKey = null, int $priority = null, array $headers = [])
-                $this->messageBus->dispatch(
-                    $message,
-                    [
-                        $amqpStamp
-                    ]
-                );
-
-                $count_key = $this->redisKeyBuilder->getCompetitionCountKey($competition_id);
-                $total_count = $this->redisManager->incrementValue($count_key);
-
-                $this->addFlash('success', 'Your submission has been received!' . $total_count);
-            } else {
-                $this->addFlash('error', 'Your submission is ALREADY been received! Chill...');
+            } catch (\Exception $e) {
+                // $this->logger->error(sprintf('Error during initial form submission for email %s: %s', $receiverEmail, $e->getMessage()));
+                $this->addFlash('error', 'An error occurred during submission. Please try again.' . $e->getMessage());
+                // If Error happened remove Keys from Redis
+                $this->redisManager->deleteKey($submissionKey);
+                $this->redisManager->deleteKey($verificationKey);
             }
+
             // return $this->redirectToRoute('public_competitions');
         }
 
@@ -162,28 +184,6 @@ class PublicCompetitionController extends AbstractController
             || $competition->getEndDate() < new \DateTimeImmutable()
         ) {
             throw $this->createNotFoundException('Competition not found or has ended.');
-        }
-    }
-
-    // TODO: 
-    private function identifyPriorityKey(Competition $competition)
-    {
-        $now = new \DateTimeImmutable();
-        $endDate = $competition->getEndDate();
-        $timeRemainingSeconds = $endDate->getTimestamp() - $now->getTimestamp();
-
-        // Map time remaining to a 0-10 priority scale (adjust values and tiers as needed)
-        // Ensure this aligns with the 'x-max-priority' set in messenger.yaml
-        if ($timeRemainingSeconds <= 3600) { // Less than 1 hour
-            return 10;
-        } elseif ($timeRemainingSeconds <= 21600) { // Less than 6 hours
-            return 8;
-        } elseif ($timeRemainingSeconds <= 86400) { // Less than 1 day
-            return 5;
-        } elseif ($timeRemainingSeconds <= 259200) { // Less than 3 days
-            return 3;
-        } else {
-            return 1; // Default low priority for competitions far in the future
         }
     }
 }

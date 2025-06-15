@@ -8,5 +8,6 @@ class CompetitionConstants
         'normal_submission' => 'normal_submission',
         'premium_submission' => 'premium_submission',
         'winner_trigger' => 'winner_trigger',
+        'email_verification' => 'email_verification'
     ];
 }
