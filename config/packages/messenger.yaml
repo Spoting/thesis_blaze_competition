@@ -32,6 +32,16 @@ framework:
                     queues:
                         competition_winner_generation_queue:
                             binding_keys: [winner_trigger]
+            
+            email_amqp:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: email_exchange
+                        type: direct
+                    queues:
+                        email_verification_queue:
+                            binding_keys: [email_verification]
 
             # --- AMQP Alternative for Failed Messages ---
             # Define a separate DSN for the failed transport, pointing to your RabbitMQ.
@@ -42,6 +52,8 @@ framework:
             # Route your messages to the transports
             App\Message\CompetitionSubmittionMessage: submission_amqp
             App\Message\WinnerTriggerMessage: winner_trigger_amqp
+            App\Message\SendVerificationEmailMessage: email_amqp
+
 # when@test:
 #    framework:
 #        messenger:

@@ -20,6 +20,13 @@ WINNER_TRIGGER_QUEUES=(
     "competition_winner_generation_queue:winner_trigger"
 )
 
+# --- Email Configuration ---
+EMAIL_EXCHANGE_NAME="email_exchange"
+EMAIL_QUEUES=(
+    "email_verification_queue:email_verification"
+)
+
+
 # --- Wait for RabbitMQ Management Plugin to be Ready ---
 echo "--- Waiting for RabbitMQ management plugin on ${RABBITMQ_HOST}:${RABBITMQ_PORT} to be ready ---"
 until rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" -q list exchanges > /dev/null 2>&1; do
@@ -67,3 +74,21 @@ for Q_DEF in "${WINNER_TRIGGER_QUEUES[@]}"; do
 done
 
 echo "--- RabbitMQ topology setup complete ---"
+
+
+###### Email Verification #######
+echo "Declaring email exchange: ${EMAIL_EXCHANGE_NAME} (type: direct, durable: true)"
+rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
+    declare exchange name="${EMAIL_EXCHANGE_NAME}" type=direct durable=true || true
+
+for Q_DEF in "${EMAIL_QUEUES[@]}"; do
+    IFS=':' read -r QUEUE_NAME ROUTING_KEY <<< "$Q_DEF"
+
+    echo "Declaring queue: ${QUEUE_NAME} (durable: true)"
+    rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
+        declare queue name="${QUEUE_NAME}" durable=true || true
+
+    echo "Binding queue '${QUEUE_NAME}' to exchange '${EMAIL_EXCHANGE_NAME}' with routing key '${ROUTING_KEY}'"
+    rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
+        declare binding source="${EMAIL_EXCHANGE_NAME}" destination="${QUEUE_NAME}" destination_type=queue routing_key="${ROUTING_KEY}" || true
+done
