@@ -61,7 +61,7 @@ class PublicCompetitionController extends AbstractController
         ]);
 
 
-        $response->setPublic();
+        // $response->setPublic();
         // $response->setMaxAge(3600);
         // $response->setSharedMaxAge(3600);
 
