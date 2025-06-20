@@ -5,7 +5,7 @@ namespace App\Controller\Public;
 use App\Constants\CompetitionConstants;
 use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
-use App\Message\SendVerificationEmailMessage;
+use App\Message\VerificationEmailMessage;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -59,7 +59,6 @@ class PublicCompetitionController extends AbstractController
             'competitions' => $competitions,
         ]);
 
-
         // $response->setPublic();
         // $response->setMaxAge(3600);
         // $response->setSharedMaxAge(3600);
@@ -85,12 +84,8 @@ class PublicCompetitionController extends AbstractController
             // Extract Data
             $competitionId = $competition->getId();
             $receiverEmail = $formData['email'] ?? '';
-            $phoneNumber = $formData['phoneNumber'] ?? '';
             $formFields = $formData;
             unset($formFields['email']);
-            unset($formFields['phoneNumber']);
-
-
 
             // Check if this a new Submission ( from Redis )
             $submissionKey = $this->redisKeyBuilder->getCompetitionSubmissionKey($competitionId, $receiverEmail);
@@ -120,7 +115,6 @@ class PublicCompetitionController extends AbstractController
                 ];
                 $this->redisManager->setValue($submissionKey, json_encode($newSubmissionKeyData), RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS);
 
-
                 // Generate Verification Token.
                 $verificationToken = $uuidFactory->create()->toRfc4122();
                 $emailTokenExpirationDateTime = (new \DateTimeImmutable())
@@ -141,7 +135,7 @@ class PublicCompetitionController extends AbstractController
                 
                 // Send the email and token to the verification_email queue.
                 $emailTokenExpirationString = $emailTokenExpirationDateTime->format('Y-m-d H:i:s');
-                $message = new SendVerificationEmailMessage(
+                $message = new VerificationEmailMessage(
                     $verificationToken,
                     $receiverEmail,
                     $emailTokenExpirationString,
@@ -162,7 +156,7 @@ class PublicCompetitionController extends AbstractController
 
             } catch (\Exception $e) {
                 // $this->logger->error(sprintf('Error during initial form submission for email %s: %s', $receiverEmail, $e->getMessage()));
-                $this->addFlash('error', 'An error occurred during submission. Please try again.' . $e->getMessage());
+                $this->addFlash('error', 'An error occurred during submission. Please try again. ' . $e->getMessage());
                 // If Error happened remove Keys from Redis
                 $this->redisManager->deleteKey($submissionKey);
                 $this->redisManager->deleteKey($verificationKey);

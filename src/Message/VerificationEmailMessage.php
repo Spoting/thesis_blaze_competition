@@ -2,17 +2,17 @@
 
 namespace App\Message;
 
-class SendVerificationEmailMessage
+final class VerificationEmailMessage
 {
     private string $verificationToken;
-    private string $email;
+    private string $recipientEmail;
     private string $expiration;
     // private array $formData;
 
-    public function __construct(string $verificationToken, string $email, string $expiration)
+    public function __construct(string $verificationToken, string $recipientEmail, string $expiration)
     {
         $this->verificationToken = $verificationToken;
-        $this->email = $email;
+        $this->recipientEmail = $recipientEmail;
         $this->expiration = $expiration;
     }
 
@@ -21,9 +21,9 @@ class SendVerificationEmailMessage
         return $this->verificationToken;
     }
 
-    public function getEmail(): string
+    public function getRecipientEmail(): string
     {
-        return $this->email;
+        return $this->recipientEmail;
     }
 
     public function getExpiration(): string

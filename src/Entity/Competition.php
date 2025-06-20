@@ -193,7 +193,7 @@ class Competition
    
     // TODO: 
 // Competition Status:
-
+// Also add X-Delay Messages for Updating Competition Status???
 // - Scheduled
 // - Running
 // - Submissions_Ended

@@ -6,7 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Constants\CompetitionConstants;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
-use App\Form\VerificationTokenType;
+use App\Form\Public\VerificationTokenType;
 use App\Message\CompetitionSubmittionMessage;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -90,13 +90,14 @@ class VerificationController extends AbstractController
             // Identify Priority of Message
             $priorityKey = $this->identifyPriorityKey($competition_ended_at);
 
+            // TODO: 
 
             // Produce Message to RabbitMQ 
             $message = new CompetitionSubmittionMessage($submissionFormFields, $competition_id, $email);
             $this->messageBus->dispatch(
                 $message,
                 [new AmqpStamp(
-                    CompetitionConstants::AMPQ_ROUTING['normal_submission'],
+                    CompetitionConstants::AMPQ_ROUTING['high_priority_submission'],
                     attributes: [
                         'priority' => $priorityKey,
                         'content_type' => 'application/json',

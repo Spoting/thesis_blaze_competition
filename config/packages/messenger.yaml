@@ -7,34 +7,42 @@ framework:
         transports:
             submission_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
-                serializer: App\Messenger\CelerySerializer
+                # Celery Seriliazer
+                # serializer: App\Messenger\CelerySerializer
+                serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
                         name: submission_exchange
                         type: direct
                     queues:
-                        submission_normal_queue:
-                            binding_keys: [normal_submission]
+                        submission_low_priority_queue:
+                            binding_keys: [low_priority_submission]
                             arguments: { "x-max-priority": "%app.messenger.max_priority%" }
-                        submission_premium_queue:
-                            binding_keys: [premium_submission]
+                        submission_high_priority_queue:
+                            binding_keys: [high_priority_submission]
                             arguments: { "x-max-priority": "%app.messenger.max_priority%" }
-
-            winner_trigger_amqp:
+                        # submission_premium_queue:
+                        #     binding_keys: [premium_submission]
+                        #     arguments: { "x-max-priority": "%app.messenger.max_priority%" }
+            
+            competition_status_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
-                        name: delayed_winner_exchange
+                        name: delayed_competition_status_exchange
                         type: x-delayed-message
                         arguments:
                             x-delayed-type: direct
                     queues:
+                        competition_status_queue:
+                            binding_keys: [competition_status]
                         competition_winner_generation_queue:
                             binding_keys: [winner_trigger]
             
             email_amqp:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
                         name: email_exchange
@@ -42,6 +50,22 @@ framework:
                     queues:
                         email_verification_queue:
                             binding_keys: [email_verification]
+                        email_notification_queue:
+                            binding_keys: [email_notification]
+
+            
+            # winner_trigger_amqp:
+            #     dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+            #     serializer: messenger.transport.symfony_serializer
+            #     options:
+            #         exchange:
+            #             name: delayed_winner_exchange
+            #             type: x-delayed-message
+            #             arguments:
+            #                 x-delayed-type: direct
+            #         queues:
+            #             competition_winner_generation_queue:
+            #                 binding_keys: [winner_trigger]
 
             # --- AMQP Alternative for Failed Messages ---
             # Define a separate DSN for the failed transport, pointing to your RabbitMQ.
@@ -51,8 +75,10 @@ framework:
         routing:
             # Route your messages to the transports
             App\Message\CompetitionSubmittionMessage: submission_amqp
-            App\Message\WinnerTriggerMessage: winner_trigger_amqp
-            App\Message\SendVerificationEmailMessage: email_amqp
+            App\Message\WinnerTriggerMessage: competition_status_amqp
+            App\Message\CompetitionUpdateStatusMessage: competition_status_amqp
+            App\Message\VerificationEmailMessage: email_amqp
+            App\Message\EmailNotificationMessage: email_amqp
 
 # when@test:
 #    framework:

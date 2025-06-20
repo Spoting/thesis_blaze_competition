@@ -2,8 +2,7 @@
 
 namespace App\MessageHandler;
 
-use App\Message\SendVerificationEmailMessage;
-use App\Repository\UserRepository;
+use App\Message\VerificationEmailMessage;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -11,29 +10,29 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Psr\Log\LoggerInterface;
 
 #[AsMessageHandler]
-class SendVerificationEmailMessageHandler
+class VerificationEmailMessageHandler
 {
     public function __construct(
         private MailerInterface $mailer,
         private UrlGeneratorInterface $router,
     ) {}
 
-    public function __invoke(SendVerificationEmailMessage $message): void
+    public function __invoke(VerificationEmailMessage $message): void
     {
-        dump('Attempting to sent Email ' . $message->getEmail());
+        dump('Attempting to sent Email ' . $message->getRecipientEmail());
 
         $verificationUrl = $this->router->generate(
-            'app_verification_form', // Target route is the main verification form
+            'app_verification_form', 
             [
-                'email' => $message->getEmail(), // This fills the {email} path parameter
-                'token' => $message->getVerificationToken(), // This becomes a ?token= query parameter
+                'email' => $message->getRecipientEmail(),
+                'token' => $message->getVerificationToken(),
             ],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
         $email = (new TemplatedEmail())
             ->from('noreply@your-domain.com')
-            ->to($message->getEmail())
+            ->to($message->getRecipientEmail())
             ->subject('Please Verify Your Submission')
             ->htmlTemplate('emails/verification_email.html.twig')
             ->context([
@@ -44,7 +43,7 @@ class SendVerificationEmailMessageHandler
 
         $this->mailer->send($email);
 
-        dump('Sent Email for ' . $message->getEmail());
+        dump('Sent Email for ' . $message->getRecipientEmail());
     }
 }
 
