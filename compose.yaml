@@ -3,27 +3,29 @@ services:
     image: ${IMAGES_PREFIX:-}app-php
     restart: unless-stopped
     environment:
-      SERVER_NAME: ${SERVER_NAME:-localhost} #, php:80
+      SERVER_NAME: ${SERVER_NAME:-localhost} # , php:80
       SYMFONY_VERSION: ${SYMFONY_VERSION:-}
       STABILITY: ${STABILITY:-stable}
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      # Run "composer require symfony/orm-pack" to install and configure Doctrine ORM
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
       RUN_MIGRATIONS: true
-      # Run "composer require symfony/mercure-bundle" to install and configure the Mercure integration
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
       # REDIS_HOST: redis
       # REDIS_PORT: 6379
       MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      # The two next lines can be removed after initial installation
     volumes:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
     ports:
       # HTTP
       - target: 80
@@ -61,7 +63,7 @@ services:
       # - ./docker/db/data:/var/lib/postgresql/data:rw
 ###< doctrine/doctrine-bundle ###
 
-  rabbitmq:
+  rabbitmq: # TODO: change latest
     image: heidiks/rabbitmq-delayed-message-exchange:latest
     ports:
       - "5672:5672" # AMQP port
@@ -88,6 +90,9 @@ services:
       - ./rabbitmq/rabbitmq_topology.sh:/usr/local/bin/rabbitmq_topology.sh:ro
     command: /usr/local/bin/rabbitmq_topology.sh
   
+  ## Maybe Add 2 Instances of Redis?
+  ## 1 for Cache
+  ## 1 for Functionality Keys that will have Persistence 
   redis:
     image: redis:7-alpine
     restart: always
@@ -95,72 +100,107 @@ services:
       - "6379:6379"
     # volumes:
     #   - redis_data:/data
-
-  worker_submission_normal:
-    scale: 2
+ 
+  # https://github.com/k-37/dolphin-is-symfony-ddd-experiment/ 
+  php_worker_submission_low_priority:
+    image: ${IMAGES_PREFIX:-}app-php-worker-submission-low-priority
     build:
-      context: ./worker
-      dockerfile: Dockerfile
-    command: >
-      celery -A app.celery worker
-      -Q submission_normal_queue
-      -l info
-      --concurrency=2
-      --prefetch-multiplier=1
-    # environment:
-    #   RABBITMQ_HOST: rabbitmq
-    #   REDIS_HOST: redis
-    #   POSTGRES_HOST: database
-    #   POSTGRES_DB: ${POSTGRES_DB:-app}
-    #   POSTGRES_USER: ${POSTGRES_USER:-app}
-    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-    depends_on:
-      - rabbitmq
-      - database
-      - redis
-      - rabbitmq_topology
+      context: .
+      target: frankenphp_dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
+      RUN_MIGRATIONS: false
+      # MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      # MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
+      # MERCURE_URL: ${CADDY_MERCURE_URL:-http://symfony.localhost:80/.well-known/mercure}
+      # MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
+      MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
     volumes:
-      - ./worker:/usr/src
-
-  worker_submission_premium:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile
-    command: >
-      celery -A app.celery worker
-      -Q submission_premium_queue
-      -l info
-      --concurrency=1
-      --prefetch-multiplier=1
-    # environment:
-    #   RABBITMQ_HOST: rabbitmq
-    #   REDIS_HOST: redis
-    #   POSTGRES_HOST: database
-    #   POSTGRES_DB: ${POSTGRES_DB:-app}
-    #   POSTGRES_USER: ${POSTGRES_USER:-app}
-    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      - ./:/app
+      - /app/var/
     depends_on:
-      - rabbitmq
-      - database
-      - redis
-      - rabbitmq_topology
-    volumes:
-      - ./worker:/usr/src
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      php:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "php", "bin/console", "about"]
+      interval: 3s
+      timeout: 15s
+      retries: 3
+      start_period: 15s
+    command: php bin/console messenger:consume submission_amqp --queues=submission_low_priority_queue --verbose --limit=100 --time-limit=3600 --memory-limit=128M
 
-  # worker_celery:
+  php_worker_submission_high_priority:
+    scale: 3
+    extends:
+      php_worker_submission_low_priority
+    image: ${IMAGES_PREFIX:-}app-php-worker-submission-high-priority
+    command: php bin/console messenger:consume submission_amqp --queues=submission_high_priority_queue --verbose --limit=100 --time-limit=3600 --memory-limit=128M
+
+  php_worker_competition_status:
+    extends:
+      php_worker_submission_low_priority
+    image: ${IMAGES_PREFIX:-}app-php-worker-competition-status
+    command: php bin/console messenger:consume competition_status_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
+
+  php_worker_email:
+    extends:
+      php_worker_submission_low_priority
+    image: ${IMAGES_PREFIX:-}app-php-worker-email
+    command: php bin/console messenger:consume email_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
+
+
+  # php_worker_base:
+  #   image: ${IMAGES_PREFIX:-}app-php-worker
   #   build:
-  #     context: ./worker
-  #     dockerfile: Dockerfile
+  #     context: .
+  #     target: frankenphp_dev
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
+  #     RUN_MIGRATIONS: false
+  #     # MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+  #     # MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+  #     # MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
+  #     # MERCURE_URL: ${CADDY_MERCURE_URL:-http://symfony.localhost:80/.well-known/mercure}
+  #     # MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
+  #     # MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+  #   volumes:
+  #     - ./:/app
+  #     - /app/var/
+  #   depends_on:
+  #     redis:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     database:
+  #       condition: service_healthy
+  #     php:
+  #       condition: service_started
+  #   healthcheck:
+  #     test: ["CMD", "php", "bin/console", "about"]
+  #     interval: 3s
+  #     timeout: 15s
+  #     retries: 3
+  #     start_period: 15s
 
-  # worker_competition_winner_generation:
+  # worker_submission_normal:
+  #   scale: 2
   #   build:
   #     context: ./worker
   #     dockerfile: Dockerfile
   #   command: >
   #     celery -A app.celery worker
-  #     -Q competition_winner_generation_queue
+  #     -Q submission_normal_queue
   #     -l info
-  #     --concurrency=1
+  #     --concurrency=2
   #     --prefetch-multiplier=1
   #   # environment:
   #   #   RABBITMQ_HOST: rabbitmq
@@ -177,81 +217,10 @@ services:
   #   volumes:
   #     - ./worker:/usr/src
 
-  worker_competition_winner_generation:
-    image: ${IMAGES_PREFIX:-}app-php-worker
-    build:
-      context: .
-      target: frankenphp_dev
-    restart: unless-stopped
-    environment:
-      SERVER_NAME: ${SERVER_NAME:-localhost} #, php:80 
-      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
-      RUN_MIGRATIONS: false
-      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
-      MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
-      MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
-      MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-    # working_dir: /srv/app
-    volumes:
-      - ./:/app
-      - /app/var/
-    depends_on:
-      redis:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-      database:
-        condition: service_healthy
-      php:
-        condition: service_started
-    command: php bin/console messenger:consume winner_trigger_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
-    healthcheck:
-      test: ["CMD", "php", "bin/console", "about"]
-      interval: 3s
-      timeout: 15s
-      retries: 3
-      start_period: 15s
-
-
-  worker_email:
-    image: ${IMAGES_PREFIX:-}app-php-worker
-    build:
-      context: .
-      target: frankenphp_dev
-    restart: unless-stopped
-    environment:
-      SERVER_NAME: ${SERVER_NAME:-localhost} #, php:80
-      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
-      RUN_MIGRATIONS: false
-      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
-      MERCURE_URL: ${CADDY_MERCURE_URL:-https://symfony.localhost:443/.well-known/mercure}
-      MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
-      MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-    # working_dir: /srv/app
-    volumes:
-      - ./:/app
-      - /app/var/
-    depends_on:
-      redis:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-      database:
-        condition: service_healthy
-      php:
-        condition: service_started
-    command: php bin/console messenger:consume email_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
-    healthcheck:
-      test: ["CMD", "php", "bin/console", "about"]
-      interval: 3s
-      timeout: 15s
-      retries: 3
-      start_period: 15s
-  # https://github.com/k-37/dolphin-is-symfony-ddd-experiment/
+  # worker_celery:
+  #   build:
+  #     context: ./worker
+  #     dockerfile: Dockerfile
 
 
 volumes:
