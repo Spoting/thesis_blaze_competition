@@ -12,11 +12,6 @@ class RedisKeyBuilder
     public const VERIFICATION_PENDING_VALUE = 'pending_verification';
     public const VERIFICATION_TOKEN_TTL_SECONDS = 120;
 
-    public function __construct()
-    {
-        // TODO: Convert Consts to Enviromentals so Celery can actually use them and to convert .env variables as common topology
-    }
-
     public function getCompetitionCountKey(int $competitionId): string
     {
         return sprintf(self::COMPETITION_COUNT_KEY, $competitionId);
@@ -24,7 +19,6 @@ class RedisKeyBuilder
 
     public function getCompetitionSubmissionKey(int $competitionId, string $email): string
     {
-        // Removed from the Uniqueness $phoneNumber.
         $hash = md5($competitionId . '-' . $email);
 
         return sprintf(self::COMPETITION_SUBMISSION_KEY, $competitionId, $hash);

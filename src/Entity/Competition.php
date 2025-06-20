@@ -46,7 +46,17 @@ class Competition
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 
-    // private ?int $totalSubmissions = null;
+    #[ORM\Column(length: 50)]
+    private string $status;
+
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $numberOfWinners;
+
+    public function __construct()
+    {
+        $this->status = self::STATUSES['draft'];
+        $this->numberOfWinners = 1;
+    }
 
     public const DEFAULT_FORM_FIELDS = [
         'email' => [
@@ -59,6 +69,17 @@ class Competition
             'name' => 'phoneNumber',
             'label' => 'Phone Number'
         ],
+    ];
+
+    public const STATUSES = [
+        'draft' => 'Draft',
+        'scheduled' => 'Scheduled',
+        'running' => 'Running',
+        'submissions_ended' => 'Submissions Ended',
+        'winners_generated' => 'Winners Generated',
+        'winners_announced' => 'Winners Announced',
+        'archived' => 'Archived',
+        'cancelled' => 'Cancelled',
     ];
 
     public function getId(): ?int
@@ -190,17 +211,32 @@ class Competition
         return $this;
     }
 
-   
-    // TODO: 
-// Competition Status:
-// Also add X-Delay Messages for Updating Competition Status???
-// - Scheduled
-// - Running
-// - Submissions_Ended
-// - Winner_Announced
-// - Archived
-// - Cancelled
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
 
+    public function setStatus(string $status): static
+    {
+        if (!key_exists($status, self::STATUSES)) {
+            throw new \InvalidArgumentException(sprintf('Invalid status: "%s". Must be one of: %s', $status, implode(', ', self::STATUSES)));
+        }
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getNumberOfWinners(): ?int
+    {
+        return $this->numberOfWinners;
+    }
+
+    public function setNumberOfWinners(int $numberOfWinners): static
+    {
+        $this->numberOfWinners = $numberOfWinners;
+
+        return $this;
+    }
 
     /**
      * @ORM\PrePersist

@@ -14,6 +14,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -34,10 +35,11 @@ class CompetitionCrudController extends AbstractCrudController
         yield TextField::new('title', 'Competition Name');
         yield TextareaField::new('description')->hideOnIndex();
         yield TextareaField::new('prizes')->setHelp('Describe the prizes for this competition.')->hideOnIndex();
-        yield IntegerField::new('maxParticipants');
+        yield IntegerField::new('numberOfWinners')->setLabel('Number of Winners');
+        // yield IntegerField::new('maxParticipants');
         yield DateTimeField::new('startDate')->setLabel('Submission Start');
         yield DateTimeField::new('endDate')->setLabel('Submission Deadline')
-         ->setFormTypeOptions([
+            ->setFormTypeOptions([
                 'constraints' => [
                     new \Symfony\Component\Validator\Constraints\GreaterThanOrEqual([
                         'propertyPath' => 'parent.all[startDate].data',
@@ -56,6 +58,29 @@ class CompetitionCrudController extends AbstractCrudController
             ->renderExpanded()
             ->setHelp('Define the fields for the public submission form. Default email and phone fields are pre-filled for new competitions (you can modify or remove them).')
             ->onlyOnForms();
+
+
+
+        $statuses = Competition::STATUSES;
+        yield ChoiceField::new('status')
+            ->setChoices(array_flip($statuses))
+            ->setLabel('Status')
+            ->renderAsNativeWidget(true)
+            ->setFormTypeOptions([
+                'choice_attr' => function ($choice, $key, $value) {
+                    // TODO: Add conditions for allowing Status to be setted.
+
+                    if(!$this->isGranted('ROLE_MANAGER_ADMIN')) {
+                        if (!in_array($key, ['cancelled'])) {
+                            return ['disabled' => 'disabled'];
+                        }
+                    }
+
+                    // For other options, return an empty array or no attributes
+                    return [];
+                },
+            ]);
+
 
         yield AssociationField::new('createdBy')->setPermission('ROLE_MANAGER_ADMIN');
         yield DateTimeField::new('createdAt')->onlyOnIndex();

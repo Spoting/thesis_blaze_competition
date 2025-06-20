@@ -5,9 +5,11 @@ namespace App\Constants;
 class CompetitionConstants
 {
     public const AMPQ_ROUTING = [
-        'normal_submission' => 'normal_submission',
-        'premium_submission' => 'premium_submission',
+        'low_priority_submission' => 'low_priority_submission',
+        'high_priority_submission' => 'high_priority_submission',
         'winner_trigger' => 'winner_trigger',
-        'email_verification' => 'email_verification'
+        'competition_status' => 'competition_status',
+        'email_verification' => 'email_verification',
+        'email_notification' => 'email_notification',
     ];
 }
