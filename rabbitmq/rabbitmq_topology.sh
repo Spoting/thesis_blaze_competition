@@ -9,14 +9,16 @@ RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
 # --- Submissions Configuration ---
 SUBMISSION_EXCHANGE_NAME="submission_exchange"
 SUBMISSION_QUEUES=( # Each entry is "QUEUE_NAME:ROUTING_KEY"
-    "submission_normal_queue:normal_submission"
-    "submission_premium_queue:premium_submission"
+    "submission_low_priority_queue:low_priority_submission"
+    "submission_high_priority_queue:high_priority_submission"
 )
-MAX_PRIORITY=10
 
-# --- Winner Trigger Configuration ---
-DELAYED_EXCHANGE_NAME="delayed_winner_exchange" # For x-delay functionality
-WINNER_TRIGGER_QUEUES=(
+MAX_PRIORITY=${MAX_PRIORITY:-10}
+
+# --- Winner Trigger and Competition Status Configuration ---
+DELAYED_EXCHANGE_NAME="delayed_competition_status_exchange" # For x-delay functionality
+COMPETITION_STATUS_QUEUES=(
+    "competition_status_queue:competition_status"
     "competition_winner_generation_queue:winner_trigger"
 )
 
@@ -24,6 +26,7 @@ WINNER_TRIGGER_QUEUES=(
 EMAIL_EXCHANGE_NAME="email_exchange"
 EMAIL_QUEUES=(
     "email_verification_queue:email_verification"
+    "email_notification_queue:email_notification"
 )
 
 
@@ -54,17 +57,17 @@ for Q_DEF in "${SUBMISSION_QUEUES[@]}"; do
         declare binding source="${SUBMISSION_EXCHANGE_NAME}" destination="${QUEUE_NAME}" destination_type=queue routing_key="${ROUTING_KEY}" || true
 done
 
-###### Winner Trigger #######
+###### Winner Trigger and Competition Status #######
 
 echo "Declaring Delayed Exchange: ${DELAYED_EXCHANGE_NAME} (type: x-delayed-message, durable: true)"
 rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
     declare exchange name="${DELAYED_EXCHANGE_NAME}" type=x-delayed-message durable=true arguments='{"x-delayed-type": "direct"}' || true
 
-# Loop through all winner trigger queues and declare + bind them
-for Q_DEF in "${WINNER_TRIGGER_QUEUES[@]}"; do
+# Loop through all competition status queues and declare + bind them
+for Q_DEF in "${COMPETITION_STATUS_QUEUES[@]}"; do
     IFS=':' read -r QUEUE_NAME ROUTING_KEY <<< "$Q_DEF"
 
-    echo "Declaring Winner Trigger Queue: ${QUEUE_NAME} (durable: true)"
+    echo "Declaring Competition Status/Winner Trigger Queue: ${QUEUE_NAME} (durable: true)"
     rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
         declare queue name="${QUEUE_NAME}" durable=true || true
 
@@ -72,9 +75,6 @@ for Q_DEF in "${WINNER_TRIGGER_QUEUES[@]}"; do
     rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
         declare binding source="${DELAYED_EXCHANGE_NAME}" destination="${QUEUE_NAME}" destination_type=queue routing_key="${ROUTING_KEY}" || true
 done
-
-echo "--- RabbitMQ topology setup complete ---"
-
 
 ###### Email Verification #######
 echo "Declaring email exchange: ${EMAIL_EXCHANGE_NAME} (type: direct, durable: true)"
@@ -92,3 +92,5 @@ for Q_DEF in "${EMAIL_QUEUES[@]}"; do
     rabbitmqadmin -H "${RABBITMQ_HOST}" -P "${RABBITMQ_PORT}" -u "${RABBITMQ_USER}" -p "${RABBITMQ_PASS}" \
         declare binding source="${EMAIL_EXCHANGE_NAME}" destination="${QUEUE_NAME}" destination_type=queue routing_key="${ROUTING_KEY}" || true
 done
+
+echo "--- RabbitMQ topology setup complete ---"
