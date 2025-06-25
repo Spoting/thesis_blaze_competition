@@ -10,37 +10,56 @@ with [FrankenPHP](https://frankenphp.dev) and [Caddy](https://caddyserver.com/) 
 
 ## Installation
 - Build Containers 
+
 ```make build-clean```
+
+- Initialize Permissions
+
+```make fix-perms```
+
 - Setup Custom SSL 
+
 ```mkcert -cert-file frankenphp/certs/tls.pem -key-file frankenphp/certs/tls.key "symfony.localhost"```
 - Trust Custom SSL 
+
 ```mkcert -install```
 - GOTO: https://symfony.localhost
 
 ## General Info
 
-- Start / Stop Project
+### Start / Stop Project
 ```
 make down; make up
 ```
 
-- Exec in PHP container:
+### Exec in PHP container:
 ```
 make php-bash
 ```
 
-- Exec in DB container:
+### Exec in DB container:
 ```
 make shell database
 ```
 
-- PSQL:
-Show tables:
+### Logs of specific Container ( or no parameter for all containers):
+```
+make logs php
+```
+
+### Worker(s) Logs :
+```
+make worker-logs
+```
+
+### PSQL:
+- Show tables:
 ```
 \d
 ```
+- Query like usual ```SELECT * FROM table;```
 
-- Services local url:
+### Services local url:
 ```
 Mailer:
 http://localhost:8026/
@@ -56,12 +75,12 @@ guest
 ```
 
 
-- Load Database with test data. 
+### Load Database with test data. 
 ```
 php bin/console doctrine:fixtures:load
 ```
 
-- Admin Login
+### Admin Login
 ```
 https://symfony.localhost/login
 
@@ -69,25 +88,24 @@ admin@symfony.com
 1234
 ```
 
-
-- Tailwind CSS 
-    - Build CSS : ```
-php bin/console tailwind:build --watch ```
-    - If there is Permission Error do below 
-    ```
-    docker compose exec php /bin/bash
-    php bin/console tailwind:build
-    exit
-    make fix-perms
-
-
-- You can check Worker Logs by :
+### Tailwind CSS 
+- Build CSS : 
 ```
-make worker-logs
+php bin/console tailwind:build --watch 
+```
+- If there is Permission Error do below 
+```
+docker compose exec php /bin/bash
+php bin/console tailwind:build
+exit
+make fix-perms
 ```
 
-- !!!! Do not use `die;` in code. Please just dont. It will require a restart
+## !!!! Do not use `die;` in code. Please just dont. It will require a restart
 
+---
+---
+---
 
 # Original Repository README notes(https://github.com/dunglas/symfony-docker)
 
