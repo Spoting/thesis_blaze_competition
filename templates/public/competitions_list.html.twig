@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Available Competitions
+{% endblock %}
+
+{% block body %}
+	<div class="container mx-auto p-4 font-sans antialiased">
+		<h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">Available Competitions</h1>
+
+		{# Tab Navigation #}
+		<div class="flex flex-wrap justify-center gap-2 mb-8 border-b border-gray-200 pb-2" id="competition-tabs">
+			{% for status in publicStatuses %}
+				{# Set the first tab as active by default #}
+				{% set isActive = loop.first %}
+
+				<button
+					data-status="{{ status }}" class="tab-button flex items-center px-4 py-2 rounded-t-lg text-sm font-medium transition-colors duration-300
+						                        {{ isActive ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700' }}">
+					{# Use statusLabels passed from the controller #}
+					{{ statusLabels[status]|default(status)|capitalize }}
+					{# Display count of competitions in this status #}
+					(<span id="count-{{ status }}">{{ (competitionsByStatus[status]|length) }}</span>)
+				</button>
+			{% endfor %}
+		</div>
+
+		{# Competition Lists by Status #}
+		<div id="competition-content">
+
+			{% for status in publicStatuses %}
+
+				{# Show the content for the first active tab, hide others #}
+				{% set isActive = loop.first %}
+
+				<div
+					id="competitions-{{ status }}" class="status-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 {{ isActive ? '' : 'hidden' }}" data-status-container="{{ status }}" {# Custom data attribute to identify the container by status #}>
+					{# Sorting dropdown #}
+					<div class="col-span-full flex justify-end mb-4">
+						<select class="sort-select border px-2 py-1 rounded text-sm text-gray-700" data-sort-status="{{ status }}">
+							<option value="start-asc">Start Date ↑</option>
+							<option value="start-desc">Start Date ↓</option>
+							<option value="end-asc">End Date ↑</option>
+							<option value="end-desc">End Date ↓</option>
+						</select>
+					</div>
+					{# Display a message if no competitions are found for this status #}
+					{% if competitionsByStatus[status] is empty %}
+						<p class="col-span-full text-center text-gray-600 text-lg py-8 no-competitions-message">
+							No competitions currently in the "{{ statusLabels[status]|default(status)|capitalize }}" status.
+						</p>
+					{% else %}
+						{# Loop through and include the competition item partial for each competition #}
+						{% for competition in competitionsByStatus[status] %}
+							<div
+								class="competition-card-wrapper" 
+                                id="competition-card-wrapper-{{ competition.id }}"
+                                data-start-date="{{ competition.startDate|date('Y-m-d') }}"
+                                data-end-date="{{ competition.endDate|date('Y-m-d') }}"
+                            >
+								{% include 'public/_competition_teaser.html.twig' with {
+                                    'competition': competition,
+                                    'statusLabels': statusLabels,
+                                    'showSubmitButton': true
+                                } %}
+							</div>
+						{% endfor %}
+					{% endif %}
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+{% endblock %}
+
+
+{% block javascripts %}
+	{{ parent() }}
+
+	<script type="module">
+		import {initializeCompetitionList} from './assets/js/competition-list.js';
+
+const mercurePublicUrl = "{{ mercure_public_url }}";
+const publicStatuses = {{ publicStatuses|json_encode()|raw }};
+const statusLabels = {{ statusLabels|json_encode()|raw }};
+
+initializeCompetitionList(mercurePublicUrl, publicStatuses, statusLabels);
+	</script>
+{% endblock %}

@@ -1,11 +1,63 @@
-<div id="competition-{{ competition.id }}">
-<h2>{{ competition.title }}</h2>
-<p>Έπαθλα: {{ competition.prizes }}</p>
-<p>Λήξη συμμετοχών: {{ competition.endDate|date('d/m/Y H:i') }}</p>
-{# {% if competition.totalSubmissions %}
-    <p>Τρέχων αριθμός συμμετοχών: {{ competition.totalSubmissions }}</p>
-{% endif %} #}
-{% if competition.maxParticipants %}
-    <p>Μέγιστος αριθμός συμμετοχών: {{ competition.maxParticipants }}</p>
-{% endif %}
+{# templates/public/_competition_item.html.twig #}
+{#
+    This partial renders the full detailed view of a competition.
+    It expects the following variables:
+    - competition: The Competition entity object to display.
+    - statusLabels: An array/map of status keys to their human-readable labels.
+#}
+<div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+    {# Using competition.title #}
+    <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ competition.title }}</h2>
+
+    <div class="flex items-center text-md text-gray-600 mb-4">
+        {# Dynamic Font Awesome Icon #}
+        {% set statusIconClass = '' %}
+        {% if competition.status == 'scheduled' %}
+            {% set statusIconClass = 'fa-solid fa-calendar-alt' %}
+        {% elseif competition.status == 'running' %}
+            {% set statusIconClass = 'fa-solid fa-play-circle' %}
+        {% elseif competition.status == 'submissions_ended' %}
+            {% set statusIconClass = 'fa-solid fa-hourglass-end' %}
+        {% elseif competition.status == 'winners_announced' %}
+            {% set statusIconClass = 'fa-solid fa-trophy' %}
+        {% elseif competition.status == 'archived' %}
+            {% set statusIconClass = 'fa-solid fa-box-archive' %}
+        {% elseif competition.status == 'cancelled' %}
+            {% set statusIconClass = 'fa-solid fa-circle-xmark' %}
+        {% endif %}
+
+        {% if statusIconClass %}
+            <i class="{{ statusIconClass }} text-blue-500 mr-2"></i>
+        {% endif %}
+        <span>Status: <span class="font-medium capitalize">{{ statusLabels[competition.status]|default(competition.status)|capitalize }}</span></span>
+    </div>
+
+    {# Full Description #}
+    {% if competition.description is not empty %}
+        <h4 class="font-bold text-lg mt-4 mb-2 text-gray-800">Description:</h4>
+        <div class="text-gray-700 leading-relaxed mb-6">{{ competition.description|raw }}</div> {# Assuming description might contain HTML #}
+    {% endif %}
+
+    {# Prizes #}
+    {% if competition.prizes is not empty %}
+        <h4 class="font-bold text-lg mt-4 mb-2 text-gray-800">Prizes:</h4>
+        <div class="text-gray-700 leading-relaxed mb-6">{{ competition.prizes|raw }}</div> {# Assuming prizes might contain HTML #}
+    {% endif %}
+
+    {# Dates #}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
+            <div>
+                <p class="font-bold">Starts:</p>
+                <p>{{ competition.startDate|date('M d, Y H:i') }}</p>
+            </div>
+            <div>
+                <p class="font-bold">Ends:</p>
+                <p>{{ competition.endDate|date('M d, Y H:i') }}</p>
+            </div>
+    </div>
+
+    {# Number of Winners #}
+        <p class="text-gray-700 mt-4"><strong>Number of Winners:</strong> {{ competition.numberOfWinners }}</p>
+
+    {# You might add more detailed fields here if they become relevant, e.g., rules, eligibility, etc. #}
 </div>

@@ -45,7 +45,6 @@ class SubmissionType extends AbstractType
 
             
         }
-
         $builder->add('submit', SubmitType::class, ['label' => 'Υποβολή Συμμετοχής']);
     }
 

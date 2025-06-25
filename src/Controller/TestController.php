@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Constants\CompetitionConstants;
+use App\Constants\AppConstants;
 use App\Message\CompetitionSubmittionMessage;
 use App\Message\CompetitionUpdateStatusMessage;
 use App\Message\EmailNotificationMessage;
@@ -66,8 +66,6 @@ class TestController extends AbstractController
             $this->generateCompetitionSubmissionMessage($i, $status);
         }
 
-        dump($status);
-
         return new Response(json_encode($status, JSON_PRETTY_PRINT));
     }
 
@@ -99,7 +97,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                CompetitionConstants::AMPQ_ROUTING['email_verification'],
+                AppConstants::AMPQ_ROUTING['email_verification'],
                 attributes: [
                     'content_type' => 'application/json',
                     'content_encoding' => 'utf-8',
@@ -126,7 +124,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                CompetitionConstants::AMPQ_ROUTING['email_notification'],
+                AppConstants::AMPQ_ROUTING['email_notification'],
                 attributes: [
                     'content_type' => 'application/json',
                     'content_encoding' => 'utf-8',
@@ -144,11 +142,11 @@ class TestController extends AbstractController
         $priorityKey = rand(0, 5);
 
         if ($priorityKey == 0) {
-            $queue = CompetitionConstants::AMPQ_ROUTING['low_priority_submission'];
+            $queue = AppConstants::AMPQ_ROUTING['low_priority_submission'];
             $mock['low_priority'][$i] = $priorityKey;
         } else {
             $message_attributes['priority'] = $priorityKey;
-            $queue = CompetitionConstants::AMPQ_ROUTING['high_priority_submission'];
+            $queue = AppConstants::AMPQ_ROUTING['high_priority_submission'];
             $mock['high_priority'][$i] = $priorityKey;
         }
 
@@ -177,7 +175,7 @@ class TestController extends AbstractController
         ];
 
         if ($target_status == 'submissions_ended') {
-            $x_delay = 60000;
+            $x_delay = 10000;
         } elseif ($target_status == 'running') {
             $x_delay = 5000;
         }
@@ -190,7 +188,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                CompetitionConstants::AMPQ_ROUTING['competition_status'],
+                AppConstants::AMPQ_ROUTING['competition_status'],
                 attributes: $message_attributes
             )]
         );
@@ -202,19 +200,17 @@ class TestController extends AbstractController
             'content_type' => 'application/json',
             'content_encoding' => 'utf-8',
         ];
-        $x_delay = 120000;    
+        $x_delay = 12000;    
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
         $message = new WinnerTriggerMessage(
             10, new \DateTime()->format('Y-m-d H:i:s'), $x_delay
         );
 
-        dump($message);
-
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                CompetitionConstants::AMPQ_ROUTING['winner_trigger'],
+                AppConstants::AMPQ_ROUTING['winner_trigger'],
                 attributes: $message_attributes
             )]
         );

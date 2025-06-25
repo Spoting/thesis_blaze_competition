@@ -17,6 +17,10 @@ psql -h 127.0.0.1 -p 5432 -U app -d app
 # Rows of Table
 \dt <table>
 
+
+## 
+php bin/console doctrine:migrations:migrate
+
 ## Query by Symfony
 php bin/console doctrine:query:sql 'SELECT * from "user"'
 

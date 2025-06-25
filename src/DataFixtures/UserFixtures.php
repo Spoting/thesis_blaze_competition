@@ -11,7 +11,6 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class UserFixtures extends Fixture implements FixtureGroupInterface
 {
     private UserPasswordHasherInterface $passwordHasher;
-
     
     // Define role constants for clarity and reusability
     public const ROLE_COMPETITION_MANAGER = 'ROLE_COMPETITION_MANAGER';
@@ -44,9 +43,9 @@ class UserFixtures extends Fixture implements FixtureGroupInterface
                 )
             );
             $obj_manager->persist($competitionManager);
+            $this->addReference('user_competition_manager_' . $i, $competitionManager);
         }
         // You can add a reference if you need this user in other fixtures
-        $this->addReference('user_competition_manager', $competitionManager);
 
         // 2. Manager Admin
         for ($i = 1; $i < 3; $i++) {
@@ -61,8 +60,8 @@ class UserFixtures extends Fixture implements FixtureGroupInterface
                 )
             );
             $obj_manager->persist($managerAdmin);
+            $this->addReference('user_manager_admin_' . $i, $managerAdmin);
         }
-        $this->addReference('user_manager_admin', $managerAdmin);
 
         // 3. Admin (Super Admin)
         $adminUser = new User();

@@ -3,7 +3,7 @@
 namespace App\Controller\Public;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Constants\CompetitionConstants;
+use App\Constants\AppConstants;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use App\Form\Public\VerificationTokenType;
@@ -64,8 +64,6 @@ class VerificationController extends AbstractController
             // Remove the verification token from Redis
             $this->redisManager->deleteKey($verificationKey);
 
-
-
             // Fetch Stored Data from Submission Key
             $submissionKey = $this->redisKeyBuilder->getCompetitionSubmissionKey($verificationData['competition_id'], $verificationData['email']);
             $submissionKeyData = $this->redisManager->getValue($submissionKey);
@@ -97,7 +95,7 @@ class VerificationController extends AbstractController
             $this->messageBus->dispatch(
                 $message,
                 [new AmqpStamp(
-                    CompetitionConstants::AMPQ_ROUTING['high_priority_submission'],
+                    AppConstants::AMPQ_ROUTING['high_priority_submission'],
                     attributes: [
                         'priority' => $priorityKey,
                         'content_type' => 'application/json',

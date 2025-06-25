@@ -16,6 +16,21 @@ class CompetitionRepository extends ServiceEntityRepository
         parent::__construct($registry, Competition::class);
     }
 
+    /**
+     * Retrieves competitions that are in the given public statuses.
+     *
+     * @param array $publicStatuses An array of statuses considered public (e.g., ['scheduled', 'running']).
+     * @return Competition[] Returns an array of Competition objects.
+     */
+    public function findByPublicStatuses(array $publicStatuses): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.status IN (:publicStatuses)')
+            ->setParameter('publicStatuses', $publicStatuses)
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Competition[] Returns an array of Competition objects
     //     */

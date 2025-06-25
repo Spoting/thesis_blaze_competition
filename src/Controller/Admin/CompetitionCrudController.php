@@ -33,10 +33,26 @@ class CompetitionCrudController extends AbstractCrudController
     {
         yield IdField::new('id')->hideOnForm();
         yield TextField::new('title', 'Competition Name');
-        yield TextareaField::new('description')->hideOnIndex();
-        yield TextareaField::new('prizes')->setHelp('Describe the prizes for this competition.')->hideOnIndex();
-        yield IntegerField::new('numberOfWinners')->setLabel('Number of Winners');
-        // yield IntegerField::new('maxParticipants');
+        $statuses = Competition::STATUSES;
+        yield ChoiceField::new('status')
+            ->setChoices(array_flip($statuses))
+            ->setLabel('Status')
+            ->renderAsNativeWidget(true)
+            ->setFormTypeOptions([
+                'choice_attr' => function ($choice, $key, $value) {
+                    // TODO: Add conditions for allowing Status to be setted.
+
+                    if (!$this->isGranted('ROLE_MANAGER_ADMIN')) {
+                        if (!in_array($key, ['cancelled'])) {
+                            return ['disabled' => 'disabled'];
+                        }
+                    }
+
+                    // For other options, return an empty array or no attributes
+                    return [];
+                },
+            ]);
+
         yield DateTimeField::new('startDate')->setLabel('Submission Start');
         yield DateTimeField::new('endDate')->setLabel('Submission Deadline')
             ->setFormTypeOptions([
@@ -47,6 +63,10 @@ class CompetitionCrudController extends AbstractCrudController
                     ]),
                 ],
             ]);
+        yield TextareaField::new('description')->hideOnIndex();
+        yield TextareaField::new('prizes')->setHelp('Describe the prizes for this competition.')->hideOnIndex();
+        yield IntegerField::new('numberOfWinners')->setLabel('Number of Winners');
+        // yield IntegerField::new('maxParticipants');
 
         yield CollectionField::new('formFields', 'Competition Form Fields')
             ->setEntryType(CompetitionFormFieldType::class)
@@ -61,25 +81,7 @@ class CompetitionCrudController extends AbstractCrudController
 
 
 
-        $statuses = Competition::STATUSES;
-        yield ChoiceField::new('status')
-            ->setChoices(array_flip($statuses))
-            ->setLabel('Status')
-            ->renderAsNativeWidget(true)
-            ->setFormTypeOptions([
-                'choice_attr' => function ($choice, $key, $value) {
-                    // TODO: Add conditions for allowing Status to be setted.
 
-                    if(!$this->isGranted('ROLE_MANAGER_ADMIN')) {
-                        if (!in_array($key, ['cancelled'])) {
-                            return ['disabled' => 'disabled'];
-                        }
-                    }
-
-                    // For other options, return an empty array or no attributes
-                    return [];
-                },
-            ]);
 
 
         yield AssociationField::new('createdBy')->setPermission('ROLE_MANAGER_ADMIN');

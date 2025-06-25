@@ -37,6 +37,8 @@ class CompetitionSubscriber
         if (!$entity instanceof Competition) {
             return;
         }
+
+        $this->mercure->publishCompetitionUpdate($entity);
         // $this->cache->delete('all_competitions');
     }
 }

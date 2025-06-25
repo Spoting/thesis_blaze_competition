@@ -2,10 +2,11 @@
 
 namespace App\Controller\Public;
 
-use App\Constants\CompetitionConstants;
+use App\Constants\AppConstants;
 use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
 use App\Message\VerificationEmailMessage;
+use App\Repository\CompetitionRepository;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -34,36 +35,32 @@ class PublicCompetitionController extends AbstractController
         $this->redisKeyBuilder = $redisKeyBuilder;
     }
 
-    #[Route('/', name: 'public_competitions', methods: ['GET'])]
-    public function index(EntityManagerInterface $entityManager): Response
+    #[Route('/', name: 'public_competitions_list', methods: ['GET'])]
+    public function public_competition_list(CompetitionRepository $competitionRepository): Response
     {
-        // cache:pool:clear
-        // $resultCache = $entityManager->getConfiguration()->getResultCache();
-        // $resultCache->deleteItem('competition_list_current');
+        $publicStatuses = Competition::PUBLIC_STATUSES;
 
-        // TODO: move functionality inside Repository
-        $now = new \DateTimeImmutable();
-        $competitions = $entityManager->getRepository(Competition::class)
-            ->createQueryBuilder('c')
-            // ->where('c.startDate <= :now')
-            // ->andWhere('c.endDate > :now')
-            // ->setParameter('now', $now)
-            ->orderBy('c.endDate', 'ASC')
-            // ->setMaxResults(1)
-            ->getQuery()
-            // ->enableResultCache()
-            // ->setResultCacheId('competition_list_current')
-            ->getResult();
+        // Fetch Public Competitions
+        $competitions = $competitionRepository->findByPublicStatuses($publicStatuses);
 
-        $response = $this->render('public/competitions.html.twig', [
-            'competitions' => $competitions,
+        // Group competitions by their status
+        $competitionsByStatus = [];
+        foreach ($publicStatuses as $status) {
+            $competitionsByStatus[$status] = [];
+        }
+
+        // Populate with fetched competitions
+        foreach ($competitions as $competition) {
+            if (in_array($competition->getStatus(), $publicStatuses)) {
+                $competitionsByStatus[$competition->getStatus()][] = $competition;
+            }
+        }
+
+        return $this->render('public/competitions_list.html.twig', [
+            'competitionsByStatus' => $competitionsByStatus,
+            'publicStatuses' => $publicStatuses,
+            'statusLabels' => Competition::STATUSES,
         ]);
-
-        // $response->setPublic();
-        // $response->setMaxAge(3600);
-        // $response->setSharedMaxAge(3600);
-
-        return $response;
     }
 
     #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
@@ -132,7 +129,7 @@ class PublicCompetitionController extends AbstractController
                 $this->redisManager->setValue($verificationKey, json_encode($verificationData), RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS);
 
 
-                
+
                 // Send the email and token to the verification_email queue.
                 $emailTokenExpirationString = $emailTokenExpirationDateTime->format('Y-m-d H:i:s');
                 $message = new VerificationEmailMessage(
@@ -143,7 +140,7 @@ class PublicCompetitionController extends AbstractController
                 $this->messageBus->dispatch(
                     $message,
                     [new AmqpStamp(
-                        CompetitionConstants::AMPQ_ROUTING['email_verification'],
+                        AppConstants::AMPQ_ROUTING['email_verification'],
                         attributes: [
                             'content_type' => 'application/json',
                             'content_encoding' => 'utf-8',
@@ -153,7 +150,6 @@ class PublicCompetitionController extends AbstractController
 
                 $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
                 return $this->redirectToRoute('app_verification_form', ['email' => $receiverEmail]);
-
             } catch (\Exception $e) {
                 // $this->logger->error(sprintf('Error during initial form submission for email %s: %s', $receiverEmail, $e->getMessage()));
                 $this->addFlash('error', 'An error occurred during submission. Please try again. ' . $e->getMessage());
@@ -168,6 +164,7 @@ class PublicCompetitionController extends AbstractController
         return $this->render('public/submit_form.html.twig', [
             'competition' => $competition,
             'form' => $form->createView(),
+            'statusLabels' => Competition::STATUSES,
         ]);
     }
 

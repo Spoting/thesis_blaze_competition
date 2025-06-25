@@ -2,7 +2,7 @@
 
 namespace App\Constants;
 
-class CompetitionConstants
+class AppConstants
 {
     public const AMPQ_ROUTING = [
         'low_priority_submission' => 'low_priority_submission',

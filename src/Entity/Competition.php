@@ -42,7 +42,7 @@ class Competition
     #[ORM\Column]
     private ?\DateTime $updatedAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'competitions')]
+    #[ORM\ManyToOne(inversedBy: 'competitions')] # Lazy
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 
@@ -56,6 +56,7 @@ class Competition
     {
         $this->status = self::STATUSES['draft'];
         $this->numberOfWinners = 1;
+        $this->maxParticipants = 10000; # Not Used
     }
 
     public const DEFAULT_FORM_FIELDS = [
@@ -80,6 +81,15 @@ class Competition
         'winners_announced' => 'Winners Announced',
         'archived' => 'Archived',
         'cancelled' => 'Cancelled',
+    ];
+    
+    public const PUBLIC_STATUSES = [
+        'scheduled',
+        'running',
+        'submissions_ended',
+        'winners_announced',
+        'archived',
+        'cancelled',
     ];
 
     public function getId(): ?int
