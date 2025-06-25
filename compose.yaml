@@ -3,7 +3,7 @@ services:
     image: ${IMAGES_PREFIX:-}app-php
     restart: unless-stopped
     environment:
-      SERVER_NAME: ${SERVER_NAME:-localhost} # , php:80
+      SERVER_NAME: ${SERVER_NAME:-localhost}
       SYMFONY_VERSION: ${SYMFONY_VERSION:-}
       STABILITY: ${STABILITY:-stable}
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
@@ -103,10 +103,10 @@ services:
  
   # https://github.com/k-37/dolphin-is-symfony-ddd-experiment/ 
   php_worker_submission_low_priority:
-    image: ${IMAGES_PREFIX:-}app-php-worker-submission-low-priority
-    build:
-      context: .
-      target: frankenphp_dev
+    image: ${IMAGES_PREFIX:-}app-php
+    # build:
+    #   context: .
+    #   target: frankenphp_dev
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
@@ -114,7 +114,7 @@ services:
       # MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       # MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
-      # MERCURE_URL: ${CADDY_MERCURE_URL:-http://symfony.localhost:80/.well-known/mercure}
+      MERCURE_URL: ${CADDY_MERCURE_URL:-http://symfony.localhost:80/.well-known/mercure}
       # MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
     volumes:
@@ -141,19 +141,19 @@ services:
     scale: 3
     extends:
       php_worker_submission_low_priority
-    image: ${IMAGES_PREFIX:-}app-php-worker-submission-high-priority
+    # image: ${IMAGES_PREFIX:-}app-php-worker-submission-high-priority
     command: php bin/console messenger:consume submission_amqp --queues=submission_high_priority_queue --verbose --limit=100 --time-limit=3600 --memory-limit=128M
 
   php_worker_competition_status:
     extends:
       php_worker_submission_low_priority
-    image: ${IMAGES_PREFIX:-}app-php-worker-competition-status
+    # image: ${IMAGES_PREFIX:-}app-php-worker-competition-status
     command: php bin/console messenger:consume competition_status_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
 
   php_worker_email:
     extends:
       php_worker_submission_low_priority
-    image: ${IMAGES_PREFIX:-}app-php-worker-email
+    # image: ${IMAGES_PREFIX:-}app-php-worker-email
     command: php bin/console messenger:consume email_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
 
 
