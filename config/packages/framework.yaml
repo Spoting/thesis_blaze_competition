@@ -5,6 +5,8 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session:
         handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
+        cookie_lifetime: 86400
+        gc_maxlifetime: 3600  
         
     ## To fix Mercure Issue (?)
     http_client:
