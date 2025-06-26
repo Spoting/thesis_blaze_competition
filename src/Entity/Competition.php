@@ -88,7 +88,7 @@ class Competition
         'running',
         'submissions_ended',
         'winners_announced',
-        'archived',
+        // 'archived',
         'cancelled',
     ];
 

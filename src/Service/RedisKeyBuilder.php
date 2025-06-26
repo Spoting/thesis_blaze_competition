@@ -12,6 +12,8 @@ class RedisKeyBuilder
     public const VERIFICATION_PENDING_VALUE = 'pending_verification';
     public const VERIFICATION_TOKEN_TTL_SECONDS = 120;
 
+    public const GLOBAL_ANNOUNCEMENT_KEY = 'global_announcements';
+
     public function getCompetitionCountKey(int $competitionId): string
     {
         return sprintf(self::COMPETITION_COUNT_KEY, $competitionId);

@@ -6,7 +6,9 @@
  */
 import './styles/app.css';
 
-import { initializeCompetitionList } from './js/competition-list.js';
+// import { initializeCompetitionList } from './js/competition-list.js';
+// import { initializeAnnouncementsMercure } from './js/announcements.js';
+
 
 console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
 

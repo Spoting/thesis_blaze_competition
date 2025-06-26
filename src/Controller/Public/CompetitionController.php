@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Uid\Factory\UuidFactory;
 // use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-class PublicCompetitionController extends AbstractController
+class CompetitionController extends AbstractController
 {
     private MessageBusInterface $messageBus;
     private RedisManager $redisManager;
@@ -150,6 +150,7 @@ class PublicCompetitionController extends AbstractController
 
                 $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
                 return $this->redirectToRoute('app_verification_form', ['email' => $receiverEmail]);
+                
             } catch (\Exception $e) {
                 // $this->logger->error(sprintf('Error during initial form submission for email %s: %s', $receiverEmail, $e->getMessage()));
                 $this->addFlash('error', 'An error occurred during submission. Please try again. ' . $e->getMessage());

@@ -16,4 +16,12 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'announcements' => [
+        'path' => './assets/js/announcements.js',
+        'entrypoint' => true,
+    ],
+    'competition-list' => [
+        'path' => './assets/js/competition-list.js',
+        'entrypoint' => true,
+    ],
 ];

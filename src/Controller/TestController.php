@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Constants\AppConstants;
+use App\Entity\Competition;
 use App\Message\CompetitionSubmittionMessage;
 use App\Message\CompetitionUpdateStatusMessage;
 use App\Message\EmailNotificationMessage;
@@ -10,6 +11,7 @@ use App\Message\VerificationEmailMessage;
 use App\Message\WinnerTriggerMessage;
 use App\Service\RedisManager;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
@@ -22,7 +24,8 @@ class TestController extends AbstractController
     public function __construct(
         private UuidFactory $uuidFactory,
         private RedisManager $redis,
-        private MessageBusInterface $messageBus
+        private MessageBusInterface $messageBus,
+        private EntityManagerInterface $entityManager
     ) {}
 
     #[Route('/test-notification-email', name: 'test_emails')]
@@ -58,6 +61,17 @@ class TestController extends AbstractController
         return new Response($status);
     }
 
+    #[Route('/test', name: 'just_a_test')]
+    public function test(): Response
+    {
+        $competitionManager = $this->entityManager->getRepository(Competition::class);
+        $competition = $competitionManager->find(321);
+        $this->entityManager->persist($competition);
+        $this->entityManager->flush();
+
+        return new Response('OK');
+    }
+
     #[Route('/test-submissions', name: 'test_submissions')]
     public function testSubmissions(): Response
     {
@@ -76,7 +90,7 @@ class TestController extends AbstractController
             'running',
             'submissions_ended',
         ];
-        
+
         foreach ($status as $target_status) {
             $this->generateCompetitionStatusUpdateMessage($target_status);
         }
@@ -182,7 +196,10 @@ class TestController extends AbstractController
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
         $message = new CompetitionUpdateStatusMessage(
-            10, $target_status, new \DateTime()->format('Y-m-d H:i:s'), $x_delay
+            10,
+            $target_status,
+            new \DateTime()->format('Y-m-d H:i:s'),
+            $x_delay
         );
 
         $this->messageBus->dispatch(
@@ -200,11 +217,13 @@ class TestController extends AbstractController
             'content_type' => 'application/json',
             'content_encoding' => 'utf-8',
         ];
-        $x_delay = 12000;    
+        $x_delay = 12000;
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
         $message = new WinnerTriggerMessage(
-            10, new \DateTime()->format('Y-m-d H:i:s'), $x_delay
+            10,
+            new \DateTime()->format('Y-m-d H:i:s'),
+            $x_delay
         );
 
         $this->messageBus->dispatch(

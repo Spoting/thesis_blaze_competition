@@ -7,11 +7,11 @@ use Redis; // For phpredis
 class RedisManager
 {
     /** @disregard P1009 */
-    private Redis $redisClient; 
+    private Redis $redisClient;
 
     /** @disregard P1009 */
     public function __construct(
-        \Redis $redisClient  
+        \Redis $redisClient
     ) {
         $this->redisClient = $redisClient;
     }
@@ -47,5 +47,10 @@ class RedisManager
     public function getList(string $listKey): array
     {
         return $this->redisClient->lrange($listKey, 0, -1);
+    }
+
+    public function trimList(string $listKey, int $start, int $end): bool
+    {
+        return $this->redisClient->ltrim($listKey, $start, $end);
     }
 }

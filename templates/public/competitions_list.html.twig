@@ -1,9 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Available Competitions
+{% block title %}
+Available Competitions
 {% endblock %}
 
 {% block body %}
+
+	{{ render(controller('App\\Controller\\Public\\AnnouncementController::announcementsFragment')) }}
+
 	<div class="container mx-auto p-4 font-sans antialiased">
 		<h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">Available Competitions</h1>
 
@@ -76,12 +80,17 @@
 	{{ parent() }}
 
 	<script type="module">
-		import {initializeCompetitionList} from './assets/js/competition-list.js';
+		import { initializeCompetitionList } from 'competition-list'; 
+		import { initializeAnnouncementsMercure } from 'announcements'; 
 
-const mercurePublicUrl = "{{ mercure_public_url }}";
-const publicStatuses = {{ publicStatuses|json_encode()|raw }};
-const statusLabels = {{ statusLabels|json_encode()|raw }};
 
-initializeCompetitionList(mercurePublicUrl, publicStatuses, statusLabels);
+		const mercurePublicUrl = "{{ mercure_public_url }}";
+		const publicStatuses = {{ publicStatuses|json_encode()|raw }};
+		const statusLabels = {{ statusLabels|json_encode()|raw }};
+
+		initializeCompetitionList(mercurePublicUrl, publicStatuses, statusLabels);
+
+		initializeAnnouncementsMercure(mercurePublicUrl);
+
 	</script>
 {% endblock %}

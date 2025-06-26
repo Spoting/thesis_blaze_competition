@@ -180,7 +180,7 @@ export function initializeCompetitionList(mercurePublicUrl, publicStatuses, stat
         console.log(`Subscribing to Mercure topic: ${generalCompetitionTopic} at ${mercurePublicUrl}`);
         eventSource.onmessage = event => {
             const data = JSON.parse(event.data);
-            console.log(`Mercure general update received:`, data);
+            console.log(`Mercure competition update received:`, data);
             updateCompetitionCard(data.id, data.status, data.html);
         };
 
