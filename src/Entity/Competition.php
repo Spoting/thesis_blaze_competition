@@ -54,7 +54,7 @@ class Competition
 
     public function __construct()
     {
-        $this->status = self::STATUSES['draft'];
+        $this->status = 'draft';
         $this->numberOfWinners = 1;
         $this->maxParticipants = 10000; # Not Used
     }
@@ -88,8 +88,8 @@ class Competition
         'running',
         'submissions_ended',
         'winners_announced',
-        // 'archived',
-        'cancelled',
+        'archived',
+        // 'cancelled',
     ];
 
     public function getId(): ?int

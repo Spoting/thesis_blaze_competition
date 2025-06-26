@@ -3,15 +3,12 @@
 namespace App\Controller\Public;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Constants\AppConstants;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use App\Form\Public\VerificationTokenType;
-use App\Message\CompetitionSubmittionMessage;
+use App\Service\MessageProducerService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 // use Symfony\Contracts\Cache\CacheInterface;
 // use Psr\Log\LoggerInterface;
@@ -22,7 +19,7 @@ class VerificationController extends AbstractController
         private RedisManager $redisManager,
         private RedisKeyBuilder $redisKeyBuilder,
         // private LoggerInterface $logger
-        private MessageBusInterface $messageBus,
+        private MessageProducerService $messageProducerService,
     ) {}
 
     #[Route('/verify/{email}', name: 'app_verification_form')]
@@ -68,10 +65,10 @@ class VerificationController extends AbstractController
             $submissionKey = $this->redisKeyBuilder->getCompetitionSubmissionKey($verificationData['competition_id'], $verificationData['email']);
             $submissionKeyData = $this->redisManager->getValue($submissionKey);
             $submissionKeyData = json_decode($submissionKeyData, true);
-            $competition_id = $submissionKeyData['competition_id'];
+            $competitionId = $submissionKeyData['competition_id'];
             // $status = $submissionKeyData['status'];
             $submissionFormFields = $submissionKeyData['formData'];
-            $competition_ended_at = $submissionKeyData['competition_ended_at'];
+            $competitionEndedAt = $submissionKeyData['competition_ended_at'];
 
 
             // Update the submission key and ttl, as it's now verified
@@ -79,33 +76,20 @@ class VerificationController extends AbstractController
             $newSubmissionKeyData = [
                 'status' => 'verified',
             ];
-            $competitionTimeRemaining = $competition_ended_at - new \DateTimeImmutable()->getTimestamp();
+            $competitionTimeRemaining = $competitionEndedAt - new \DateTimeImmutable()->getTimestamp();
 
             $this->redisManager->setValue($submissionKey, json_encode($newSubmissionKeyData), $competitionTimeRemaining);
             $this->addFlash('success', 'Email successfully verified!');
 
-
-            // Identify Priority of Message
-            $priorityKey = $this->identifyPriorityKey($competition_ended_at);
-
-            // TODO: 
-
-            // Produce Message to RabbitMQ 
-            $message = new CompetitionSubmittionMessage($submissionFormFields, $competition_id, $email);
-            $this->messageBus->dispatch(
-                $message,
-                [new AmqpStamp(
-                    AppConstants::AMPQ_ROUTING['high_priority_submission'],
-                    attributes: [
-                        'priority' => $priorityKey,
-                        'content_type' => 'application/json',
-                        'content_encoding' => 'utf-8',
-                    ]
-                )]
-            );
-
+            // Publish Message
+            $this->messageProducerService->produceSubmissionMessage(
+                $competitionEndedAt,
+                $submissionFormFields,
+                $competitionId,
+                $email);
+           
             // Increment the Total Count for this Competition
-            $count_key = $this->redisKeyBuilder->getCompetitionCountKey($competition_id);
+            $count_key = $this->redisKeyBuilder->getCompetitionCountKey($competitionId);
             $total_count = $this->redisManager->incrementValue($count_key);
 
             $this->addFlash('success', 'TOTAL ENTRIES: ' . $total_count);
@@ -130,26 +114,4 @@ class VerificationController extends AbstractController
         return $this->render('public/submission_success.html.twig');
     }
 
-
-    private function identifyPriorityKey($competitionEndTimestamp)
-    {
-        return 9;
-
-        $now = new \DateTimeImmutable();
-        $timeRemainingSeconds = $competitionEndTimestamp - $now->getTimestamp();
-
-        // Map time remaining to a 0-10 priority scale (adjust values and tiers as needed)
-        // Ensure this aligns with the 'x-max-priority' set in messenger.yaml
-        if ($timeRemainingSeconds <= 3600) { // Less than 1 hour
-            return 10;
-        } elseif ($timeRemainingSeconds <= 21600) { // Less than 6 hours
-            return 8;
-        } elseif ($timeRemainingSeconds <= 86400) { // Less than 1 day
-            return 5;
-        } elseif ($timeRemainingSeconds <= 259200) { // Less than 3 days
-            return 3;
-        } else {
-            return 1; // Default low priority for competitions far in the future
-        }
-    }
 }

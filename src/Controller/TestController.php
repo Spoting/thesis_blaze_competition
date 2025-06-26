@@ -2,13 +2,13 @@
 
 namespace App\Controller;
 
-use App\Constants\AppConstants;
 use App\Entity\Competition;
 use App\Message\CompetitionSubmittionMessage;
 use App\Message\CompetitionUpdateStatusMessage;
 use App\Message\EmailNotificationMessage;
 use App\Message\VerificationEmailMessage;
 use App\Message\WinnerTriggerMessage;
+use App\Service\MessageProducerService;
 use App\Service\RedisManager;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +21,8 @@ use Symfony\Component\Uid\Factory\UuidFactory;
 
 class TestController extends AbstractController
 {
+
+
     public function __construct(
         private UuidFactory $uuidFactory,
         private RedisManager $redis,
@@ -110,7 +112,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                AppConstants::AMPQ_ROUTING['email_verification'],
+                MessageProducerService::AMPQ_ROUTING['email_verification'],
                 attributes: [
                     'content_type' => 'application/json',
                     'content_encoding' => 'utf-8',
@@ -137,7 +139,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                AppConstants::AMPQ_ROUTING['email_notification'],
+                MessageProducerService::AMPQ_ROUTING['email_notification'],
                 attributes: [
                     'content_type' => 'application/json',
                     'content_encoding' => 'utf-8',
@@ -155,11 +157,11 @@ class TestController extends AbstractController
         $priorityKey = rand(0, 5);
 
         if ($priorityKey == 0) {
-            $queue = AppConstants::AMPQ_ROUTING['low_priority_submission'];
+            $queue = MessageProducerService::AMPQ_ROUTING['low_priority_submission'];
             $mock['low_priority'][$i] = $priorityKey;
         } else {
             $message_attributes['priority'] = $priorityKey;
-            $queue = AppConstants::AMPQ_ROUTING['high_priority_submission'];
+            $queue = MessageProducerService::AMPQ_ROUTING['high_priority_submission'];
             $mock['high_priority'][$i] = $priorityKey;
         }
 
@@ -204,7 +206,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                AppConstants::AMPQ_ROUTING['competition_status'],
+                MessageProducerService::AMPQ_ROUTING['competition_status'],
                 attributes: $message_attributes
             )]
         );
@@ -228,7 +230,7 @@ class TestController extends AbstractController
         $this->messageBus->dispatch(
             $message,
             [new AmqpStamp(
-                AppConstants::AMPQ_ROUTING['winner_trigger'],
+                MessageProducerService::AMPQ_ROUTING['winner_trigger'],
                 attributes: $message_attributes
             )]
         );

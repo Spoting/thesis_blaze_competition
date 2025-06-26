@@ -2,38 +2,28 @@
 
 namespace App\Controller\Public;
 
-use App\Constants\AppConstants;
 use App\Entity\Competition;
 use App\Form\Public\SubmissionType;
-use App\Message\VerificationEmailMessage;
+
 use App\Repository\CompetitionRepository;
+use App\Service\MessageProducerService;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Uid\Factory\UuidFactory;
 // use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class CompetitionController extends AbstractController
 {
-    private MessageBusInterface $messageBus;
-    private RedisManager $redisManager;
-    private RedisKeyBuilder $redisKeyBuilder;
-
+    
     public function __construct(
-        MessageBusInterface $messageBus,
-        RedisManager $redisManager,
-        RedisKeyBuilder $redisKeyBuilder,
-    ) {
-        $this->messageBus = $messageBus;
-        $this->redisManager = $redisManager;
-        $this->redisKeyBuilder = $redisKeyBuilder;
-    }
+        private MessageProducerService $messageProducerService,
+        private RedisManager $redisManager,
+        private RedisKeyBuilder $redisKeyBuilder,
+    ) {}
 
     #[Route('/', name: 'public_competitions_list', methods: ['GET'])]
     public function public_competition_list(CompetitionRepository $competitionRepository): Response
@@ -129,24 +119,11 @@ class CompetitionController extends AbstractController
                 $this->redisManager->setValue($verificationKey, json_encode($verificationData), RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS);
 
 
+                $emailTokenExpirationString = $emailTokenExpirationDateTime->format('Y-m-d H:i:s');
 
                 // Send the email and token to the verification_email queue.
-                $emailTokenExpirationString = $emailTokenExpirationDateTime->format('Y-m-d H:i:s');
-                $message = new VerificationEmailMessage(
-                    $verificationToken,
-                    $receiverEmail,
-                    $emailTokenExpirationString,
-                );
-                $this->messageBus->dispatch(
-                    $message,
-                    [new AmqpStamp(
-                        AppConstants::AMPQ_ROUTING['email_verification'],
-                        attributes: [
-                            'content_type' => 'application/json',
-                            'content_encoding' => 'utf-8',
-                        ]
-                    )]
-                );
+                $this->messageProducerService->produceEmailVerificationMessage($emailTokenExpirationString, $verificationToken, $receiverEmail);
+
 
                 $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
                 return $this->redirectToRoute('app_verification_form', ['email' => $receiverEmail]);

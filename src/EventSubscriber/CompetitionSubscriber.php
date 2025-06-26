@@ -13,9 +13,9 @@ use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Psr\Log\LoggerInterface;
 
+// #[AsDoctrineListener(event: Events::postPersist)]
 #[AsDoctrineListener(event: Events::preUpdate)]
 #[AsDoctrineListener(event: Events::postUpdate)]
-#[AsDoctrineListener(event: Events::postPersist)]
 class CompetitionSubscriber
 {
     /** @var array<string, array{entity: object, changes: array}> */
@@ -66,19 +66,26 @@ class CompetitionSubscriber
                     (string) json_encode($new)
                 ));
 
-                // Check Status Change and Publish Updates
-                if ($field == 'status') {
-                    if ($old != $new && in_array($new, Competition::PUBLIC_STATUSES)) {
-                        // Add Announcement to Redis
-                        $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$new]);
-                        $this->announcementService->addAnnouncement($new, $message);
-
-                        // Publish Updates
-
-                        $this->publisher->publishAnnouncement($new, $message);
-                        $this->publisher->publishCompetitionUpdate($entity);
-                        // $this->logger->error('Mercure publishCompetitionUpdate error: ' . $e->getMessage() . "|||" . $e->getTraceAsString());
-                    }
+                
+                switch ($field) {
+                    case ('status'): // Check Status Change and Publish Mercure Updates
+                        if ($old != $new && in_array($new, Competition::PUBLIC_STATUSES)) {
+                            // Add Announcement to Redis
+                            $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$new]);
+                            $this->announcementService->addAnnouncement($new, $message);
+        
+                            // Publish Updates
+                            $this->publisher->publishAnnouncement($new, $message);
+                            $this->publisher->publishCompetitionUpdate($entity);
+                            // $this->logger->error('Mercure publishCompetitionUpdate error: ' . $e->getMessage() . "|||" . $e->getTraceAsString());
+                        }
+                        break;
+                    case ('startDate'): 
+                    case ('endDate'):
+                        if ($entity->getStatus() == 'scheduled') {
+                            
+                        }
+                        break;
                 }
             }
 
@@ -95,15 +102,15 @@ class CompetitionSubscriber
             return;
         }
 
-        // RealTime Update Competition
-        if ($entity->getStatus() != 'draft') {
-            // Add Announcement to Redis
-            $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$entity->getStatus()]);
-            $this->announcementService->addAnnouncement($entity->getStatus(), $message);
+        // RealTime Update Competition -- No need. All Competitions will be Draft
+        // if ($entity->getStatus() != 'draft') {
+        //     // Add Announcement to Redis
+        //     $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$entity->getStatus()]);
+        //     $this->announcementService->addAnnouncement($entity->getStatus(), $message);
 
-            // RealTime Update
-            $this->publisher->publishAnnouncement($entity->getStatus(), $message);
-            $this->publisher->publishCompetitionUpdate($entity);
-        }
+        //     // RealTime Update
+        //     $this->publisher->publishAnnouncement($entity->getStatus(), $message);
+        //     $this->publisher->publishCompetitionUpdate($entity);
+        // }
     }
 }

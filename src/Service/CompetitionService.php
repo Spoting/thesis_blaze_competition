@@ -28,6 +28,15 @@ class CompetitionService
         return true;
     }
 
+
+    public function calculateStatusTransitionTimestamps(Competition $competition) 
+    {
+        // Produce running delay message
+        // Produce submissions_ended delay message
+        // Produce winners_generated ? ( or winnertriggered )
+        // Produce archived 
+    }
+
     //TODO: Maybe move functionality to generate LockSubmissionKey here
 
     //TODO: Maybe move functionality to generate CountSubmissionKey here
