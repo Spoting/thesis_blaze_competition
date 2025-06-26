@@ -10,7 +10,7 @@ parameters:
         admin: 'ROLE_ADMIN'
         user: 'ROLE_USER'
     app.mercure.public_url: '%env(MERCURE_PUBLIC_URL)%'
-    app.messenger.max_priority: 10
+    app.messenger.max_priority: '%env(MESSAGE_QUEUE_MAX_PRIORITY)%'
 
 
 services:

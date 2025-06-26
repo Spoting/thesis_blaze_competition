@@ -71,6 +71,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      MESSAGE_QUEUE_MAX_PRIORITY: ${MESSAGE_QUEUE_MAX_PRIORITY-5}
     healthcheck: # Docker's healthcheck for the RabbitMQ service
       test: ["CMD", "rabbitmq-diagnostics", "status"] # Checks RabbitMQ's internal status
       interval: 5s

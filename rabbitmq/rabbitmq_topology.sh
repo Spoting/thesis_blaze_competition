@@ -13,7 +13,7 @@ SUBMISSION_QUEUES=( # Each entry is "QUEUE_NAME:ROUTING_KEY"
     "submission_high_priority_queue:high_priority_submission"
 )
 
-MAX_PRIORITY=${MAX_PRIORITY:-10}
+MAX_PRIORITY=${MESSAGE_QUEUE_MAX_PRIORITY:-5}
 
 # --- Winner Trigger and Competition Status Configuration ---
 DELAYED_EXCHANGE_NAME="delayed_competition_status_exchange" # For x-delay functionality
