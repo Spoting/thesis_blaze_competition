@@ -22,7 +22,6 @@ services:
       # See https://xdebug.org/docs/all_settings#mode
       XDEBUG_MODE: "${XDEBUG_MODE:-off}"
       APP_ENV: "${APP_ENV:-dev}"
-      # CADDY_GLOBAL_OPTIONS: "auto_https off"
     extra_hosts:
       - host.docker.internal:host-gateway
     tty: true
