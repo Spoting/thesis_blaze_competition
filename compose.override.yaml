@@ -12,7 +12,11 @@ services:
       #- /app/vendor
       - ./frankenphp/certs:/etc/caddy/certs:ro
     environment:
-      CADDY_SERVER_EXTRA_DIRECTIVES: "tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key"
+      # CADDY_SERVER_EXTRA_DIRECTIVES: "tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key"
+      CADDY_EXTRA_CONFIG: |
+          https:// {
+              tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key
+          }
       FRANKENPHP_WORKER_CONFIG: watch
       # MERCURE_EXTRA_DIRECTIVES: demo
       # See https://xdebug.org/docs/all_settings#mode
