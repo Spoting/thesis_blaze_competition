@@ -8,7 +8,7 @@
  */
 export function initializeAnnouncementsMercure(mercurePublicUrl, announcementTopic = '/global_announcements', maxDisplayedAnnouncements = 8) {
     document.addEventListener('DOMContentLoaded', () => {
-        const announcementsList = document.getElementById('announcements-list');
+        // const announcementsList = document.getElementById('announcements-list');
         const globalAnnouncementsSection = document.getElementById('global-announcements');
 
         // Exit if the announcement section isn't present on the page.
@@ -27,15 +27,17 @@ export function initializeAnnouncementsMercure(mercurePublicUrl, announcementTop
             console.log('Mercure Announcement update received:', data);
 
             // Only process updates identified as 'new_announcement' and containing a message.
-            if (data.type === 'new_announcement' && data.message) {
-                let currentAnnouncementsList = announcementsList;
+            // data.type === 'new_announcement' && 
+            if (data.message) {
+                // let currentAnnouncementsList = announcementsList;
+                let currentAnnouncementsList = document.getElementById('announcements-list');
 
                 // If "No announcements yet." message is present, remove it.
                 const noAnnouncementsMessage = document.querySelector('#global-announcements .no-announcements-message');
                 if (noAnnouncementsMessage) {
                     noAnnouncementsMessage.remove();
                 }
-
+                
                 // If the UL element for announcements doesn't exist (e.g., initially no announcements were rendered), create it.
                 if (!currentAnnouncementsList) {
                     globalAnnouncementsSection.innerHTML = `
