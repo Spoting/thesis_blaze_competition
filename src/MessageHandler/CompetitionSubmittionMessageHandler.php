@@ -10,8 +10,7 @@ use Psr\Log\LoggerInterface;
 #[AsMessageHandler]
 class CompetitionSubmittionMessageHandler
 {
-    public function __construct(
-        private MailerInterface $mailer,
+    public function __construct(    
     ) {}
 
     public function __invoke(CompetitionSubmittionMessage $message): void
@@ -20,6 +19,7 @@ class CompetitionSubmittionMessageHandler
 
         // 1. GET
         // 2. INSERT
-        // 3. Email Notification
+        // 2.1 on Error decrease Redis Counter & Remove Lock Key.
+        // 3. Publish Email Notification to Public User
     }
 }

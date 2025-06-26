@@ -74,19 +74,16 @@ class CompetitionSubscriber
                         $this->announcementService->addAnnouncement($new, $message);
 
                         // Publish Updates
+
                         $this->publisher->publishAnnouncement($new, $message);
                         $this->publisher->publishCompetitionUpdate($entity);
+                        // $this->logger->error('Mercure publishCompetitionUpdate error: ' . $e->getMessage() . "|||" . $e->getTraceAsString());
                     }
                 }
             }
 
             unset($this->changeLog[$hash]); // Clean up
         }
-
-        // RealTime Update Competition
-        $this->publisher->publishCompetitionUpdate($entity);
-
-        // $this->cache->delete('all_competitions');
     }
 
     public function postPersist(PostPersistEventArgs $args): void
@@ -103,7 +100,7 @@ class CompetitionSubscriber
             // Add Announcement to Redis
             $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$entity->getStatus()]);
             $this->announcementService->addAnnouncement($entity->getStatus(), $message);
-            
+
             // RealTime Update
             $this->publisher->publishAnnouncement($entity->getStatus(), $message);
             $this->publisher->publishCompetitionUpdate($entity);

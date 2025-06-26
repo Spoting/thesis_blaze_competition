@@ -66,7 +66,6 @@ class TestController extends AbstractController
     {
         $competitionManager = $this->entityManager->getRepository(Competition::class);
         $competition = $competitionManager->find(321);
-        $this->entityManager->persist($competition);
         $this->entityManager->flush();
 
         return new Response('OK');
@@ -191,12 +190,12 @@ class TestController extends AbstractController
         if ($target_status == 'submissions_ended') {
             $x_delay = 10000;
         } elseif ($target_status == 'running') {
-            $x_delay = 5000;
+            $x_delay = 1000;
         }
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
         $message = new CompetitionUpdateStatusMessage(
-            10,
+            322,
             $target_status,
             new \DateTime()->format('Y-m-d H:i:s'),
             $x_delay

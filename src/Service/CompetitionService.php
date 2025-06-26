@@ -2,11 +2,13 @@
 
 namespace App\Service;
 
+use App\Entity\Competition;
+
 class CompetitionService
 {
 
     // TODO: 
-    public function shouldAllowSumbission($competition): bool
+    public function shouldAllowSumbission(Competition $competition): bool
     {
         // if ($competition->getStatus(), in_array['statuses that allow submission']
 
@@ -15,7 +17,7 @@ class CompetitionService
 
 
     // TODO:
-    public function isStatusValid($competition, $new_status): bool
+    public function isStatusTransitionValid(Competition $competition, string $new_status): bool
     {
         // Check StartDate when running
 
