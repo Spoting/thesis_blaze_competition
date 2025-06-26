@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 // use App\Form\Admin\CompetitionFormFieldType;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
@@ -21,6 +22,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use Symfony\Component\Validator\Constraints\Callback;
+use Symfony\Component\Validator\Constraints\GreaterThan;
+use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 
 class CompetitionCrudController extends AbstractCrudController
 {
@@ -34,7 +38,7 @@ class CompetitionCrudController extends AbstractCrudController
         yield IdField::new('id')->hideOnForm();
         yield TextField::new('title', 'Competition Name');
         $statuses = Competition::STATUSES;
-        yield ChoiceField::new('status')
+        $statusField = ChoiceField::new('status')
             ->setChoices(array_flip($statuses))
             ->setLabel('Status')
             ->renderAsNativeWidget(true)
@@ -43,7 +47,7 @@ class CompetitionCrudController extends AbstractCrudController
                     // TODO: Add conditions for allowing Status to be setted.
 
                     if (!$this->isGranted('ROLE_MANAGER_ADMIN')) {
-                        if (!in_array($key, ['cancelled'])) {
+                        if (!in_array($value, ['cancelled', 'draft', 'scheduled'])) {
                             return ['disabled' => 'disabled'];
                         }
                     }
@@ -53,16 +57,63 @@ class CompetitionCrudController extends AbstractCrudController
                 },
             ]);
 
-        yield DateTimeField::new('startDate')->setLabel('Submission Start');
-        yield DateTimeField::new('endDate')->setLabel('Submission Deadline')
-            ->setFormTypeOptions([
-                'constraints' => [
-                    new \Symfony\Component\Validator\Constraints\GreaterThanOrEqual([
-                        'propertyPath' => 'parent.all[startDate].data',
-                        'message' => 'The end date must be after or equal to the start date.',
-                    ]),
-                ],
+
+
+        $startDateField = DateTimeField::new('startDate')
+            ->setTimezone('UTC')
+            ->setFormTypeOption('model_timezone', 'UTC')
+            ->setFormTypeOption('view_timezone', 'Europe/Athens');
+        $endDateField = DateTimeField::new('endDate')
+            ->setTimezone('UTC')
+            ->setFormTypeOption('model_timezone', 'UTC')
+            ->setFormTypeOption('view_timezone', 'Europe/Athens');
+
+        $startDateConstraints = [];
+        $endDateConstraints = [
+            new GreaterThan([
+                'propertyPath' => 'parent.all[startDate].data',
+                'message' => 'The end date must be after to the start date.',
+            ])
+        ];
+
+
+        if (in_array($pageName, [Crud::PAGE_NEW, Crud::PAGE_EDIT])) {
+            $startDateField->setLabel('Submissions Start (Athens Time)');
+            $endDateField->setLabel('Submissions End (Athens Time)');
+        } else {
+            $startDateField->setLabel('Start Date (UTC)');
+            $endDateField->setLabel('End Date (UTC)');
+        }
+
+        if (Crud::PAGE_NEW === $pageName) {
+            // Disable Status field so all New Competitions will be 'draft'
+            $statusField->setDisabled();
+
+            $startDateConstraints[] = new GreaterThan([
+                'value' => new \DateTimeImmutable('now', new \DateTimeZone('UTC'))->modify('+15 minutes'),
+                'message' => 'Start time must be at least 2 minutes in the future.',
             ]);
+        }
+
+        if (Crud::PAGE_EDIT === $pageName) {
+            $entity = $this->getContext()?->getEntity()?->getInstance();
+            if ($entity && $entity->getStatus() != 'draft') {
+                // Dont allow Organizer to Change Start|End dates when the Competition is Published.
+                $startDateField->setFormTypeOption('disabled', true);
+                $endDateField->setFormTypeOption('disabled', true);
+
+                // Dont change the Status after the Automations are scheduled.
+                if ($entity->getStatus() != 'scheduled') {
+                    $statusField->setDisabled();
+                }
+            }
+        }
+
+        yield $statusField;
+        yield $startDateField->setFormTypeOption('constraints', $startDateConstraints);
+        yield $endDateField->setFormTypeOption('constraints', $endDateConstraints);
+
+
         yield TextareaField::new('description')->hideOnIndex();
         yield TextareaField::new('prizes')->setHelp('Describe the prizes for this competition.')->hideOnIndex();
         yield IntegerField::new('numberOfWinners')->setLabel('Number of Winners');
@@ -78,11 +129,6 @@ class CompetitionCrudController extends AbstractCrudController
             ->renderExpanded()
             ->setHelp('Define the fields for the public submission form. Default email and phone fields are pre-filled for new competitions (you can modify or remove them).')
             ->onlyOnForms();
-
-
-
-
-
 
         yield AssociationField::new('createdBy')->setPermission('ROLE_MANAGER_ADMIN');
         yield DateTimeField::new('createdAt')->onlyOnIndex();
