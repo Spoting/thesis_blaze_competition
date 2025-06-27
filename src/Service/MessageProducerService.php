@@ -75,10 +75,12 @@ class MessageProducerService
         ];
         $message_attributes['headers'] = ['x-delay' => $delay_ms];
 
+        $now = new \DateTime();
+
         $message = new CompetitionUpdateStatusMessage(
             $competitionId,
             $target_status,
-            new \DateTime()->format('Y-m-d H:i:s'),
+            $now->format('Y-m-d H:i:s'),
             $delay_ms
         );
 
@@ -99,9 +101,11 @@ class MessageProducerService
         ];
         $message_attributes['headers'] = ['x-delay' => $delay_ms];
 
+        $now = new \DateTime();
+
         $message = new WinnerTriggerMessage(
             $competitionId,
-            new \DateTime()->format('Y-m-d H:i:s'),
+            $now->format('Y-m-d H:i:s'),
             $delay_ms
         );
 

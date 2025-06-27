@@ -89,9 +89,10 @@ class CompetitionCrudController extends AbstractCrudController
             // Disable Status field so all New Competitions will be 'draft'
             $statusField->setDisabled();
 
+            $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
             $startDateConstraints[] = new GreaterThan([
-                'value' => new \DateTimeImmutable('now', new \DateTimeZone('UTC'))->modify('+15 minutes'),
-                'message' => 'Start time must be at least 2 minutes in the future.',
+                'value' => $now->modify('+1 minutes'),
+                'message' => 'Start time must be at least 1 minutes in the future.',
             ]);
         }
 

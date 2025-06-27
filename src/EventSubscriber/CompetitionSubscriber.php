@@ -6,7 +6,9 @@ use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Events;
 use App\Entity\Competition;
 use App\Service\AnnouncementService;
+use App\Service\CompetitionService;
 use App\Service\MercurePublisherService;
+use App\Service\MessageProducerService;
 use App\Service\RedisManager;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
@@ -26,6 +28,8 @@ class CompetitionSubscriber
         private RedisManager $redis,
         private AnnouncementService $announcementService,
         private LoggerInterface $logger,
+        private CompetitionService $competitionService,
+        private MessageProducerService $messageProducerService
     ) {}
 
 
@@ -53,8 +57,13 @@ class CompetitionSubscriber
         $hash = spl_object_hash($entity);
 
         if (isset($this->changeLog[$hash])) {
+            // Publish Updated Competition's Data.
+            $this->publisher->publishCompetitionUpdate($entity);
+
             $changes = $this->changeLog[$hash]['changes'];
 
+
+            $shouldDispatchStatusUpdateMessages = false;
             foreach ($changes as $field => [$old, $new]) {
                 // Log Changes
                 $this->logger->info(sprintf(
@@ -66,26 +75,56 @@ class CompetitionSubscriber
                     (string) json_encode($new)
                 ));
 
-                
+
                 switch ($field) {
-                    case ('status'): // Check Status Change and Publish Mercure Updates
+                    case ('status'):
+
+                        // Check Status Change and Publish Mercure Updates
                         if ($old != $new && in_array($new, Competition::PUBLIC_STATUSES)) {
+                            // If new Status is scheduled flag to Trigger Status Automations
+                            if ($new == 'scheduled') {
+                                $shouldDispatchStatusUpdateMessages = true;
+                            }
+
+                            // Store & Publish Announcement
                             // Add Announcement to Redis
                             $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$new]);
                             $this->announcementService->addAnnouncement($new, $message);
-        
+
                             // Publish Updates
                             $this->publisher->publishAnnouncement($new, $message);
-                            $this->publisher->publishCompetitionUpdate($entity);
-                            // $this->logger->error('Mercure publishCompetitionUpdate error: ' . $e->getMessage() . "|||" . $e->getTraceAsString());
+                        
                         }
+
                         break;
-                    case ('startDate'): 
+
+                    case ('startDate'):
                     case ('endDate'):
+                        // If Start/End Date is changed, and the current status is Scheduled,
+                        // Activate flag to Trigger Status Automations
                         if ($entity->getStatus() == 'scheduled') {
-                            
+                            $shouldDispatchStatusUpdateMessages = true;
                         }
                         break;
+                }
+            }
+
+
+            if ($shouldDispatchStatusUpdateMessages) {
+                $statusTransitionTimestamps = $this->competitionService->calculateStatusTransitionDelays($entity);
+                foreach ($statusTransitionTimestamps as $status => $delay_ms) {
+                    if ($status == 'winners_announced') {
+                        $this->messageProducerService->produceWinnerTriggerMessage(
+                            $entity->getId(),
+                            $delay_ms,
+                        );
+                    } else {
+                        $this->messageProducerService->produceCompetitionStatusUpdateMessage(
+                            $entity->getId(),
+                            $delay_ms,
+                            $status,
+                        );
+                    }
                 }
             }
 

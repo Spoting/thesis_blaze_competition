@@ -29,12 +29,31 @@ class CompetitionService
     }
 
 
-    public function calculateStatusTransitionTimestamps(Competition $competition) 
-    {
-        // Produce running delay message
-        // Produce submissions_ended delay message
-        // Produce winners_generated ? ( or winnertriggered )
-        // Produce archived 
+    /** Returns Delays in Milliseconds  */
+    public function calculateStatusTransitionDelays(
+        Competition $competition,
+        int $winnerGracePeriod = 60,     // 1 minute in seconds
+        int $archiveAfter = 259200       // 3 days in seconds
+    ): array {
+
+        $now = new \DateTimeImmutable('now');
+        $now = $now->getTimestamp();
+
+        $start = $competition->getStartDate()->getTimestamp();
+        $end = $competition->getEndDate()->getTimestamp();
+
+
+        $runningDelay = $start - $now;
+        $submissionsEndedDelay = $end - $now;
+        $winnersGeneratedDelay = ($end + $winnerGracePeriod) - $now;
+        $archivedDelay = ($end + $archiveAfter) - $now;
+
+        return [
+            'running' => (int) $runningDelay * 1000,
+            'submissions_ended' => (int) $submissionsEndedDelay * 1000,
+            'winners_announced' => (int) $winnersGeneratedDelay * 1000,
+            'archived' => (int) $archivedDelay * 1000,
+        ];
     }
 
     //TODO: Maybe move functionality to generate LockSubmissionKey here
