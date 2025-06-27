@@ -196,10 +196,11 @@ class TestController extends AbstractController
         }
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
+        $now = new \DateTime();
         $message = new CompetitionUpdateStatusMessage(
             322,
             $target_status,
-            new \DateTime()->format('Y-m-d H:i:s'),
+            $now->format('Y-m-d H:i:s'),
             $x_delay
         );
 
@@ -221,9 +222,10 @@ class TestController extends AbstractController
         $x_delay = 12000;
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
+        $now = new \DateTime();
         $message = new WinnerTriggerMessage(
-            10,
-            new \DateTime()->format('Y-m-d H:i:s'),
+            322,
+            $now->format('Y-m-d H:i:s'),
             $x_delay
         );
 
