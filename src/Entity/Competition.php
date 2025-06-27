@@ -77,10 +77,10 @@ class Competition
         'scheduled' => 'Scheduled',
         'running' => 'Running',
         'submissions_ended' => 'Submissions Ended',
-        'winners_generated' => 'Winners Generated',
+        // 'winners_generated' => 'Winners Generated',
         'winners_announced' => 'Winners Announced',
         'archived' => 'Archived',
-        'cancelled' => 'Cancelled',
+        // 'cancelled' => 'Cancelled',
     ];
     
     public const PUBLIC_STATUSES = [
