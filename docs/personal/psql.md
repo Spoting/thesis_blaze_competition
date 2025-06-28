@@ -19,6 +19,8 @@ psql -h 127.0.0.1 -p 5432 -U app -d app
 
 
 ## 
+php bin/console doctrine:cache:clear-metadata
+
 php bin/console doctrine:migrations:migrate
 
 ## Query by Symfony

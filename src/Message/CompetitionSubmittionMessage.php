@@ -7,14 +7,12 @@ class CompetitionSubmittionMessage extends AbstractMessage
     private array $formData;
     private int $competitionId;
     private string $email;
-    // private bool $premium;
 
-    public function __construct(array $formData, int $competitionId, string $email, bool $premium = false)
+    public function __construct(array $formData, int $competitionId, string $email)
     {
         $this->formData = $formData;
         $this->competitionId = $competitionId;
         $this->email = $email;
-        // $this->premium = $premium;
     }
 
     public function getCompetitionId(): int
@@ -29,9 +27,4 @@ class CompetitionSubmittionMessage extends AbstractMessage
     {
         return $this->formData;
     }
-
-    // public function isPremium(): bool
-    // {
-    //     return $this->premium;
-    // }
 }

@@ -61,8 +61,9 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
     		echo "RUN_MIGRATIONS is not set or is empty. Skipping migrations."
 		fi
 		
-	fi
+	fi	
 
+	# They Provide Error on new User : Operation Not Permitted
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
 	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
 
