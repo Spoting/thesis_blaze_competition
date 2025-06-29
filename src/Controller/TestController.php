@@ -73,15 +73,16 @@ class TestController extends AbstractController
         return new Response('OK');
     }
 
-    #[Route('/test-submissions', name: 'test_submissions')]
-    public function testSubmissions(): Response
+    #[Route('/test-submissions/{total}/{prefix}/{priority?}', name: 'test_submissions')]
+    public function testSubmissions(int $total, int $prefix, ?int $priority): Response
     {
         $status = [];
-        for ($i = 0; $i < 100; $i++) {
-            $this->generateCompetitionSubmissionMessage($i, $status);
+        for ($i = 0; $i < $total; $i++) {
+            $this->generateCompetitionSubmissionMessage($i . '' . $prefix, $status, $priority);
         }
 
-        return new Response(json_encode($status, JSON_PRETTY_PRINT));
+        // return new Response(json_encode($status, JSON_PRETTY_PRINT));
+        return new Response('OK');
     }
 
     #[Route('/test-comp-status-updates', name: 'test_comp_status_updates')]
@@ -148,13 +149,17 @@ class TestController extends AbstractController
         );
     }
 
-    private function generateCompetitionSubmissionMessage($i, &$mock)
+    private function generateCompetitionSubmissionMessage($i, &$mock, $priority = null)
     {
         $message_attributes = [
             'content_type' => 'application/json',
             'content_encoding' => 'utf-8',
         ];
-        $priorityKey = rand(0, 5);
+        if ($priority == null) {
+            $priorityKey = rand(0, 5); 
+        } else {
+            $priorityKey = $priority;
+        }
 
         if ($priorityKey == 0) {
             $queue = MessageProducerService::AMPQ_ROUTING['low_priority_submission'];
@@ -167,8 +172,8 @@ class TestController extends AbstractController
 
         $message = new CompetitionSubmittionMessage(
             ['email' => 'kati@kati.com', 'priority' => $i . "|" . $priorityKey],
-            10,
-            'kati@kati.com'
+            321,
+            'kati'.$i.'@kati.com'.$i
         );
 
         $this->messageBus->dispatch(

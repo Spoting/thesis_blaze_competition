@@ -54,6 +54,7 @@ final class CompetitionUpdateStatusMessageHandler
         // Update Competition
         $competition->setStatus($targetStatus);
         $this->entityManager->flush();
+        $this->entityManager->clear();
 
         // Publish Message Email Notification to Organizer
         $organizerEmail = $competition->getCreatedBy()?->getEmail();

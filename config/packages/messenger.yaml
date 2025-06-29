@@ -10,6 +10,14 @@ framework:
                 # Celery Seriliazer
                 # serializer: App\Messenger\CelerySerializer
                 serializer: messenger.transport.symfony_serializer
+                # retry_strategy:
+                #     max_retries: 3
+                #     # milliseconds delay
+                #     delay: 1000
+                #     # causes the delay to be higher before each retry
+                #     # e.g. 1 second delay, 2 seconds, 4 seconds
+                #     multiplier: 2
+                #     max_delay: 0
                 options:
                     exchange:
                         name: submission_exchange
@@ -39,6 +47,11 @@ framework:
                             binding_keys: [competition_status]
                         competition_winner_generation_queue:
                             binding_keys: [winner_trigger]
+                # prefetch_count: 100
+                #     auto_setup: false
+                # retry_strategy:
+                #     max_retries: 3
+                #     delay: 1000
             
             email_amqp:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
