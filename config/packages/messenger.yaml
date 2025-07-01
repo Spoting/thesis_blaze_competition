@@ -5,6 +5,18 @@ framework:
         #     default_serializer: App\Messenger\CelerySerializer
 
         transports:
+            # Define a dedicated transport for dead-letter messages
+            dead_letter_amqp:
+                dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                serializer: messenger.transport.symfony_serializer
+                options:
+                    exchange:
+                        name: dead_letter_exchange # This will be your DLX
+                        type: topic # Using topic for flexibility, could be direct
+                    queues:
+                        dead_letter_queue: # This will be your DLQ
+                            binding_keys: ["#"] # Binds to all messages on the DLX
+
             submission_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 # Celery Seriliazer
@@ -25,10 +37,16 @@ framework:
                     queues:
                         submission_low_priority_queue:
                             binding_keys: [low_priority_submission]
-                            arguments: { "x-max-priority": "%app.messenger.max_priority%" }
+                            arguments:
+                                "x-max-priority": "%app.messenger.max_priority%"
+                                "x-dead-letter-exchange": "dead_letter_exchange" # Point to your DLX
+                                "x-dead-letter-routing-key": "submission.low_priority.dead" # Specific routing key for DLQ
                         submission_high_priority_queue:
                             binding_keys: [high_priority_submission]
-                            arguments: { "x-max-priority": "%app.messenger.max_priority%" }
+                            arguments:
+                                "x-max-priority": "%app.messenger.max_priority%"
+                                "x-dead-letter-exchange": "dead_letter_exchange"
+                                "x-dead-letter-routing-key": "submission.high_priority.dead"
                         # submission_premium_queue:
                         #     binding_keys: [premium_submission]
                         #     arguments: { "x-max-priority": "%app.messenger.max_priority%" }
@@ -45,8 +63,14 @@ framework:
                     queues:
                         competition_status_queue:
                             binding_keys: [competition_status]
+                            arguments:
+                                "x-dead-letter-exchange": "dead_letter_exchange"
+                                "x-dead-letter-routing-key": "competition_status.dead"
                         competition_winner_generation_queue:
                             binding_keys: [winner_trigger]
+                            arguments:
+                                "x-dead-letter-exchange": "dead_letter_exchange"
+                                "x-dead-letter-routing-key": "winner_trigger.dead"
                 # prefetch_count: 100
                 #     auto_setup: false
                 # retry_strategy:
@@ -63,8 +87,14 @@ framework:
                     queues:
                         email_verification_queue:
                             binding_keys: [email_verification]
+                            arguments:
+                                "x-dead-letter-exchange": "dead_letter_exchange"
+                                "x-dead-letter-routing-key": "email.verification.dead"
                         email_notification_queue:
                             binding_keys: [email_notification]
+                            arguments:
+                                "x-dead-letter-exchange": "dead_letter_exchange"
+                                "x-dead-letter-routing-key": "email.notification.dead"
 
             
             # winner_trigger_amqp:
@@ -92,6 +122,9 @@ framework:
             App\Message\CompetitionUpdateStatusMessage: competition_status_amqp
             App\Message\VerificationEmailMessage: email_amqp
             App\Message\EmailNotificationMessage: email_amqp
+            # You might want to define a specific routing for messages that have already been dead-lettered
+            # For example, if you decide to re-process them.
+            # App\Message\DeadLetteredMessage: dead_letter_amqp
 
 # when@test:
 #    framework:

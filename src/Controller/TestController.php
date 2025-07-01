@@ -78,7 +78,7 @@ class TestController extends AbstractController
     {
         $status = [];
         for ($i = 0; $i < $total; $i++) {
-            $this->generateCompetitionSubmissionMessage($i . '' . $prefix, $status, $priority);
+            $this->generateCompetitionSubmissionMessage($i . '-' . $prefix, $status, $priority);
         }
 
         // return new Response(json_encode($status, JSON_PRETTY_PRINT));

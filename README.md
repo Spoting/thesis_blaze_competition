@@ -89,7 +89,7 @@ admin@symfony.com
 ```
 
 ### Tailwind CSS 
-- Build CSS : 
+- Build CSS (dev): 
 ```
 php bin/console tailwind:build --watch 
 ```
@@ -100,6 +100,11 @@ php bin/console tailwind:build
 exit
 make fix-perms
 ```
+- Generate Assets (prod):
+```
+php bin/console asset-map:compile
+```
+
 
 ## !!!! Do not use `die;` in code. Please just dont. It will require a restart
 
