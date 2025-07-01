@@ -35,21 +35,19 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
     public function __invoke(CompetitionSubmittionMessage $message, ?Acknowledger $ack): mixed
     {
-        $this->output->writeln('Added to batch Submission: ' . $message->getEmail());
+        // $this->output->writeln('Added to batch Submission: ' . $message->getEmail());
         return $this->handle($message, $ack);
     }
 
-
-
     private function process(array $jobs): void
     {
-        $this->output->writeln(sprintf('Attempting to bulk insert %d submissions using DBAL.', count($jobs)));
-        $this->logger->info(sprintf('Attempting to bulk insert %d submissions using DBAL.', count($jobs)));
+        $this->output->writeln(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
+        $this->logger->info(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
 
         /** @var Connection $connection */
         $connection = $this->entityManager->getConnection();
 
-        // Define the columns once
+        // Define Columns
         $columns = [
             'competition_id',
             'email',
@@ -64,10 +62,16 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         $parameters = [];
         $paramTypes = [];
 
+        // Keep preinsert emails for later checking.
+        $toInsertEmails = [];
+
+        // Build each Row's Data for Raw SQL BULK Insert Query
         foreach ($jobs as [$message, $ack]) {
+            $toInsertEmails[] = $message->getEmail();
+
             /** @var CompetitionSubmittionMessage $message */
             $allValuePlaceholders[] = $singleRowPlaceholders;
-
+            
             $parameters[] = $message->getCompetitionId();
             $parameters[] = $message->getEmail();
             $parameters[] = json_encode($message->getFormData());
@@ -76,8 +80,8 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             // Define parameter types for each value
             $paramTypes[] = ParameterType::INTEGER;
             $paramTypes[] = ParameterType::STRING;
-            $paramTypes[] = ParameterType::STRING; // JSON is a string type
-            $paramTypes[] = ParameterType::STRING; // DateTime as string
+            $paramTypes[] = ParameterType::STRING; 
+            $paramTypes[] = ParameterType::STRING;
         }
 
         // Construct the base INSERT SQL statement
@@ -108,25 +112,37 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             }
 
             $connection->commit();
-            $this->logger->info(sprintf('Successfully bulk inserted %d new submissions (affected rows: %d).', count($jobs), implode( ",", $insertedEmails)));
-            $this->output->writeln(sprintf('Successfully bulk inserted %d new submissions (affected rows: %d).', count($jobs), implode( ",", $insertedEmails)));
+            $this->logger->info(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
+            $this->output->writeln(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
         } catch (\Exception $e) {
+            // Failing here, means a more Generic Error Happened. ex, database connection error
             $connection->rollback();
-            $this->logger->error(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()), ['exception' => $e]);
+
+            $this->logger->error(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
             $this->output->writeln(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
             throw $e; // Re-throw to signal failure to Messenger
         } finally {
-            $this->entityManager->clear();
+            // $this->entityManager->clear();
         }
 
         // ACK all messages since Batch was Succeful
         foreach ($jobs as $i => [$message, $ack]) {
-            // If want to ACK/NACK each one.
-            // if ($i == 0) {
-            //     $ack->nack(new Exception('Test nack'));
-            // } else {
             $ack->ack($message);
-            // }
+            //     $ack->nack(new Exception('Test nack'));
+        }
+
+        // Sent Corresponding Emails.
+        foreach ($insertedEmails as $successEmail) {
+                // Sent Success Email
+                // $this->output->writeln('Success: ' . $successEmail);
+        }
+        $failedEmails = array_diff($toInsertEmails, $insertedEmails);
+        if (!empty($failedEmails)) {
+            foreach ($failedEmails as $failedEmail) {
+                // Sent Failed Email
+                // $this->output->writeln('Failed: ' . $failedEmail);
+                // TODO: Decrease Redis Counter here.
+            }
         }
 
         $this->output->writeln('Processed new batch of Submissions');
@@ -143,9 +159,4 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
     // {
     //     return 12 <= \count($this->jobs);
     // }
-
-
-
-
-
 }
