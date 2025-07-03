@@ -40,6 +40,8 @@ services:
       - target: 443
         published: ${HTTP3_PORT:-443}
         protocol: udp
+    networks:
+      - monitoring_network
 
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###
@@ -60,9 +62,8 @@ services:
       start_period: 60s
     volumes:
       - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+    networks:
+      - monitoring_network
 
   rabbitmq: # TODO: change latest
     image: heidiks/rabbitmq-delayed-message-exchange:latest
@@ -79,18 +80,23 @@ services:
       timeout: 10s
       retries: 10
       start_period: 5s
+    networks:
+      - monitoring_network
     # volumes:
     #   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
   # RabbitMQ Topology Declaration Service
-  rabbitmq_topology:
-    image: heidiks/rabbitmq-delayed-message-exchange:latest
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    volumes:
-      - ./rabbitmq/rabbitmq_topology.sh:/usr/local/bin/rabbitmq_topology.sh:ro
-    command: /usr/local/bin/rabbitmq_topology.sh
+  # rabbitmq_topology:
+  #   image: heidiks/rabbitmq-delayed-message-exchange:latest
+  #   environment:
+  #     MESSAGE_QUEUE_MAX_PRIORITY: ${MESSAGE_QUEUE_MAX_PRIORITY-5}
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./rabbitmq/rabbitmq_topology.sh:/usr/local/bin/rabbitmq_topology.sh:ro
+  #   entrypoint: ["/bin/bash", "-c", "/usr/local/bin/rabbitmq_topology.sh"]
+  #   restart: "no"
   
   ## Maybe Add 2 Instances of Redis?
   ## 1 for Cache
@@ -100,6 +106,9 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      - monitoring_network
+      
     # volumes:
     #   - redis_data:/data
  
@@ -111,6 +120,7 @@ services:
     #   target: frankenphp_dev
     restart: unless-stopped
     environment:
+      APP_ENV: "${APP_ENV:-dev}"
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
       RUN_MIGRATIONS: false
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
@@ -137,14 +147,21 @@ services:
       timeout: 15s
       retries: 3
       start_period: 15s
-    command: php bin/console messenger:consume submission_amqp --queues=submission_low_priority_queue --verbose --limit=100 --time-limit=3600 --memory-limit=128M
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 128M 
+    networks:
+      - monitoring_network
+    command: php bin/console messenger:consume submission_amqp --queues=submission_low_priority_queue --verbose --limit=5000 --time-limit=3600 --memory-limit=128M
 
   php_worker_submission_high_priority:
-    scale: 3
+    scale: 1
     extends:
       php_worker_submission_low_priority
     # image: ${IMAGES_PREFIX:-}app-php-worker-submission-high-priority
-    command: php bin/console messenger:consume submission_amqp --queues=submission_high_priority_queue --verbose --limit=100 --time-limit=3600 --memory-limit=128M
+    command: php bin/console messenger:consume submission_amqp --queues=submission_high_priority_queue --verbose --time-limit=3600 --memory-limit=128M
 
   php_worker_competition_status:
     extends:
@@ -157,41 +174,6 @@ services:
       php_worker_submission_low_priority
     # image: ${IMAGES_PREFIX:-}app-php-worker-email
     command: php bin/console messenger:consume email_amqp --verbose --limit=100 --time-limit=3600 --memory-limit=128M
-
-
-  # php_worker_base:
-  #   image: ${IMAGES_PREFIX:-}app-php-worker
-  #   build:
-  #     context: .
-  #     target: frankenphp_dev
-  #   restart: unless-stopped
-  #   environment:
-  #     DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
-  #     RUN_MIGRATIONS: false
-  #     # MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-  #     # MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-  #     # MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-amqp://guest:guest@rabbitmq:5672/%2f}
-  #     # MERCURE_URL: ${CADDY_MERCURE_URL:-http://symfony.localhost:80/.well-known/mercure}
-  #     # MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-symfony.localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
-  #     # MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-  #   volumes:
-  #     - ./:/app
-  #     - /app/var/
-  #   depends_on:
-  #     redis:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     database:
-  #       condition: service_healthy
-  #     php:
-  #       condition: service_started
-  #   healthcheck:
-  #     test: ["CMD", "php", "bin/console", "about"]
-  #     interval: 3s
-  #     timeout: 15s
-  #     retries: 3
-  #     start_period: 15s
 
   # worker_submission_normal:
   #   scale: 2
@@ -225,6 +207,71 @@ services:
   #     dockerfile: Dockerfile
 
 
+ # Add monitoring services below this line
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090" # Prometheus UI
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro # Mount Prometheus config
+      - prometheus_data:/prometheus # Persistent storage for metrics
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle' # Allows config reload via API, useful for testing
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000" # Grafana UI
+    volumes:
+      - grafana_data:/var/lib/grafana # Persistent storage for Grafana data
+      - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning:ro # Auto-provision data sources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+    environment:
+      # Optional: Set admin password from env var
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin} # Set a strong password in .env!
+
+  # Node Exporter: Monitors the host system where Docker is running (CPU, memory, disk I/O)
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    # Crucial for host metrics:
+    pid: "host" # Allows access to host process information
+    volumes:
+      - '/:/host:ro,rslave' # Mounts host root filesystem for metrics
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  # cAdvisor: Collects and exposes Docker container metrics (CPU, memory, network, disk per container)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080" # cAdvisor UI
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+
 volumes:
   caddy_data:
   caddy_config:
@@ -234,3 +281,13 @@ volumes:
 ###> doctrine/doctrine-bundle ###
   database_data:
 ###< doctrine/doctrine-bundle ###
+
+  prometheus_data: 
+  grafana_data:    
+
+
+networks:
+  default: # Your existing default bridge network
+    external: false # Or true if you manage it manually
+  monitoring_network:
+    driver: bridge

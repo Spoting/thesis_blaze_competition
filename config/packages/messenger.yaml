@@ -1,8 +1,9 @@
 framework:
     messenger:
-        # failure_transport: failed
         # serializer:
         #     default_serializer: App\Messenger\CelerySerializer
+
+        failure_transport: dead_letter_amqp # Name of your failure transport
 
         transports:
             # Define a dedicated transport for dead-letter messages
@@ -11,25 +12,35 @@ framework:
                 serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
-                        name: dead_letter_exchange # This will be your DLX
-                        type: topic # Using topic for flexibility, could be direct
+                        name: dead_letter_exchange
+                        type: topic 
                     queues:
-                        dead_letter_queue: # This will be your DLQ
-                            binding_keys: ["#"] # Binds to all messages on the DLX
+                        dead_letter_queue: 
+                            binding_keys: ["#"]
+            
+            # submission_dead_letter_amqp:
+            #     dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+            #     serializer: messenger.transport.symfony_serializer
+            #     options:
+            #         exchange:
+            #             name: submission_dead_letter_exchange
+            #             type: topic 
+            #         queues:
+            #             submission_dead_letter_queue: 
+            #                 binding_keys: ["low_priority_submission", "high_priority_submission"]
+
 
             submission_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                # failure_transport: submission_dead_letter_amqp
                 # Celery Seriliazer
                 # serializer: App\Messenger\CelerySerializer
                 serializer: messenger.transport.symfony_serializer
-                # retry_strategy:
-                #     max_retries: 3
-                #     # milliseconds delay
-                #     delay: 1000
-                #     # causes the delay to be higher before each retry
-                #     # e.g. 1 second delay, 2 seconds, 4 seconds
-                #     multiplier: 2
-                #     max_delay: 0
+                retry_strategy:
+                    max_retries: 1
+                    delay: 1000
+                    # multiplier: 2
+                    # max_delay: 0
                 options:
                     exchange:
                         name: submission_exchange
@@ -39,14 +50,14 @@ framework:
                             binding_keys: [low_priority_submission]
                             arguments:
                                 "x-max-priority": "%app.messenger.max_priority%"
-                                "x-dead-letter-exchange": "dead_letter_exchange" # Point to your DLX
-                                "x-dead-letter-routing-key": "submission.low_priority.dead" # Specific routing key for DLQ
+                                # "x-dead-letter-exchange": "dead_letter_exchange" # Point to your DLX
+                                # "x-dead-letter-routing-key": "submission.low_priority.dead" # Specific routing key for DLQ
                         submission_high_priority_queue:
                             binding_keys: [high_priority_submission]
                             arguments:
                                 "x-max-priority": "%app.messenger.max_priority%"
-                                "x-dead-letter-exchange": "dead_letter_exchange"
-                                "x-dead-letter-routing-key": "submission.high_priority.dead"
+                                # "x-dead-letter-exchange": "dead_letter_exchange"
+                                # "x-dead-letter-routing-key": "submission.high_priority.dead"
                         # submission_premium_queue:
                         #     binding_keys: [premium_submission]
                         #     arguments: { "x-max-priority": "%app.messenger.max_priority%" }
@@ -54,6 +65,11 @@ framework:
             competition_status_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
+                retry_strategy:
+                    max_retries: 1
+                    delay: 1000
+                    multiplier: 2
+                    max_delay: 0
                 options:
                     exchange:
                         name: delayed_competition_status_exchange
@@ -64,13 +80,13 @@ framework:
                         competition_status_queue:
                             binding_keys: [competition_status]
                             arguments:
-                                "x-dead-letter-exchange": "dead_letter_exchange"
-                                "x-dead-letter-routing-key": "competition_status.dead"
+                                # "x-dead-letter-exchange": "dead_letter_exchange"
+                                # "x-dead-letter-routing-key": "competition_status.dead"
                         competition_winner_generation_queue:
                             binding_keys: [winner_trigger]
                             arguments:
-                                "x-dead-letter-exchange": "dead_letter_exchange"
-                                "x-dead-letter-routing-key": "winner_trigger.dead"
+                                # "x-dead-letter-exchange": "dead_letter_exchange"
+                                # "x-dead-letter-routing-key": "winner_trigger.dead"
                 # prefetch_count: 100
                 #     auto_setup: false
                 # retry_strategy:
@@ -80,6 +96,11 @@ framework:
             email_amqp:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 serializer: messenger.transport.symfony_serializer
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+                    max_delay: 0
                 options:
                     exchange:
                         name: email_exchange
@@ -88,13 +109,13 @@ framework:
                         email_verification_queue:
                             binding_keys: [email_verification]
                             arguments:
-                                "x-dead-letter-exchange": "dead_letter_exchange"
-                                "x-dead-letter-routing-key": "email.verification.dead"
+                                # "x-dead-letter-exchange": "dead_letter_exchange"
+                                # "x-dead-letter-routing-key": "email.verification.dead"
                         email_notification_queue:
                             binding_keys: [email_notification]
                             arguments:
-                                "x-dead-letter-exchange": "dead_letter_exchange"
-                                "x-dead-letter-routing-key": "email.notification.dead"
+                                # "x-dead-letter-exchange": "dead_letter_exchange"
+                                # "x-dead-letter-routing-key": "email.notification.dead"
 
             
             # winner_trigger_amqp:
