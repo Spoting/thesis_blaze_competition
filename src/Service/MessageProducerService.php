@@ -8,6 +8,7 @@ use App\Message\EmailNotificationMessage;
 use App\Message\VerificationEmailMessage;
 use App\Message\WinnerTriggerMessage;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
+use Jwage\PhpAmqpLibMessengerBundle\Transport\AmqpStamp as PushAmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class MessageProducerService
@@ -122,7 +123,7 @@ class MessageProducerService
     {
         $priorityKey = $this->identifyPriorityKey($competitionEndTimestamp);
         if ($priorityKey == 0) {
-            $ampqStamp = new AmqpStamp(
+            $ampqStamp = new PushAmqpStamp(
                 self::AMPQ_ROUTING['low_priority_submission'],
                 attributes: [
                     'content_type' => 'application/json',
@@ -130,7 +131,7 @@ class MessageProducerService
                 ]
             );
         } else {
-            $ampqStamp = new AmqpStamp(
+            $ampqStamp = new PushAmqpStamp(
                 self::AMPQ_ROUTING['high_priority_submission'],
                 attributes: [
                     'priority' => $priorityKey,
