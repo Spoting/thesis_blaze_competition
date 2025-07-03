@@ -44,9 +44,6 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         $this->output->writeln(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
         $this->logger->info(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
 
-        /** @var Connection $connection */
-        $connection = $this->entityManager->getConnection();
-
         // Define Columns
         $columns = [
             'competition_id',
@@ -64,6 +61,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
         // Keep preinsert emails for later checking.
         $toInsertEmails = [];
+        $insertedEmails = [];
 
         // Build each Row's Data for Raw SQL BULK Insert Query
         foreach ($jobs as [$message, $ack]) {
@@ -71,7 +69,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
             /** @var CompetitionSubmittionMessage $message */
             $allValuePlaceholders[] = $singleRowPlaceholders;
-            
+
             $parameters[] = $message->getCompetitionId();
             $parameters[] = $message->getEmail();
             $parameters[] = json_encode($message->getFormData());
@@ -80,7 +78,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             // Define parameter types for each value
             $paramTypes[] = ParameterType::INTEGER;
             $paramTypes[] = ParameterType::STRING;
-            $paramTypes[] = ParameterType::STRING; 
+            $paramTypes[] = ParameterType::STRING;
             $paramTypes[] = ParameterType::STRING;
         }
 
@@ -94,19 +92,20 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         $sql .= ' ON CONFLICT DO NOTHING RETURNING email'; //(competition_id, email)
 
         // ----------------------------------------------------
-
-        $connection->beginTransaction();
+        $errorOccured = false;
         try {
+            /** @var Connection $connection */
+            $connection = $this->entityManager->getConnection();
+            $connection->beginTransaction();
+
             $statement = $connection->prepare($sql);
 
             foreach ($parameters as $index => $value) {
                 $statement->bindValue($index + 1, $value, $paramTypes[$index]);
             }
-
             $query_result = $statement->executeQuery();
 
             $results = $query_result->fetchAllAssociative();
-            $insertedEmails = [];
             if (!empty($results)) {
                 $insertedEmails = array_column($results, 'email');
             }
@@ -120,21 +119,32 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
             $this->logger->error(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
             $this->output->writeln(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
-            throw $e; // Re-throw to signal failure to Messenger
+
+            $errorOccured = true;
         } finally {
-            // $this->entityManager->clear();
+            $this->entityManager->clear();
+
+
+            // ACK all messages since Batch was Succefull
+            foreach ($jobs as $i => [$message, $ack]) {
+                if ($errorOccured && !empty($e)) {
+                    $ack->nack($e);
+                } else {
+                    $ack->ack($message);
+                }
+            }
+
+            if ($errorOccured && !empty($e)) {
+                dump('Error occured!');
+                throw $e;
+            }
         }
 
-        // ACK all messages since Batch was Succeful
-        foreach ($jobs as $i => [$message, $ack]) {
-            $ack->ack($message);
-            //     $ack->nack(new Exception('Test nack'));
-        }
 
         // Sent Corresponding Emails.
         foreach ($insertedEmails as $successEmail) {
-                // Sent Success Email
-                // $this->output->writeln('Success: ' . $successEmail);
+            // Sent Success Email
+            // $this->output->writeln('Success: ' . $successEmail);
         }
         $failedEmails = array_diff($toInsertEmails, $insertedEmails);
         if (!empty($failedEmails)) {
