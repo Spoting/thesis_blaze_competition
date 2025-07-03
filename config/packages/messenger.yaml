@@ -31,7 +31,8 @@ framework:
 
 
             submission_amqp:
-                dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                # dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                dsn: phpamqplib://guest:guest@rabbitmq:5672/%2f
                 # failure_transport: submission_dead_letter_amqp
                 # Celery Seriliazer
                 # serializer: App\Messenger\CelerySerializer
@@ -42,6 +43,7 @@ framework:
                     # multiplier: 2
                     # max_delay: 0
                 options:
+                    prefetch_count: 50
                     exchange:
                         name: submission_exchange
                         type: direct
@@ -53,14 +55,12 @@ framework:
                                 # "x-dead-letter-exchange": "dead_letter_exchange" # Point to your DLX
                                 # "x-dead-letter-routing-key": "submission.low_priority.dead" # Specific routing key for DLQ
                         submission_high_priority_queue:
+
                             binding_keys: [high_priority_submission]
                             arguments:
                                 "x-max-priority": "%app.messenger.max_priority%"
                                 # "x-dead-letter-exchange": "dead_letter_exchange"
                                 # "x-dead-letter-routing-key": "submission.high_priority.dead"
-                        # submission_premium_queue:
-                        #     binding_keys: [premium_submission]
-                        #     arguments: { "x-max-priority": "%app.messenger.max_priority%" }
             
             competition_status_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"

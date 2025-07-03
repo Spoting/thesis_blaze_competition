@@ -45,6 +45,7 @@ RUN set -eux; \
 		zip \
 		amqp \
 		redis \
+		sockets \
 	;
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser

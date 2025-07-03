@@ -162,7 +162,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
     private function getBatchSize(): int
     {
-        return 50;
+        return 50; // TODO: Convert to Enviromental
     }
 
     // private function shouldFlush(): bool

@@ -59,6 +59,9 @@
             "config/routes/easyadmin.yaml"
         ]
     },
+    "jwage/phpamqplib-messenger": {
+        "version": "0.8.4"
+    },
     "snc/redis-bundle": {
         "version": "4.9",
         "recipe": {
