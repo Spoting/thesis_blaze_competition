@@ -19,6 +19,8 @@ use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
 
 // UnrecoverableMessageHandlingException
 
+// Remember, that Connections are still Connections. We need to have less Workers as possible, meaning we need to optimize our Operation so we can have fewer Workers
+
 #[AsMessageHandler]
 class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 {
@@ -42,7 +44,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
     private function process(array $jobs): void
     {
         $this->output->writeln(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
-        $this->logger->info(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
+        // $this->logger->info(sprintf('Attempting to bulk insert %d submissions.', count($jobs)));
 
         // Define Columns
         $columns = [
@@ -89,7 +91,13 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             implode(', ', $allValuePlaceholders)
         );
 
+
+
         $sql .= ' ON CONFLICT DO NOTHING RETURNING email'; //(competition_id, email)
+        // DETAIL:  Key (competition_id)=(290) is not present in table "competition"."
+        // Foreign key violation: 7 ERROR:  insert or update on table "submission" violates foreign key constraint "fk_db055af37b39d312"
+        // Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException
+
 
         // ----------------------------------------------------
         $errorOccured = false;
@@ -97,9 +105,10 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             /** @var Connection $connection */
             $connection = $this->entityManager->getConnection();
             $connection->beginTransaction();
-
+            // throw new Exception('aaa');
+            
             $statement = $connection->prepare($sql);
-
+            // throw new Exception('aaa');
             foreach ($parameters as $index => $value) {
                 $statement->bindValue($index + 1, $value, $paramTypes[$index]);
             }
@@ -109,25 +118,28 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             if (!empty($results)) {
                 $insertedEmails = array_column($results, 'email');
             }
-
             $connection->commit();
-            $this->logger->info(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
+            // $this->logger->info(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
             $this->output->writeln(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
-        } catch (\Exception $e) {
-            // Failing here, means a more Generic Error Happened. ex, database connection error
+        } catch (\Doctrine\DBAL\Exception\ConnectionException $ce) {
+            // $this->output->writeln(sprintf('Connection Failed %s', $ce->getMessage()));
+            $this->output->writeln(sprintf('Connection Failed %s . %s', $ce->getMessage(), get_class($ce)));
+
+            $err_msg = $ce->getMessage();
+
+            $e = $ce;
+        } catch (\Throwable $e) {
+            $this->output->writeln(sprintf('Failed %s . %s', $e->getMessage(), get_class($e)));
+            $err_msg = $e->getMessage();
             $connection->rollback();
 
-            $this->logger->error(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
-            $this->output->writeln(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
-
+            // $this->logger->error(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
+            // $this->output->writeln(sprintf('Failed to bulk insert submissions: %s', $e->getMessage()));
             $errorOccured = true;
         } finally {
-            $this->entityManager->clear();
-
-
             // ACK all messages since Batch was Succefull
             foreach ($jobs as $i => [$message, $ack]) {
-                if ($errorOccured && !empty($e)) {
+                if ($errorOccured && !empty($err_msg)) {
                     $ack->nack($e);
                 } else {
                     $ack->ack($message);
@@ -136,7 +148,8 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
             if ($errorOccured && !empty($e)) {
                 dump('Error occured!');
-                throw $e;
+                // throw $e;
+                return;
             }
         }
 
@@ -155,7 +168,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             }
         }
 
-        $this->output->writeln('Processed new batch of Submissions');
+        $this->output->writeln('Processed new batch of Submissions 50');
         $this->output->writeln(PHP_EOL);
     }
 

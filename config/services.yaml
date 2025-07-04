@@ -33,6 +33,10 @@ services:
 
     Redis: '@snc_redis.default'
 
+    App\Messenger\DynamicCompetitionDlqSender:
+        arguments:
+            $dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+
     Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
         arguments:
             - '@Redis'
