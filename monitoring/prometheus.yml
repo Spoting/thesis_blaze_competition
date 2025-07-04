@@ -20,6 +20,22 @@ scrape_configs:
       - targets: ['rabbitmq:15692'] # RabbitMQ Management UI port for Prometheus metrics
     metrics_path: '/metrics' # Default path for RabbitMQ's Prometheus plugin
 
+  # https://grafana.com/grafana/dashboards/20700-rabbitmq-queues-overview-seventh-state-rabbitmq-support/
+  - job_name: 'rabbitmq-details-exporter'
+    metrics_path: /metrics/detailed
+    scrape_interval: 15s
+    params:
+      family: ["queue_coarse_metrics", "queue_consumer_count", "channel_queue_metrics", "channel_queue_exchange_metrics", "channel_metrics", "connection_metrics", "connection_coarse_metrics", "channel_exchange_metrics"]
+    static_configs:
+      - targets: ['rabbitmq:15692']
+    metric_relabel_configs:
+      - source_labels: [ 'queue_vhost' ]
+        regex: 'queue_vhost="(.*)"'
+        action: replace
+        target_label: "vhost"
+        replacement: "$1"
+
+
   - job_name: 'symfony_app'
     # If your Symfony 'php' service or workers expose custom metrics:
     # You would need to add a bundle/library to expose metrics from your Symfony app
