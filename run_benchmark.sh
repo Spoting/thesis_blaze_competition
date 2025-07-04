@@ -27,8 +27,6 @@ echo ""
 echo ""
 
 
-# --- Database Reset ---
-echo "### Clearing database tables"
 # Adjust the POSTGRES_USER and POSTGRES_DB if they differ from your .env or docker-compose defaults
 DB_USER=${POSTGRES_USER:-app}
 DB_NAME=${POSTRES_DB:-app}
@@ -50,6 +48,9 @@ echo 'Done Stopping Workers###'
 echo ""
 echo ""
 
+
+# --- Database Reset ---
+echo "### Clearing database tables"
 
 for TABLE in "${TABLES_TO_TRUNCATE[@]}"; do
     echo "$TABLE"

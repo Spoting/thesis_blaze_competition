@@ -147,11 +147,11 @@ services:
       timeout: 15s
       retries: 3
       start_period: 15s
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '1'
-    #       memory: 128M 
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 64M 
     networks:
       - monitoring_network
     command: php bin/console messenger:consume submission_amqp --queues=submission_low_priority_queue --verbose --limit=5000 --time-limit=3600 --memory-limit=128M
