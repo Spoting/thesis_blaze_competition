@@ -3,7 +3,9 @@
 namespace App\Command;
 
 use App\Message\CompetitionSubmittionMessage;
+use App\Message\CompetitionUpdateStatusMessage;
 use App\Service\MessageProducerService;
+use Jwage\PhpAmqpLibMessengerBundle\Batch;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -12,6 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
+use Jwage\PhpAmqpLibMessengerBundle\Transport\AmqpStamp as PushAmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsCommand(
@@ -21,11 +24,18 @@ use Symfony\Component\Messenger\MessageBusInterface;
 class ProduceMessagesCommand extends Command
 {
     private MessageBusInterface $messageBus;
+    // private AmqpTransportFactory $transportFactory;
+    // private SerializerInterface $serializer;
 
-    public function __construct(MessageBusInterface $messageBus)
-    {
+    public function __construct(
+        MessageBusInterface $messageBus,
+        // AmqpTransportFactory $transportFactory,
+        // SerializerInterface $serializer,
+    ) {
         parent::__construct();
         $this->messageBus = $messageBus;
+        // $this->serializer = $serializer;
+        // $this->transportFactory = $transportFactory;
     }
 
     protected function configure(): void
@@ -51,7 +61,6 @@ class ProduceMessagesCommand extends Command
         $lastPrintTime = $startTime;
         $printInterval = 5; // Print progress every 5 seconds
 
-
         // Initialize $lastMessageSendTime *before* the loop
         $lastMessageSendTime = $startTime; // Set it to the start time initially
 
@@ -62,7 +71,6 @@ class ProduceMessagesCommand extends Command
         $progressBar->setMessage('Initializing...');
         // --- End ProgressBar Init ---
 
-
         for ($i = 0; $i < $count; $i++) {
             $currentLoopTime = microtime(true);
             $elapsedTime = $currentLoopTime - $startTime;
@@ -70,7 +78,7 @@ class ProduceMessagesCommand extends Command
             if ($sendRate > 0) {
                 $expectedMessagesSent = floor($elapsedTime * $sendRate);
                 if ($messagesSent > $expectedMessagesSent) {
-                    $sleepTime = ( ( $messagesSent + 1 ) / $sendRate ) - $elapsedTime;
+                    $sleepTime = (($messagesSent + 1) / $sendRate) - $elapsedTime;
                     if ($sleepTime > 0) {
                         usleep((int) ($sleepTime * 1_000_000));
                     }
@@ -99,17 +107,15 @@ class ProduceMessagesCommand extends Command
                 }
             }
 
-
             $message = new CompetitionSubmittionMessage(
                 ['email' => 'kati@kati.com', 'priority' => $i . "|" . $priorityKey],
-                321,
+                321, // rand(1,350),
                 'kati' . $i . '@kati.com' . $i
             );
 
-
             $this->messageBus->dispatch(
                 $message,
-                [new AmqpStamp(
+                [new PushAmqpStamp(
                     $queue,
                     attributes: $message_attributes
                 )]
@@ -127,7 +133,7 @@ class ProduceMessagesCommand extends Command
             }
             // --- End ProgressBar Update ---
         }
-        
+
         // --- Finish the ProgressBar ---
         $progressBar->finish();
         // --- End ProgressBar Finish ---
@@ -148,3 +154,39 @@ class ProduceMessagesCommand extends Command
         return Command::SUCCESS;
     }
 }
+
+
+
+
+//         use Jwage\PhpAmqpLibMessengerBundle\Transport\AmqpTransportFactory;
+// use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+//         $transport = $this->transportFactory->createTransport(
+//             'phpamqplib://guest:guest@rabbitmq:5672/%2f/qwerty',
+//             ['exchange' => ['name' => 'kati']],
+//             $this->serializer
+//         );
+
+
+//         $message_attributes = [
+//             'content_type' => 'application/json',
+//             'content_encoding' => 'utf-8',
+//         ];
+//         $queue = 'kati2';
+
+//         $i = 1;
+
+//         $message = new CompetitionSubmittionMessage(
+//             ['email' => 'kati@kati.com', 'priority' => $i . "|"],
+//             321,
+//             'kati' . $i . '@kati.com' . $i
+//         );
+
+//         $envelope = new Envelope(
+//             $message,
+//             [new PushAmqpStamp(
+//                 $queue,
+//                 attributes: $message_attributes
+//             )]
+//         );
+
+//         $transport->send($envelope);
