@@ -51,10 +51,8 @@ class DynamicCompetitionDlqSender
 
     public function __destruct()
     {
-        dump('clossing custom connectrions');
         $this->channel?->close();
         $this->connection?->close();
-        // Connection gets closed automatically with channel
     }
 
     private function createConnectionFromDsn(string $dsn): AMQPStreamConnection
@@ -65,8 +63,6 @@ class DynamicCompetitionDlqSender
         $pass = $parts['pass'] ?? 'guest';
         $host = $parts['host'] ?? 'rabbitmq';
         $port = $parts['port'] ?? 5672;
-
-        // dump('dsn : ', $parts);
 
         return new AMQPStreamConnection($host, $port, $user, $pass);
     }

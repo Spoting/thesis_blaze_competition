@@ -21,6 +21,11 @@ class RedisManager
         return $this->redisClient->incrBy($key, $amount);
     }
 
+    public function decrementValue(string $key, int $amount = 1): int
+    {
+        return $this->redisClient->decrBy($key, $amount);
+    }
+
     public function getValue(string $key): ?string
     {
         return $this->redisClient->get($key);
