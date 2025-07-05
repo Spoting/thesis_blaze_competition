@@ -4,7 +4,7 @@ namespace App\MessageHandler;
 
 use App\Entity\Competition;
 use App\Message\WinnerTriggerMessage;
-use App\Service\CompetitionService;
+use App\Service\CompetitionStatusManagerService;
 use App\Service\MessageProducerService;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
@@ -20,7 +20,7 @@ final class WinnerTriggerMessageHandler
         private LoggerInterface $logger,
         private EntityManagerInterface $entityManager,
         private MessageProducerService $messageProducerService,
-        private CompetitionService $competitionService,
+        private CompetitionStatusManagerService $competitionStatusManager,
         private RedisManager $redisManager,
         private RedisKeyBuilder $redisKeyBuilder,
     ) {}
@@ -49,21 +49,22 @@ final class WinnerTriggerMessageHandler
         /** @var Competition */
         $competition = $this->entityManager->getRepository(Competition::class)->find($competitionId);
 
-
         // Validate Status Change
-        $isStatusValid = $this->competitionService->isStatusTransitionValid($competition, $targetStatus);
+        $isStatusValid = $this->competitionStatusManager->isStatusTransitionValid($competition, $targetStatus);
         if (!$isStatusValid) {
             // throw exception. dont attempt retry
         }
-
 
         // Validate if all Submissions are processed
         $submittedSubmissionCount = (int) $this->redisKeyBuilder->getCompetitionCountKey($competitionId);
         $processedSubmissionCount = (int) $submittedSubmissionCount; // TODO: Actual Query
         if ($processedSubmissionCount < $submittedSubmissionCount) {
-            // Do not awk message and retry later.
+            // NACK message and retry later.
+            // throw Exception
+        } elseif ($processedSubmissionCount > $submittedSubmissionCount) {
+            // Heal Redis counter key
         }
-
+        
         if (!$this->shouldGenerateWinners($competition)) {
             // Dont attempt to generate/announce winners
             return;
@@ -77,8 +78,6 @@ final class WinnerTriggerMessageHandler
 
         // Save Winners and Competition Status
         $this->entityManager->flush();
-
-
 
         // Publish Notification Message to Winners
         $winnersText = [];

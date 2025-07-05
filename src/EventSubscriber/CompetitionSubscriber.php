@@ -6,7 +6,7 @@ use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Events;
 use App\Entity\Competition;
 use App\Service\AnnouncementService;
-use App\Service\CompetitionService;
+use App\Service\CompetitionStatusManagerService;
 use App\Service\MercurePublisherService;
 use App\Service\MessageProducerService;
 use App\Service\RedisManager;
@@ -28,7 +28,7 @@ class CompetitionSubscriber
         private RedisManager $redis,
         private AnnouncementService $announcementService,
         private LoggerInterface $logger,
-        private CompetitionService $competitionService,
+        private CompetitionStatusManagerService $competitionStatusManager,
         private MessageProducerService $messageProducerService
     ) {}
 
@@ -86,8 +86,7 @@ class CompetitionSubscriber
                                 $shouldDispatchStatusUpdateMessages = true;
                             }
 
-                            // Store & Publish Announcement
-                            // Add Announcement to Redis
+                            // Store to Redis & Mercure Publish Announcement
                             $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$new]);
                             $this->announcementService->addAnnouncement($new, $message);
 
@@ -111,7 +110,7 @@ class CompetitionSubscriber
 
 
             if ($shouldDispatchStatusUpdateMessages) {
-                $statusTransitionTimestamps = $this->competitionService->calculateStatusTransitionDelays($entity);
+                $statusTransitionTimestamps = $this->competitionStatusManager->calculateStatusTransitionDelays($entity);
                 foreach ($statusTransitionTimestamps as $status => $delay_ms) {
                     if ($status == 'winners_announced') {
                         $this->messageProducerService->produceWinnerTriggerMessage(

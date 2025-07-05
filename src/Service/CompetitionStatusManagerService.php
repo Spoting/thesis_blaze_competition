@@ -4,18 +4,8 @@ namespace App\Service;
 
 use App\Entity\Competition;
 
-class CompetitionService
+class CompetitionStatusManagerService
 {
-
-    // TODO: 
-    public function shouldAllowSumbission(Competition $competition): bool
-    {
-        // if ($competition->getStatus(), in_array['statuses that allow submission']
-
-        return true;
-    }
-
-
     // TODO:
     public function isStatusTransitionValid(Competition $competition, string $new_status): bool
     {
@@ -29,10 +19,10 @@ class CompetitionService
     }
 
 
-    /** Returns Delays in Milliseconds  */
+    /** Returns Scheduling Delays in Milliseconds  */
     public function calculateStatusTransitionDelays(
         Competition $competition,
-        int $winnerGracePeriod = 60,     // 1 minute in seconds
+        int $winnerGracePeriod = 30,     // 30 seconds
         int $archiveAfter = 259200       // 3 days in seconds
     ): array {
 
@@ -41,7 +31,6 @@ class CompetitionService
 
         $start = $competition->getStartDate()->getTimestamp();
         $end = $competition->getEndDate()->getTimestamp();
-
 
         $runningDelay = $start - $now;
         $submissionsEndedDelay = $end - $now;
@@ -56,7 +45,4 @@ class CompetitionService
         ];
     }
 
-    //TODO: Maybe move functionality to generate LockSubmissionKey here
-
-    //TODO: Maybe move functionality to generate CountSubmissionKey here
 }

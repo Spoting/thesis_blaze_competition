@@ -4,7 +4,7 @@ namespace App\MessageHandler;
 
 use App\Entity\Competition;
 use App\Message\CompetitionUpdateStatusMessage;
-use App\Service\CompetitionService;
+use App\Service\CompetitionStatusManagerService;
 use App\Service\MessageProducerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -17,7 +17,7 @@ final class CompetitionUpdateStatusMessageHandler
         private LoggerInterface $logger,
         private EntityManagerInterface $entityManager,
         private MessageProducerService $messageProducerService,
-        private CompetitionService $competitionService
+        private CompetitionStatusManagerService $competitionStatusManager
     ) {}
 
     public function __invoke(CompetitionUpdateStatusMessage $message): void
@@ -46,7 +46,7 @@ final class CompetitionUpdateStatusMessageHandler
         $competition = $this->entityManager->getRepository(Competition::class)->find($competitionId);
 
         // Validate Status Change
-        $isStatusValid = $this->competitionService->isStatusTransitionValid($competition, $targetStatus);
+        $isStatusValid = $this->competitionStatusManager->isStatusTransitionValid($competition, $targetStatus);
         if (!$isStatusValid) {
             // throw exception. dont attempt retry
         }
