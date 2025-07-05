@@ -82,7 +82,7 @@ class Competition
         'archived' => 'Archived',
         // 'cancelled' => 'Cancelled',
     ];
-    
+
     public const PUBLIC_STATUSES = [
         'scheduled',
         'running',
@@ -265,5 +265,10 @@ class Competition
     public function setUpdatedAtValue(): void
     {
         $this->updatedAt = new \DateTime();
+    }
+
+    public function canAcceptSubmissions(): bool
+    {
+        return $this->status === 'running';
     }
 }

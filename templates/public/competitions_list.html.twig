@@ -64,7 +64,7 @@ Available Competitions
 								{% include 'public/_competition_teaser.html.twig' with {
                                     'competition': competition,
                                     'statusLabels': statusLabels,
-                                    'showSubmitButton': true
+                                    'showSubmitButton': competition.canAcceptSubmissions()
                                 } %}
 							</div>
 						{% endfor %}

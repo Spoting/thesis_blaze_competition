@@ -41,6 +41,7 @@ class CompetitionController extends AbstractController
 
         // Populate with fetched competitions
         foreach ($competitions as $competition) {
+            // $competition
             if (in_array($competition->getStatus(), $publicStatuses)) {
                 $competitionsByStatus[$competition->getStatus()][] = $competition;
             }
@@ -56,7 +57,9 @@ class CompetitionController extends AbstractController
     #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
     public function handleSubmitForm(Competition $competition, Request $request, UuidFactory $uuidFactory): Response
     {
-        $this->validateCompetition($competition);
+        if (!$competition->canAcceptSubmissions()){
+            throw new \Exception('You cannot Submit to this Competition');
+        }
 
         $form = $this->createForm(SubmissionType::class, null, [
             'competition_id' => $competition->getId(),
@@ -91,7 +94,6 @@ class CompetitionController extends AbstractController
                 ]);
             }
 
-            // return $this->redirectToRoute('public_competition_submit');
             try {
                 // Set the initial submission key with a short TTL (for pending verification)
                 $newSubmissionKeyData = [
@@ -146,13 +148,13 @@ class CompetitionController extends AbstractController
         ]);
     }
 
-    private function validateCompetition(Competition $competition)
-    {
-        if (
-            !$competition instanceof Competition
-            || $competition->getEndDate() < new \DateTimeImmutable()
-        ) {
-            throw $this->createNotFoundException('Competition not found or has ended.');
-        }
-    }
+    // private function validateCompetition(Competition $competition)
+    // {
+    //     if (
+    //         !$competition instanceof Competition
+    //         || $competition->getEndDate() < new \DateTimeImmutable()
+    //     ) {
+    //         throw $this->createNotFoundException('Competition not found or has ended.');
+    //     }
+    // }
 }

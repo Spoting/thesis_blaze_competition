@@ -76,7 +76,8 @@ class VerificationController extends AbstractController
             $newSubmissionKeyData = [
                 'status' => 'verified',
             ];
-            $competitionTimeRemaining = $competitionEndedAt - new \DateTimeImmutable()->getTimestamp();
+            $now = new \DateTimeImmutable();
+            $competitionTimeRemaining = $competitionEndedAt - $now->getTimestamp();
 
             $this->redisManager->setValue($submissionKey, json_encode($newSubmissionKeyData), $competitionTimeRemaining);
             $this->addFlash('success', 'Email successfully verified!');

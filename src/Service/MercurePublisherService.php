@@ -57,7 +57,7 @@ class MercurePublisherService
             $renderedHtml = $this->twig->render('public/_competition_teaser.html.twig', [
                 'competition' => $competition,
                 'statusLabels' => Competition::STATUSES, 
-                'showSubmitButton' => true,
+                'showSubmitButton' => $competition->canAcceptSubmissions()
             ]);
         }
 
