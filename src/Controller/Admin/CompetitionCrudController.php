@@ -86,8 +86,10 @@ class CompetitionCrudController extends AbstractCrudController
         }
 
         if (Crud::PAGE_NEW === $pageName) {
-            // Disable Status field so all New Competitions will be 'draft'
-            $statusField->setDisabled();
+            if (!$this->isGranted('ROLE_MANAGER_ADMIN')) {
+                // Disable Status field so all New Competitions will be 'draft'
+                $statusField->setDisabled();
+            }
 
             $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
             $startDateConstraints[] = new GreaterThan([
@@ -105,7 +107,9 @@ class CompetitionCrudController extends AbstractCrudController
 
                 // Dont change the Status after the Automations are scheduled.
                 if ($entity->getStatus() != 'scheduled') {
-                    $statusField->setDisabled();
+                    if (!$this->isGranted('ROLE_MANAGER_ADMIN')) {
+                        $statusField->setDisabled();
+                    }
                 }
             }
         }

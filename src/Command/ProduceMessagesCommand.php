@@ -13,7 +13,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
+use App\Service\RedisKeyBuilder;
+use App\Service\RedisManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Jwage\PhpAmqpLibMessengerBundle\Transport\AmqpStamp as PushAmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -23,19 +25,13 @@ use Symfony\Component\Messenger\MessageBusInterface;
 )]
 class ProduceMessagesCommand extends Command
 {
-    private MessageBusInterface $messageBus;
-    // private AmqpTransportFactory $transportFactory;
-    // private SerializerInterface $serializer;
-
     public function __construct(
-        MessageBusInterface $messageBus,
-        // AmqpTransportFactory $transportFactory,
-        // SerializerInterface $serializer,
+        private MessageBusInterface $messageBus,
+        private EntityManagerInterface $entityManager,
+        private RedisManager $redisManager,
+        private RedisKeyBuilder $redisKeyBuilder,
     ) {
         parent::__construct();
-        $this->messageBus = $messageBus;
-        // $this->serializer = $serializer;
-        // $this->transportFactory = $transportFactory;
     }
 
     protected function configure(): void
@@ -70,7 +66,8 @@ class ProduceMessagesCommand extends Command
         $progressBar->start();
         $progressBar->setMessage('Initializing...');
         // --- End ProgressBar Init ---
-
+        
+        $redisCountKey = $this->redisKeyBuilder->getCompetitionCountKey(321);
         for ($i = 0; $i < $count; $i++) {
             $currentLoopTime = microtime(true);
             $elapsedTime = $currentLoopTime - $startTime;
@@ -85,6 +82,8 @@ class ProduceMessagesCommand extends Command
                 }
             }
 
+            // Increment the Total Count for this Competition
+            $this->redisManager->incrementValue($redisCountKey);
 
             $message_attributes = [
                 'content_type' => 'application/json',
@@ -108,7 +107,7 @@ class ProduceMessagesCommand extends Command
             }
 
             $message = new CompetitionSubmittionMessage(
-                ['email' => 'kati@kati.com', 'priority' => $i . "|" . $priorityKey],
+                ['email' => 'kati' . $i . '@kati.com' . $i, 'priority' => $priorityKey],
                 321, // rand(1,350),
                 'kati' . $i . '@kati.com' . $i
             );
@@ -158,7 +157,7 @@ class ProduceMessagesCommand extends Command
 
 
 
-//         use Jwage\PhpAmqpLibMessengerBundle\Transport\AmqpTransportFactory;
+// use Jwage\PhpAmqpLibMessengerBundle\Transport\AmqpTransportFactory;
 // use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 //         $transport = $this->transportFactory->createTransport(
 //             'phpamqplib://guest:guest@rabbitmq:5672/%2f/qwerty',
