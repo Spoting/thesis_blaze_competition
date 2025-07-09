@@ -93,9 +93,9 @@ class TestController extends AbstractController
             'submissions_ended',
         ];
 
-        foreach ($status as $target_status) {
-            $this->generateCompetitionStatusUpdateMessage($target_status);
-        }
+        // foreach ($status as $target_status) {
+        //     $this->generateCompetitionStatusUpdateMessage($target_status);
+        // }
 
         $this->generateWinnerTriggerMessage();
 
@@ -195,7 +195,7 @@ class TestController extends AbstractController
         ];
 
         if ($target_status == 'submissions_ended') {
-            $x_delay = 10000;
+            $x_delay = 3000;
         } elseif ($target_status == 'running') {
             $x_delay = 1000;
         }
@@ -203,7 +203,7 @@ class TestController extends AbstractController
 
         $now = new \DateTime();
         $message = new CompetitionUpdateStatusMessage(
-            322,
+            321,
             $target_status,
             $now->format('Y-m-d H:i:s'),
             $x_delay
@@ -224,12 +224,12 @@ class TestController extends AbstractController
             'content_type' => 'application/json',
             'content_encoding' => 'utf-8',
         ];
-        $x_delay = 12000;
+        $x_delay = 5000;
         $message_attributes['headers'] = ['x-delay' => $x_delay];
 
         $now = new \DateTime();
         $message = new WinnerTriggerMessage(
-            322,
+            321,
             $now->format('Y-m-d H:i:s'),
             $x_delay
         );
