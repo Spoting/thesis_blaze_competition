@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Grafana DashBoards
+## RabbitMQ
+### RabbitMQ Queues Overview - Seventh State RabbitMQ Support
+### RabbitMQ Queue Details - Seventh State RabbitMQ Support
+### RabbitMQ-Overview
+## Cadvisor
+### cAdvisor Docker Insights
+### Cadvisor exporter
+
 # Load environment variables (optional, but good practice if you use a .env file)
 if [ -f .env ]; then
   export $(cat .env | grep -v '#' | awk '/=/ {print $1}')

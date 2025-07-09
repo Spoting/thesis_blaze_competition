@@ -38,6 +38,8 @@ services:
     environment:
       - RI_REDIS_HOST=${REDIS_HOST:-redis}
       - RI_REDIS_PORT=${REDIS_PORT:-6379}
+    networks:
+      - monitoring_network
     #   - RI_REDIS_ALIAS=MyLocalRedis
     #   - RI_REDIS_USERNAME=default
     #   - RI_REDIS_PASSWORD=your_strong_password
