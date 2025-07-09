@@ -16,28 +16,20 @@ class WinnerRepository extends ServiceEntityRepository
         parent::__construct($registry, Winner::class);
     }
 
-    //    /**
-    //     * @return Winner[] Returns an array of Winner objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('w')
-    //            ->andWhere('w.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('w.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Winner
-    //    {
-    //        return $this->createQueryBuilder('w')
-    //            ->andWhere('w.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Counts the number of winners for a given competition ID.
+     * This is useful if you only have the ID and not the Competition object itself.
+     *
+     * @param int $competitionId The ID of the Competition.
+     * @return int The count of winners.
+     */
+    public function countByCompetitionId(int $competitionId): int
+    {
+        return $this->createQueryBuilder('w')
+            ->select('COUNT(w.id)')
+            ->andWhere('w.competition = :competitionId')
+            ->setParameter('competitionId', $competitionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

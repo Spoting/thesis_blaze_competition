@@ -16,28 +16,39 @@ class SubmissionRepository extends ServiceEntityRepository
         parent::__construct($registry, Submission::class);
     }
 
-    //    /**
-    //     * @return Submission[] Returns an array of Submission objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Counts the number of submissions for a given competition ID.
+     * This is useful if you only have the ID and not the Competition object itself.
+     *
+     * @param int $competitionId The ID of the Competition.
+     * @return int The count of submissions.
+     */
+    public function countByCompetitionId(int $competitionId): int
+    {
+        return $this->createQueryBuilder('s')
+            ->select('COUNT(s.id)')
+            ->andWhere('s.competition = :competitionId')
+            ->setParameter('competitionId', $competitionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 
-    //    public function findOneBySomeField($value): ?Submission
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+
+    /**
+     * Returns an iterator for all submission IDs for a given competition.
+     * This uses a database cursor (toIterable()) for memory efficiency with large result sets.
+     *
+     * @param int $competitionId The ID of the competition.
+     * @return iterable A traversable object (iterator) yielding submission IDs.
+     */
+    public function getSubmissionIdsIterator(int $competitionId): iterable
+    {
+        return $this->createQueryBuilder('s')
+            ->select('s.id') 
+            ->where('s.competition = :competitionId')
+            ->setParameter('competitionId', $competitionId)
+            ->orderBy('s.id', 'ASC') 
+            ->getQuery()
+            ->toIterable();
+    }
 }

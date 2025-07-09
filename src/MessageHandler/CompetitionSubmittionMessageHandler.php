@@ -87,8 +87,6 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         $parameters = [];
         $paramTypes = [];
 
-
-
         $emailCompetitionIdMapping = [];
         foreach ($jobs as [$message, $ack]) {
             // Build email-competitionId mapping for later use.
@@ -182,7 +180,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         foreach ($insertedEmails as $successEmail) {
             // Sent Success Email
             $emailSubject = 'Submissions Accepted';
-            $emailText = 'Your Submission is Accepted for Competition: ' . $message->getCompetitionId();
+            $emailText = 'Your Submission is Accepted for Competition: ' . $emailCompetitionIdMapping[$successEmail];
             $this->messageProducer->produceEmailNotificationMessage(
                 $emailCompetitionIdMapping[$successEmail],
                 $successEmail,
@@ -197,7 +195,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             foreach ($failedEmails as $failedEmail) {
                 // Sent Failed Email
                 $emailSubject = 'Problem with Submission';
-                $emailText = 'Seems you have already Submitted. Your Submission Failed for Competition: ' . $message->getCompetitionId();
+                $emailText = 'Seems you have already Submitted. Your Submission Failed for Competition: ' . $emailCompetitionIdMapping[$failedEmail];
                 $this->messageProducer->produceEmailNotificationMessage(
                     $emailCompetitionIdMapping[$failedEmail],
                     $failedEmail,
@@ -205,7 +203,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
                     ['text' => $emailText]
                 );
                 // Decrement the Total Count for this Competition
-                $count_key = $this->redisKeyBuilder->getCompetitionCountKey($message->getCompetitionId());
+                $count_key = $this->redisKeyBuilder->getCompetitionCountKey($emailCompetitionIdMapping[$failedEmail]);
                 $this->redisManager->decrementValue($count_key);
             }
         }
