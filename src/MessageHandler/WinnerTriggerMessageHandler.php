@@ -71,17 +71,26 @@ final class WinnerTriggerMessageHandler
                 ));
             }
 
+            if ($this->winnersExistForCompetition($competition)) {
+                $this->logger->info(sprintf('Winner generation skipped for competition %s: Winners have already been generated. This message is unrecoverable.', $competitionId));
+                // No need to retry, the work is already done.
+                throw new UnrecoverableMessageHandlingException(sprintf(
+                    'Winners already exist for competition %s.',
+                    $competitionId
+                ));
+            }
+
             // Query Actuall Processed Submissions
             $processedSubmissionCount = $this->submissionRepository->countByCompetitionId($competitionId);
 
-            if (!$this->shouldGenerateWinners($processedSubmissionCount, $competition)) {
+            if (!$this->areAllSubmissionsProcessed($processedSubmissionCount, $competition)) {
                 // Dont attempt to generate/announce winners Yet
                 // NACK message and retry later.
                 throw new \Exception('Not all Submittions has been Processed for : ' . $competition->getId());
             }
 
             // Generate Winners
-            $winners = $this->generateWinners($competition, $competition->getNumberOfWinners());
+            $winners = $this->generateWinners($competition);
 
             // Update Competition Status
             $competition->setStatus($targetStatus);
@@ -137,12 +146,11 @@ final class WinnerTriggerMessageHandler
             );
         }
 
-
-
+        $this->logger->info(sprintf('Winners successfully Generated/Announced for Competition: %s', $competitionId));
         dump(sprintf('Winners Generated/Announced Competition: %s', $competitionId));
     }
 
-    private function shouldGenerateWinners(int $processedSubmissionCount, Competition $competition): bool
+    private function areAllSubmissionsProcessed(int $processedSubmissionCount, Competition $competition): bool
     {
         // Validate if all Submissions are processed
         $submittedSubmissionCountKey = $this->redisKeyBuilder->getCompetitionCountKey($competition->getId());
@@ -157,17 +165,41 @@ final class WinnerTriggerMessageHandler
         return true;
     }
 
-    private function generateWinners(Competition $competition, int $numberOfWinners): array
+    /**
+     * Checks if winners have already been generated and persisted for a given competition.
+     *
+     * @param Competition $competition The competition entity to check.
+     * @return bool True if at least one winner exists for the competition, false otherwise.
+     */
+    private function winnersExistForCompetition(Competition $competition): bool
+    {
+        // Use the WinnerRepository to count existing winners for the competition.
+        // A simple count is efficient and sufficient to determine if any winners exist.
+        $existingWinnersCount = $this->winnerRepository->count(['competition' => $competition->getId()]);
+
+        return $existingWinnersCount > 0;
+    }
+
+
+    /**
+     * Generates a list of random winner emails using Reservoir Sampling.
+     * Creates and persists Winner entities.
+     *
+     * @param Competition $competition The competition entity for which to generate winners.
+     * @return array<string> An array of winning emails.
+     */
+    private function generateWinners(Competition $competition): array
     {
         // --- Reservoir Sampling Algorithm (Algorithm R) ---
         // This algorithm selects 'k' random items from a stream of 'N' items
         // where 'N' can be very large or unknown, in a single pass, using O(k) space.
+        $numberOfWinners = $competition->getNumberOfWinners(); // 'k' items
         $reservoirSubmissionIds = []; // This will store the IDs of the 'k' potential winners.
         $i = 0; // Counter for the total number of submissions processed so far.
 
         // Use toIterable() to fetch submission IDs in batches.
         $submissionIdsIterator = $this->submissionRepository->getSubmissionIdsIterator($competition->getId());
-        
+
         foreach ($submissionIdsIterator as $submissionIdRow) {
             $currentSubmissionId = (int) $submissionIdRow['id'];
 
