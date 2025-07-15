@@ -129,8 +129,6 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             /** @var Connection $connection */
             $connection = $this->entityManager->getConnection();
             $connection->beginTransaction();
-            // throw new Exception('aaa');
-
             $statement = $connection->prepare($sql);
             // throw new Exception('aaa');
             foreach ($parameters as $index => $value) {

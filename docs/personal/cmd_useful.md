@@ -29,3 +29,7 @@ php bin/console doctrine:migrations:diff
 <!-- php bin/console make:migration -->
 
 php bin/console doctrine:migrations:migrate
+
+
+##
+php bin/console cache:pool:clear --all

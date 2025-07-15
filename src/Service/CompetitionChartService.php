@@ -35,7 +35,7 @@ class CompetitionChartService
         $competitionId = $competition->getId();
         $competitionTitle = $competition->getTitle();
 
-        // 1. Fetch historical snapshots
+        // Fetch snapshots
         $snapshots = $this->competitionStatsSnapshotRepository->findSnapshotsForCompetition(
             $competitionId,
         );
@@ -43,25 +43,16 @@ class CompetitionChartService
         $labels = [];
         $initiatedData = [];
         $processedData = [];
+        $failedData = [];
 
         foreach ($snapshots as $snapshot) {
             $labels[] = $snapshot->getCapturedAt()->format('H:i:s'); // Format time as HH:MM
-            $initiatedData[] = $snapshot->getInitiatedSubmissions();
-            $processedData[] = $snapshot->getProcessedSubmissions();
+            $initiatedData[] = (int) $snapshot->getInitiatedSubmissions();
+            $processedData[] = (int) $snapshot->getProcessedSubmissions();
+            $failedData[] = (int) $snapshot->getFailedSubmissions();
         }
 
-        // 2. Get current live data from Redis and PostgreSQL
-        $currentInitiated = (int) $this->redisManager->getValue($this->redisKeyBuilder->getCompetitionCountKey($competitionId)) ?? 0;
-        $currentProcessed = $this->submissionRepository->countByCompetitionId($competitionId);
-
-        // Add the current live data point as the very latest on the graph
-        if (empty($labels) || end($initiatedData) !== $currentInitiated || end($processedData) !== $currentProcessed) {
-            $labels[] = (new \DateTimeImmutable())->format('H:i:s') . ' (Now)';
-            $initiatedData[] = $currentInitiated;
-            $processedData[] = $currentProcessed;
-        }
-
-        // 3. Build the Chart.js object
+        // Build the Chart.js object
         $chart = $this->chartBuilder->createChart(Chart::TYPE_LINE);
 
         $chart->setData([
@@ -82,29 +73,38 @@ class CompetitionChartService
                     'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
                     'fill' => true,
                     'tension' => 0.1
+                ],
+                [
+                    'label' => 'Failed Submissions (DLQ)',
+                    'data' => $failedData,
+                    'borderColor' => 'rgba(255, 99, 132, 1)', // Red color
+                    'backgroundColor' => 'rgba(255, 99, 132, 0.2)', // Light red fill
+                    'fill' => true,
+                    'tension' => 0.1
                 ]
             ],
         ]);
-
         $chart->setOptions([
             'responsive' => true,
             'maintainAspectRatio' => false,
             'plugins' => [
                 'title' => [
                     'display' => true,
-                    'text' => $chartTitlePrefix // Dynamic chart title
+                    'text' => $chartTitlePrefix,
                 ],
                 'tooltip' => [
                     'mode' => 'index',
                     'intersect' => false,
                     'callbacks' => [
-                        'label' => 'function(context) { return context.dataset.label + ": " + context.parsed.y.toLocaleString(); }',
+                        'label' => 'function(context) {
+                    return context.dataset.label + ": " + context.parsed.y.toLocaleString();
+                }',
                     ],
                 ],
                 'zoom' => [
                     'zoom' => [
-                        'wheel' => [ 'enabled' => true ],
-                        'pinch' => [ 'enabled' => true ],
+                        'wheel' => ['enabled' => true],
+                        'pinch' => ['enabled' => true],
                         'mode' => 'x',
                     ],
                     'pan' => [
@@ -114,12 +114,16 @@ class CompetitionChartService
                 ],
             ],
             'scales' => [
-                'x' => [ 'title' => [ 'display' => true, 'text' => 'Time' ] ],
+                'x' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Time',
+                    ],
+                ],
                 'y' => [
-                    'beginAtZero' => true,
-                    'title' => [ 'display' => true, 'text' => 'Number of Submissions' ],
-                    'ticks' => [
-                        'callback' => 'function(value) { return value.toLocaleString(); }',
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Number of Submissions',
                     ],
                 ],
             ],

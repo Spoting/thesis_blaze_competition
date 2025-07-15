@@ -11,6 +11,7 @@ parameters:
         user: 'ROLE_USER'
     app.mercure.public_url: '%env(MERCURE_PUBLIC_URL)%'
     app.messenger.max_priority: '%env(MESSAGE_QUEUE_MAX_PRIORITY)%'
+    
 
 
 services:
@@ -36,6 +37,12 @@ services:
     App\Messenger\DynamicCompetitionDlqSender:
         arguments:
             $dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+    App\Service\RabbitMqManagementService:
+        arguments:
+            $rabbitmqManagementBaseUrl: '%env(RABBIT_MQ_MANAGEMENT_BASE_URL)%'
+            $rabbitmqManagementUsername: '%env(RABBIT_MQ_MANAGEMENT_USERNAME)%'
+            $rabbitmqManagementPassword:  '%env(RABBIT_MQ_MANAGEMENT_PASSWORD)%'
 
     Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
         arguments:

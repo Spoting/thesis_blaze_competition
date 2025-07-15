@@ -20,6 +20,9 @@ class CompetitionStatsSnapshot
     
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $processedSubmissions = null;
+
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $failedSubmissions = null;
     
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -77,6 +80,18 @@ class CompetitionStatsSnapshot
     public function setProcessedSubmissions(int $processedSubmissions): static
     {
         $this->processedSubmissions = $processedSubmissions;
+
+        return $this;
+    }
+
+    public function getFailedSubmissions(): ?int
+    {
+        return $this->failedSubmissions;
+    }
+
+    public function setFailedSubmissions(int $failedSubmissions): static
+    {
+        $this->failedSubmissions = $failedSubmissions;
 
         return $this;
     }

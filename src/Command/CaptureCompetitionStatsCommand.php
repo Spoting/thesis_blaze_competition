@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Entity\CompetitionStatsSnapshot;
 use App\Repository\CompetitionRepository;
 use App\Repository\SubmissionRepository;
+use App\Service\RabbitMqManagementService;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,6 +28,7 @@ class CaptureCompetitionStatsCommand extends Command
         private RedisKeyBuilder $redisKeyBuilder,
         private CompetitionRepository $competitionRepository,
         private SubmissionRepository $submissionRepository,
+        private RabbitMqManagementService $rabbitMqManagement,
         private LoggerInterface $logger,
     ) {
         parent::__construct();
@@ -57,17 +59,20 @@ class CaptureCompetitionStatsCommand extends Command
                 ) ?? 0;
                 $processedSubmissions = $this->submissionRepository->countByCompetitionId($competitionId);
 
+                $failedSubmissions = $this->rabbitMqManagement->getQueueMessageCount('dlq_competition_submission_' . $competitionId);
+
                 $snapshot = new CompetitionStatsSnapshot();
                 $snapshot->setCompetition($competition);
                 $snapshot->setCapturedAt(new \DateTimeImmutable());
                 $snapshot->setInitiatedSubmissions($initiatedSubmissions);
                 $snapshot->setProcessedSubmissions($processedSubmissions);
+                $snapshot->setFailedSubmissions($failedSubmissions);
 
                 $this->entityManager->persist($snapshot);
                 $capturedCount++;
                 
                 // TODO: Push Mercure Update
-                $io->success(sprintf('Captured %d stats snapshots for %d active competitions.', $capturedCount, count($activeCompetitions)));
+                $io->success(sprintf('Captured Snapshot for %d.', $competitionId));
 
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(
@@ -80,6 +85,7 @@ class CaptureCompetitionStatsCommand extends Command
         }
 
         $this->entityManager->flush();
+        $this->entityManager->clear();
 
         $io->success(sprintf('Captured %d stats snapshots for %d active competitions.', $capturedCount, count($activeCompetitions)));
         $this->logger->info(sprintf('Captured %d stats snapshots for %d active competitions.', $capturedCount, count($activeCompetitions)));
