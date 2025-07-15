@@ -39,7 +39,7 @@ class WorkerSubscriber implements EventSubscriberInterface
 
         // Root Failed Message to DLQ
         $queueName = 'dlq_competition_submission_' . $message->getCompetitionId();
-        $this->dlqSender->send($queueName, $message);
+        $this->dlqSender->send($queueName, $message, $event->getThrowable()->getMessage());
 
         // Decrement the Total Count for this Competition
         $count_key = $this->redisKeyBuilder->getCompetitionCountKey($message->getCompetitionId());

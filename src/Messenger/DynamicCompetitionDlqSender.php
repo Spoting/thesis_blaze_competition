@@ -25,7 +25,7 @@ class DynamicCompetitionDlqSender
         $this->channel = $this->connection->channel();
     }
 
-    public function send(string $queueName, object $message): void
+    public function send(string $queueName, object $message, string $errorMessage): void
     {
         if (!($message instanceof CompetitionSubmittionMessage)) {
             return;
@@ -44,6 +44,7 @@ class DynamicCompetitionDlqSender
         }
 
         $payload = $this->serializer->serialize($message, 'json');
+        // TODO: add ErrorMessage
         $amqpMessage = new AMQPMessage($payload, ['delivery_mode' => 2]);
 
         $this->channel->basic_publish($amqpMessage, '', $queueName);
