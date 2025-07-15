@@ -16,6 +16,10 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'admin_app' => [
+        'path' => './assets/admin_app.js',
+        'entrypoint' => true,
+    ],
     'announcements' => [
         'path' => './assets/js/announcements.js',
         'entrypoint' => true,
@@ -23,5 +27,26 @@ return [
     'competition-list' => [
         'path' => './assets/js/competition-list.js',
         'entrypoint' => true,
+    ],
+    '@hotwired/stimulus' => [
+        'version' => '3.2.2',
+    ],
+    '@symfony/stimulus-bundle' => [
+        'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
+    ],
+    'chart.js' => [
+        'version' => '3.9.1',
+    ],
+    'chartjs-plugin-zoom' => [
+        'version' => '2.2.0',
+    ],
+    'hammerjs' => [
+        'version' => '2.0.8',
+    ],
+    'chart.js/helpers' => [
+        'version' => '4.4.6',
+    ],
+    '@kurkle/color' => [
+        'version' => '0.3.2',
     ],
 ];

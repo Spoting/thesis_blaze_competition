@@ -4,41 +4,55 @@ namespace App\Controller\Admin;
 
 use App\Entity\Competition;
 use App\Entity\User;
+use App\Repository\CompetitionRepository;
+use App\Repository\CompetitionStatsSnapshotRepository;
+use App\Repository\SubmissionRepository;
+use App\Service\CompetitionChartService;
+use App\Service\RedisKeyBuilder;
+use App\Service\RedisManager;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 #[AdminDashboard(routePath: '/admin', routeName: 'admin_dashboard')]
 class DashboardController extends AbstractDashboardController
 {
+    // Inject the new CompetitionChartService
+    public function __construct(
+        private CompetitionRepository $competitionRepository,
+        private CompetitionChartService $competitionChartService
+    ) {}
+
     public function index(): Response
     {
-        // return parent::index();
+        /** @var User $currentUser */
+        $currentUser = $this->getUser();
 
-        // Option 1. You can make your dashboard redirect to some common page of your backend
-        //
-        // 1.1) If you have enabled the "pretty URLs" feature:
-        // return $this->redirectToRoute('admin_user_index');
-        //
-        // 1.2) Same example but using the "ugly URLs" that were used in previous EasyAdmin versions:
-        // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-        // return $this->redirect($adminUrlGenerator->setController(OneOfYourCrudController::class)->generateUrl());
+        // Fetch only running competitions created by the current user
+        $runningCompetitions = $this->competitionRepository->findBy([
+            'status' => 'running',
+            'createdBy' => $currentUser, // Filter by the current user
+        ]);
+        
+        $charts = []; // Array to hold data for each chart
+        
+        // Loop through each running competition and use the service to build chart data
+        foreach ($runningCompetitions as $competition) {
+            $charts[] = $this->competitionChartService->buildCompetitionChartData(
+                $competition,
+                'Submission Trends' // Title prefix for dashboard charts
+            );
+        }
 
-        // Option 2. You can make your dashboard redirect to different pages depending on the user
-        //
-        // if ('jane' === $this->getUser()->getUsername()) {
-        //     return $this->redirectToRoute('...');
-        // }
-
-        // Option 3. You can render some custom template to display a proper dashboard with widgets, etc.
-        // (tip: it's easier if your template extends from @EasyAdmin/page/content.html.twig)
-        //
-
-        // $userIdentifier = $this->getUser()?->getUserIdentifier();
+        // Render the main dashboard template, passing all chart data and user info
         return $this->render('admin/main_dashboard.html.twig', [
-            // 'user_identifier' => $userIdentifier,
+            'charts_data' => $charts, // Array of chart data for each running competition
+            'user_identifier' => $currentUser->getUserIdentifier(), // Current logged-in user
         ]);
     }
 

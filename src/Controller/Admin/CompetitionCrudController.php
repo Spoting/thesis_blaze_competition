@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 // use App\Form\Admin\CompetitionFormFieldType;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -138,6 +140,27 @@ class CompetitionCrudController extends AbstractCrudController
         yield AssociationField::new('createdBy')->setPermission('ROLE_MANAGER_ADMIN');
         yield DateTimeField::new('createdAt')->onlyOnIndex();
         yield DateTimeField::new('updatedAt')->onlyOnIndex();
+    }
+
+
+    public function configureActions(Actions $actions): Actions  
+    {
+        // Define the custom action to view competition stats
+        $viewStats = Action::new('viewStats', 'View Stats', 'fa fa-chart-bar')
+            // Link this action to your custom route for competition stats
+            ->linkToRoute('admin_competition_stats', function (Competition $competition) {
+                return ['id' => $competition->getId()];
+            })
+            ->addCssClass('btn btn-info')
+            ->setHtmlAttributes(['title' => 'View Competition Statistics Chart']);
+
+        return $actions
+            ->add(Crud::PAGE_INDEX, $viewStats)
+            ->add(Crud::PAGE_DETAIL, $viewStats)
+            // Set permissions for other default actions as per your security roles
+            ->setPermission(Action::NEW, 'ROLE_COMPETITION_MANAGER')
+            ->setPermission(Action::EDIT, 'ROLE_COMPETITION_MANAGER')
+            ->setPermission(Action::DELETE, 'ROLE_MANAGER_ADMIN'); // Only admins can delete
     }
 
 

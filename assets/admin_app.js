@@ -5,15 +5,17 @@ import './bootstrap.js';
  * This file will be included onto the page via the importmap() Twig function,
  * which should already be in your base.html.twig.
  */
-import './styles/app.css';
+import './styles/admin_app.css';
 
-// import { initializeCompetitionList } from './js/competition-list.js';
-// import { initializeAnnouncementsMercure } from './js/announcements.js';
+import { Chart } from 'chart.js';
 
+import zoomPlugin from 'chartjs-plugin-zoom';
 
-console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
-
-// https://symfony.com/bundles/TailwindBundle/current/index.html
+// Register the zoom plugin
+document.addEventListener('chartjs:init', function (event) {
+    const Chart = event.detail.Chart;
+    Chart.register(zoomPlugin); 
+});
 
 // php bin/console tailwind:build --watch
 // php bin/console importmap:

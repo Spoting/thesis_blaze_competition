@@ -8,7 +8,10 @@ use App\Message\CompetitionUpdateStatusMessage;
 use App\Message\EmailNotificationMessage;
 use App\Message\VerificationEmailMessage;
 use App\Message\WinnerTriggerMessage;
+use App\Repository\CompetitionStatsSnapshotRepository;
+use App\Repository\SubmissionRepository;
 use App\Service\MessageProducerService;
+use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,6 +21,8 @@ use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Uid\Factory\UuidFactory;
+use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 class TestController extends AbstractController
 {
@@ -156,7 +161,7 @@ class TestController extends AbstractController
             'content_encoding' => 'utf-8',
         ];
         if ($priority == null) {
-            $priorityKey = rand(0, 5); 
+            $priorityKey = rand(0, 5);
         } else {
             $priorityKey = $priority;
         }
@@ -173,7 +178,7 @@ class TestController extends AbstractController
         $message = new CompetitionSubmittionMessage(
             ['email' => 'kati@kati.com', 'priority' => $i . "|" . $priorityKey],
             321,
-            'kati'.$i.'@kati.com'.$i
+            'kati' . $i . '@kati.com' . $i
         );
 
         $this->messageBus->dispatch(
@@ -243,8 +248,40 @@ class TestController extends AbstractController
         );
     }
 
+    #[Route('/test-chart', name: 'app_test_chart')]
+    public function app_test_chart(ChartBuilderInterface $chartBuilder): Response
+    {
+        $chart = $chartBuilder->createChart(Chart::TYPE_LINE);
+
+        $chart->setData([
+            'labels' => ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+            'datasets' => [
+                [
+                    'label' => 'My First dataset',
+                    'backgroundColor' => 'rgb(255, 99, 132)',
+                    'borderColor' => 'rgb(255, 99, 132)',
+                    'data' => [0, 10, 5, 2, 20, 30, 45],
+                ],
+            ],
+        ]);
+
+        $chart->setOptions([
+            'scales' => [
+                'y' => [
+                    'suggestedMin' => 0,
+                    'suggestedMax' => 100,
+                ],
+            ],
+        ]);
+
+        // 4. Render the Twig template, passing the chart object
+        return $this->render('admin/comp_stat_chart.html.twig', [
+            'chart' => $chart,
+        ]);
+    }
+
     #[Route('/test', name: 'test')]
-    public function sendTemplatedEmail(): Response
+    public function testTheTestie(): Response
     {
         phpinfo();
         return new Response('OK');

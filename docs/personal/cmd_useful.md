@@ -22,8 +22,10 @@ when@dev:
 
 
 ## Migrations
+php bin/console doctrine:cache:clear-metadata
+
 php bin/console doctrine:migrations:diff
 
-php bin/console make:migration
+<!-- php bin/console make:migration -->
 
 php bin/console doctrine:migrations:migrate

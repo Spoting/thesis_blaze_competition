@@ -1,0 +1,13 @@
+/* Tailwind CSS directives - MUST be at the top */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your custom admin-specific CSS (if any) goes below these directives */
+
+.ea-content-body .card {
+    background-color: #e0f2f7;
+    border: 1px solid #e0e0e0; /* Light gray border */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Light shadow for depth */
+    border-radius: 0.5rem; /* Ensure rounded corners */
+}

@@ -1,8 +1,48 @@
 {# templates/admin/main_dashboard.html.twig #}
 {# {% extends '@EasyAdmin/layout.html.twig' %} #}
 {% extends '@EasyAdmin/page/content.html.twig' %}
+
 {% block main %}
-    Welcome
-    {# {{ app.user.roles.0 }} #}
+	Welcome
     {{ app.user.userIdentifier }}
 {% endblock main %}
+
+{% block content %}
+    <div class="ea-content-body">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-3xl text-blue-800 font-bold mb-6">Running Competition Statistics</h1>
+            </div>
+        </div>
+
+        {% if charts_data is empty %}
+            <div class="alert alert-info">
+                No competitions are currently running to display statistics.
+            </div>
+        {% endif %}
+
+        <div class="row">
+            {# Loop through each competition's chart data #}
+            {% for chart_data in charts_data %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card p-4">
+                        <h2 class="text-xl text-black font-semibold mb-4">{{ chart_data.competitionTitle }}</h2>
+                        
+                        {# Include the reusable chart partial #}
+                        {# Pass the chart object, Mercure URL, and competition title #}
+                        {% include 'admin/_competition_chart_block.html.twig' with {
+                            chart: chart_data.chart,
+                            mercureUrl: chart_data.mercureUrl,
+                            competitionTitle: chart_data.competitionTitle
+                        } %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% block importmap %}{{ importmap('admin_app') }}{% endblock %}
+{% endblock %}

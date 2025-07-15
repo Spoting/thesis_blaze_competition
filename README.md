@@ -75,7 +75,7 @@ guest
 ```
 
 
-### Load Database with test data. 
+### Load Database with test data (dev mode only). 
 ```
 php bin/console doctrine:fixtures:load
 ```
@@ -100,11 +100,15 @@ php bin/console tailwind:build
 exit
 make fix-perms
 ```
-- Generate Assets (prod):
+- Generate Assets ( css / js ) :
 ```
 php bin/console asset-map:compile
 ```
 
+- Require NPM modules :
+```
+php bin/console importmap:require chartjs-plugin-zoom
+```
 
 ## !!!! Do not use `die;` in code. Please just dont. It will require a restart
 

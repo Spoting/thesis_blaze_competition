@@ -16,28 +16,20 @@ class CompetitionStatsSnapshotRepository extends ServiceEntityRepository
         parent::__construct($registry, CompetitionStatsSnapshot::class);
     }
 
-    //    /**
-    //     * @return CompetitionStatsSnapshot[] Returns an array of CompetitionStatsSnapshot objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?CompetitionStatsSnapshot
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Finds historical snapshots for a given competition within a specified time range.
+     *
+     * @param int $competitionId The ID of the competition.
+     * @param \DateTimeImmutable|null $since The start date/time for the historical data. If null, fetches all.
+     * @return CompetitionStatsSnapshot[] An array of snapshot entities, ordered by capture time.
+     */
+    public function findSnapshotsForCompetition(int $competitionId): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->andWhere('s.competition = :competitionId')
+            ->setParameter('competitionId', $competitionId)
+            ->orderBy('s.capturedAt', 'ASC');
+            
+        return $qb->getQuery()->getResult();
+    }
 }
