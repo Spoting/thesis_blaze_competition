@@ -147,25 +147,42 @@ class MessageProducerService
             $message,
             [$ampqStamp]
         );
+
     }
 
-    private function identifyPriorityKey($competitionEndTimestamp)
+    public function identifyPriorityKey($competitionEndTimestamp)
     {
         $now = new \DateTimeImmutable();
         $timeRemainingSeconds = $competitionEndTimestamp - $now->getTimestamp();
-
-        if ($timeRemainingSeconds <= 28800) { // Less than 8 hour
-            return 1;
-        } elseif ($timeRemainingSeconds <= 14400) { // Less than 4 hours
-            return 2;
-        } elseif ($timeRemainingSeconds <= 9000) { // Less than 2.5 hours
-            return 3;
-        } elseif ($timeRemainingSeconds <= 3600) { // Less than 1 Hours
-            return 4;
-        } elseif ($timeRemainingSeconds <= 1800) { // Less then 30 Minutes
+        
+        
+        // Adjusted thresholds for demonstration
+        if ($timeRemainingSeconds <= 10) { // Less than 10 seconds
             return 5;
+        } elseif ($timeRemainingSeconds <= 20) { // Less than 20 seconds
+            return 4;
+        } elseif ($timeRemainingSeconds <= 30) { // Less than 30 seconds
+            return 3;
+        } elseif ($timeRemainingSeconds <= 60) { // Less than 1 minute
+            return 2;
+        } elseif ($timeRemainingSeconds <= 120) { // Less than 2 minutes
+            return 1;
         } else {
-            return 0; // Inditcates that it will be routed to Low Priority Queue.
+            return 0; // 2 minutes and up
         }
+
+        // if ($timeRemainingSeconds <= 28800) { // Less than 8 hour
+        //     return 1;
+        // } elseif ($timeRemainingSeconds <= 14400) { // Less than 4 hours
+        //     return 2;
+        // } elseif ($timeRemainingSeconds <= 9000) { // Less than 2.5 hours
+        //     return 3;
+        // } elseif ($timeRemainingSeconds <= 3600) { // Less than 1 Hours
+        //     return 4;
+        // } elseif ($timeRemainingSeconds <= 1800) { // Less then 30 Minutes
+        //     return 5;
+        // } else {
+        //     return 0; // Inditcates that it will be routed to Low Priority Queue.
+        // }
     }
 }
