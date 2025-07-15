@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Entity\CompetitionStatsSnapshot;
 use App\Repository\CompetitionRepository;
 use App\Repository\SubmissionRepository;
+use App\Service\MercurePublisherService;
 use App\Service\RabbitMqManagementService;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
@@ -30,6 +31,7 @@ class CaptureCompetitionStatsCommand extends Command
         private SubmissionRepository $submissionRepository,
         private RabbitMqManagementService $rabbitMqManagement,
         private LoggerInterface $logger,
+        private MercurePublisherService $mercurePublisher,
     ) {
         parent::__construct();
     }
@@ -71,8 +73,10 @@ class CaptureCompetitionStatsCommand extends Command
                 $this->entityManager->persist($snapshot);
                 $capturedCount++;
                 
-                // TODO: Push Mercure Update
                 $io->success(sprintf('Captured Snapshot for %d.', $competitionId));
+                
+                // TODO: Push Mercure Update
+                $this->mercurePublisher->publishUpdateChart($competitionId, $snapshot);
 
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(

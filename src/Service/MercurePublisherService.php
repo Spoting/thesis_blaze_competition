@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Competition;
+use App\Entity\CompetitionStatsSnapshot;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Twig\Environment;
@@ -12,6 +13,7 @@ class MercurePublisherService
 
     public const ANNOUNCEMENT_TOPIC = '/global_announcements';
     public const COMPETITIONS_TOPIC = '/competitions';
+    public const COMPETITION_STATS = '/competition/%d/stats';
 
     private HubInterface $hub;
     private Environment $twig;
@@ -41,7 +43,7 @@ class MercurePublisherService
 
         $this->hub->publish($update);
     }
-    
+
     /**
      * Publishes a Mercure update for a specific competition.
      *
@@ -56,7 +58,7 @@ class MercurePublisherService
         if ($isPublic) {
             $renderedHtml = $this->twig->render('public/_competition_teaser.html.twig', [
                 'competition' => $competition,
-                'statusLabels' => Competition::STATUSES, 
+                'statusLabels' => Competition::STATUSES,
                 'showSubmitButton' => $competition->canAcceptSubmissions()
             ]);
         }
@@ -71,6 +73,42 @@ class MercurePublisherService
                 'status' => $competition->getStatus(),
                 'statusLabels' => Competition::STATUSES,
             ])
+        );
+
+        $this->hub->publish($update);
+    }
+
+
+    public function publishUpdateChart(int $competitionId, CompetitionStatsSnapshot $snapshot)
+    {
+        $newLabels = $snapshot->getCapturedAt()->format('H:i:s'); // Format time as HH:MM
+        $newInitiatedData = (int) $snapshot->getInitiatedSubmissions();
+        $newProcessedData = (int) $snapshot->getProcessedSubmissions();
+        $newFailedData = (int) $snapshot->getFailedSubmissions();
+
+        $data = [
+            'labels' => [$newLabels],
+            'datasets' => [
+                [
+                    'label' => 'Initiated Submissions',
+                    'data' => [$newInitiatedData],
+                ],
+                [
+                    'label' => 'Processed Submissions',
+                    'data' => [$newProcessedData],
+                ],
+                [
+                    'label' => 'Failed Submissions (DLQ)',
+                    'data' => [$newFailedData],
+                ],
+            ],
+        ];
+
+        $topic = sprintf(self::COMPETITION_STATS, $competitionId);
+
+        $update = new Update(
+            $topic,
+            json_encode($data)
         );
 
         $this->hub->publish($update);

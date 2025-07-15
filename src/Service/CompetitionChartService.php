@@ -17,7 +17,7 @@ class CompetitionChartService
         private RedisManager $redisManager,
         private RedisKeyBuilder $redisKeyBuilder,
         private SubmissionRepository $submissionRepository,
-        // private HubInterface $mercureHub
+        private HubInterface $mercureHub
     ) {}
 
     /**
@@ -92,15 +92,6 @@ class CompetitionChartService
                     'display' => true,
                     'text' => $chartTitlePrefix,
                 ],
-                'tooltip' => [
-                    'mode' => 'index',
-                    'intersect' => false,
-                    'callbacks' => [
-                        'label' => 'function(context) {
-                    return context.dataset.label + ": " + context.parsed.y.toLocaleString();
-                }',
-                    ],
-                ],
                 'zoom' => [
                     'zoom' => [
                         'wheel' => ['enabled' => true],
@@ -125,13 +116,15 @@ class CompetitionChartService
                         'display' => true,
                         'text' => 'Number of Submissions',
                     ],
+                    'min' => 0,
                 ],
             ],
         ]);
 
-        // TODO: 4. Generate the Mercure subscribe URL 
-        $mercureUrl = sprintf('https://example.com/competition/%d/stats', $competitionId);
-        // $mercureUrl = $this->mercureHub->getPublicUrl() . '?topic=' . urlencode($mercureTopic);
+        // Generate the Mercure subscribe URL 
+
+        $mercureTopic = sprintf(MercurePublisherService::COMPETITION_STATS, $competitionId);
+        $mercureUrl = $this->mercureHub->getPublicUrl() . '?topic=' . urlencode($mercureTopic);
 
         return [
             'competitionId' => $competitionId,
