@@ -167,13 +167,13 @@ services:
     extends:
       php_worker_submission_low_priority
     # image: ${IMAGES_PREFIX:-}app-php-worker-competition-status
-    command: php bin/console messenger:consume competition_status_amqp --verbose --limit=1000 --time-limit=3600 --memory-limit=128M
+    command: php bin/console messenger:consume competition_status_amqp --verbose --time-limit=3600 --memory-limit=128M
 
   php_worker_email:
     extends:
       php_worker_submission_low_priority
     # image: ${IMAGES_PREFIX:-}app-php-worker-email
-    command: php bin/console messenger:consume email_amqp --verbose --limit=3000 --time-limit=3600 --memory-limit=128M
+    command: php bin/console messenger:consume email_verification_amqp email_notification_amqp --verbose --time-limit=3600 --memory-limit=128M
 
   php_cronjob:
     extends:

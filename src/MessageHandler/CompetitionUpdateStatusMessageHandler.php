@@ -65,7 +65,8 @@ final class CompetitionUpdateStatusMessageHandler
                 $competitionId,
                 $organizerEmail,
                 $emailSubject,
-                ['text' => $emailText]
+                ['text' => $emailText],
+                2 // High Priority
             );
         }
 

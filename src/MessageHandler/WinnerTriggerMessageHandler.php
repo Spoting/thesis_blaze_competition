@@ -142,7 +142,8 @@ final class WinnerTriggerMessageHandler
                 $competitionId,
                 $organizerEmail,
                 $emailSubject,
-                ['text' => $emailText]
+                ['text' => $emailText],
+                2 // High Priority
             );
         }
 

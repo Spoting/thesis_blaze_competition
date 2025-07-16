@@ -47,7 +47,7 @@ class MessageProducerService
         );
     }
 
-    public function produceEmailNotificationMessage(int $competitionId, string $receiverEmail, string $emailSubject, array $templateContext)
+    public function produceEmailNotificationMessage(int $competitionId, string $receiverEmail, string $emailSubject, array $templateContext, int $maxPriority = 1)
     {
         $message = new EmailNotificationMessage(
             $competitionId,
@@ -63,6 +63,7 @@ class MessageProducerService
                 attributes: [
                     'content_type' => 'application/json',
                     'content_encoding' => 'utf-8',
+                    'priority' => $maxPriority,
                 ]
             )]
         );

@@ -35,14 +35,10 @@ class TestController extends AbstractController
         private EntityManagerInterface $entityManager
     ) {}
 
-    #[Route('/test-notification-email', name: 'test_emails')]
+    #[Route('/test-emails', name: 'test_emails')]
     public function testMessages(): Response
     {
         $status = "";
-
-        // Email Verification
-        $message = $this->generateVerificationEmailMessage();
-        $status .= "Verification: OK\n";
 
         // Email Notification User Failure
         $message = $this->generateEmailNotificationMessage('Submission Failure', 'Your Submission has Failed to be Processed .');
@@ -52,18 +48,28 @@ class TestController extends AbstractController
         $message = $this->generateEmailNotificationMessage('Submission Success', 'Your Submission has been Succesfully Processed.');
         $status .= "Notify Submission Success: OK\n";
 
+        // Email Notification User Sucess
+        $message = $this->generateEmailNotificationMessage('Submission Success', 'Your Submission has been Succesfully Processed.');
+        $status .= "Notify Submission Success: OK\n";
+
         // Email Organizer Start Competition
-        $message = $this->generateEmailNotificationMessage('Started Competition', 'Competition has Started.');
+        $message = $this->generateEmailNotificationMessage('Started Competition', 'Competition has Started.', 2);
         $status .= "Notify Organizer Start: OK\n";
 
 
         // Email Organizer End Competition
-        $message = $this->generateEmailNotificationMessage('Ended Competition', 'Competition has Ended.');
+        $message = $this->generateEmailNotificationMessage('Ended Competition', 'Competition has Ended.', 2);
         $status .= "Notify Organizer End: OK\n";
 
         // Email Organizer Winner(s) Generated Competition
-        $message = $this->generateEmailNotificationMessage('Winners Generated Competition', 'Competition has new Winners!.');
+        $message = $this->generateEmailNotificationMessage('Winners Generated Competition', 'Competition has new Winners!.', 2);
         $status .= "Notify Organizer Winner(s) Generated: OK\n";
+
+        // Email Verification
+        for ($i=0; $i<10; $i++) {
+            $message = $this->generateVerificationEmailMessage();
+            $status .= "Verification: OK\n";
+        }
 
         return new Response($status);
     }
@@ -128,17 +134,18 @@ class TestController extends AbstractController
         return $message;
     }
 
-    private function generateEmailNotificationMessage($case, $text)
+    private function generateEmailNotificationMessage($case, $text, $priority = 1)
     {
-        $receiverEmail = 'notify@ekane.pin';
 
+        $receiverEmail = 'notify@something.notify' . $priority;
         $competition_id = '10';
         // $redis->setValue('verification_token_'. $verificationToken, json_encode(['email' => $receiverEmail, 'otherdata' => 'skata'], 1749990508));
+
 
         $message = new EmailNotificationMessage(
             $competition_id,
             $receiverEmail,
-            $case . ' - Test - Notification Email',
+            $case . ' - Test - Notification Email | priority=' . $priority,
             templateContext: ['text' => $text, 'competition_id' => $competition_id]
         );
 
@@ -149,6 +156,7 @@ class TestController extends AbstractController
                 attributes: [
                     'content_type' => 'application/json',
                     'content_encoding' => 'utf-8',
+                    'priority' => $priority
                 ]
             )]
         );

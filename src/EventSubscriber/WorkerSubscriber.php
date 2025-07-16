@@ -52,7 +52,8 @@ class WorkerSubscriber implements EventSubscriberInterface
             $message->getCompetitionId(),
             $message->getEmail(),
             $emailSubject,
-            ['text' => $emailText]
+            ['text' => $emailText],
+            2 // High Priority
         );
     }
 
@@ -79,7 +80,8 @@ class WorkerSubscriber implements EventSubscriberInterface
                     $message->getCompetitionId(),
                     $organizerEmail,
                     $emailSubject,
-                    ['text' => $emailText]
+                    ['text' => $emailText],
+                    2 // High Priority
                 );
             }
             return;
@@ -94,7 +96,8 @@ class WorkerSubscriber implements EventSubscriberInterface
                 $message->getCompetitionId(),
                 $organizerEmail,
                 $emailSubject,
-                ['text' => $emailText]
+                ['text' => $emailText],
+                2 // High Priority
             );
         }
     }
@@ -120,7 +123,8 @@ class WorkerSubscriber implements EventSubscriberInterface
                     $message->getCompetitionId(),
                     $organizerEmail,
                     $emailSubject,
-                    ['text' => $emailText]
+                    ['text' => $emailText],
+                    2 // High Priority
                 );
             }
             return;
@@ -136,7 +140,8 @@ class WorkerSubscriber implements EventSubscriberInterface
                 $message->getCompetitionId(),
                 $organizerEmail,
                 $emailSubject,
-                ['text' => $emailText]
+                ['text' => $emailText],
+                2 // High Priority
             );
         }
     }

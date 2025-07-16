@@ -35,8 +35,10 @@ php bin/console doctrine:fixtures:load --group=UserFixtures
 ## Export / Import Database
 
 ### Export 
-pg_dump -U $POSTGRES_USER -h $DATABASE_HOST -d $POSTGRES_DB -f backup.sql
-
+<!-- pg_dump -U $POSTGRES_USER -h $DATABASE_HOST -d $POSTGRES_DB -f backup.sql -->
+docker compose exec database /bin/bash;
+pg_dump -U $POSTGRES_USER -h localhost -d $POSTGRES_DB -f backup.sql;
+docker cp database:/backup.sql .
 
 ### Import
 create database

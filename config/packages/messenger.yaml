@@ -13,11 +13,11 @@ framework:
                 options:
                     exchange:
                         name: dead_letter_exchange
-                        type: topic 
+                        type: topic
                     queues:
-                        dead_letter_queue: 
+                        dead_letter_queue:
                             binding_keys: ["#"]
-            
+
             submission_amqp:
                 # dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 dsn: phpamqplib://guest:guest@rabbitmq:5672/%2f
@@ -25,7 +25,7 @@ framework:
                 # Celery Seriliazer
                 # serializer: App\Messenger\CelerySerializer
                 serializer: messenger.transport.symfony_serializer
-                retry_strategy: 
+                retry_strategy:
                     max_retries: 0
                     delay: 1000
                     multiplier: 2
@@ -46,13 +46,12 @@ framework:
                                 # "x-dead-letter-exchange": "dead_letter_exchange" # Point to your DLX
                                 # "x-dead-letter-routing-key": "submission.low_priority.dead" # Specific routing key for DLQ
                         submission_high_priority_queue:
-
                             binding_keys: [high_priority_submission]
                             arguments:
                                 "x-max-priority": "%app.messenger.max_priority%"
                                 # "x-dead-letter-exchange": "dead_letter_exchange"
                                 # "x-dead-letter-routing-key": "submission.high_priority.dead"
-            
+
             competition_status_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
@@ -84,11 +83,11 @@ framework:
                 # retry_strategy:
                 #     max_retries: 3
                 #     delay: 1000
-            
-            email_amqp:
-                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+            email_verification_amqp:
+                dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
-                failure_transport: dead_letter_amqp
+                failure_transport: dead_letter_amqp 
                 retry_strategy:
                     max_retries: 3
                     delay: 1000
@@ -96,49 +95,38 @@ framework:
                     max_delay: 0
                 options:
                     exchange:
-                        name: email_exchange
+                        name: email_exchange # Use the same email exchange
                         type: direct
                     queues:
                         email_verification_queue:
                             binding_keys: [email_verification]
-                            arguments:
-                                # "x-dead-letter-exchange": "dead_letter_exchange"
-                                # "x-dead-letter-routing-key": "email.verification.dead"
+
+            email_notification_amqp:
+                dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
+                serializer: messenger.transport.symfony_serializer
+                failure_transport: dead_letter_amqp # Route failures to dead_letter_amqp
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+                    max_delay: 0
+                options:
+                    exchange:
+                        name: email_exchange # Use the same email exchange
+                        type: direct
+                    queues:
                         email_notification_queue:
                             binding_keys: [email_notification]
                             arguments:
-                                # "x-dead-letter-exchange": "dead_letter_exchange"
-                                # "x-dead-letter-routing-key": "email.notification.dead"
+                                "x-max-priority": 2
 
-            
-            # winner_trigger_amqp:
-            #     dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
-            #     serializer: messenger.transport.symfony_serializer
-            #     options:
-            #         exchange:
-            #             name: delayed_winner_exchange
-            #             type: x-delayed-message
-            #             arguments:
-            #                 x-delayed-type: direct
-            #         queues:
-            #             competition_winner_generation_queue:
-            #                 binding_keys: [winner_trigger]
-
-            # --- AMQP Alternative for Failed Messages ---
-            # Define a separate DSN for the failed transport, pointing to your RabbitMQ.
-            # The 'queue_name' parameter tells Messenger which queue to send failed messages to.
-            # failed: '%env(MESSENGER_TRANSPORT_DSN)%?queue_name=failed_messages'
-
+        # Routing: Messages are routed to specific transports
         routing:
-            # Route your messages to the transports
-            App\Message\CompetitionSubmittionMessage: submission_amqp
-            App\Message\WinnerTriggerMessage: competition_status_amqp
-            App\Message\CompetitionUpdateStatusMessage: competition_status_amqp
-            App\Message\VerificationEmailMessage: email_amqp
-            App\Message\EmailNotificationMessage: email_amqp
-            # You might want to define a specific routing for messages that have already been dead-lettered
-            # For example, if you decide to re-process them.
-            # App\Message\DeadLetteredMessage: dead_letter_amqp
+            'App\Message\CompetitionSubmittionMessage': submission_amqp
+            'App\Message\WinnerTriggerMessage': competition_status_amqp
+            'App\Message\CompetitionUpdateStatusMessage': competition_status_amqp
+            'App\Message\VerificationEmailMessage': email_verification_amqp 
+            'App\Message\EmailNotificationMessage': email_notification_amqp 
 
 # when@test:
 #    framework:
