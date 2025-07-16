@@ -9,7 +9,9 @@ use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\Exception\ORMException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -91,7 +93,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         foreach ($jobs as [$message, $ack]) {
             // Build email-competitionId mapping for later use.
             $emailCompetitionIdMapping[$message->getEmail()] = $message->getCompetitionId();
-            
+
             // Build each Row's Data for Raw SQL BULK Insert Query
             /** @var CompetitionSubmittionMessage $message */
             $allValuePlaceholders[] = $singleRowPlaceholders;
@@ -117,17 +119,48 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
 
         // Silent Error for unique(competition_id, email) and null Constraints
-        $sql .= ' ON CONFLICT DO NOTHING RETURNING email'; 
+        $sql .= ' ON CONFLICT DO NOTHING RETURNING email';
         // The whole batch could fail because -> Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException
         // Which should not happen. Nevertheless, we still need to handle it accordingly.
 
 
-        // ----------------------------------------------------
         $errorOccured = false;
         $insertedEmails = [];
+        // ----------------------------------------------------
+        /** @var Connection $connection */
+        $connection = $this->entityManager->getConnection();
+
+        // Aggressive connection reset before starting processing
         try {
-            /** @var Connection $connection */
-            $connection = $this->entityManager->getConnection();
+            // Check if connection is open and try to close it cleanly
+            if ($connection->isConnected()) {
+                if ($connection->isTransactionActive()) {
+                    $this->logger->warning('Found active transaction before batch processing. Attempting rollback.');
+                    $connection->rollBack(); // Try to roll back any lingering transaction
+                }
+                $connection->close(); // Close the physical connection
+                $this->logger->info('Database connection explicitly closed before batch processing.');
+            }
+            // Force EntityManager to clear its UnitOfWork and potentially reset internal state
+            // This is crucial for long-running processes like Messenger workers.
+            $this->entityManager->clear();
+            $this->logger->info('EntityManager cleared before batch processing.');
+
+        } catch (DriverException $e) {
+            $this->logger->error(sprintf('Error during pre-batch connection cleanup: %s. Forcing connection close.', $e->getMessage()), ['exception' => $e]);
+            // If even cleanup fails, ensure connection is closed aggressively
+            if ($connection->isConnected()) {
+                $connection->close();
+            }
+            // Don't throw here, try to proceed with the main logic,
+            // the subsequent beginTransaction will attempt to re-establish.
+        } catch (ORMException $e) { // Catch ORM specific exceptions during clear
+            $this->logger->error(sprintf('ORM Exception during pre-batch EM clear: %s', $e->getMessage()), ['exception' => $e]);
+            // Re-throw if EM is in a truly unusable state
+            throw $e;
+        }
+
+        try {
             $connection->beginTransaction();
             $statement = $connection->prepare($sql);
             // throw new Exception('aaa');
@@ -143,17 +176,25 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             $connection->commit();
             // $this->logger->info(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
             $this->output->writeln(sprintf('Successfully bulk inserted %d new submissions.', count($jobs)));
-        } catch (\Doctrine\DBAL\Exception\ConnectionException $ce) {
-            // $this->output->writeln(sprintf('Connection Failed %s . %s', $ce->getMessage(), get_class($ce)));
+        } catch (\Doctrine\DBAL\Exception\ConnectionException $ce) {  // | \Doctrine\DBAL\Driver\PDO\PDOException 
+            $this->output->writeln(sprintf('Connection Failed %s . %s', $ce->getMessage(), get_class($ce)));
             // Do not attempt to Rollback on Connection Error.
             $errorOccured = true;
             $e = $ce;
         } catch (\Throwable $e) {
-            // $this->output->writeln(sprintf('Failed %s . %s', $e->getMessage(), get_class($e)));
-            // Rollback Changes
-            $connection->rollback();
+            $this->output->writeln(sprintf('Failed %s . %s', $e->getMessage(), get_class($e)));
 
             $errorOccured = true;
+
+            if ($connection->isTransactionActive()) {
+                try {
+                    $connection->rollBack();
+                } catch (DriverException $rollbackException) {
+                    $this->output->writeln(sprintf('Failed to roll back transaction after error: %s', $rollbackException->getMessage()));
+                    // If rollback fails, connection might be broken, force close for next message
+                    $connection->close();
+                }
+            }
         } finally {
             // ACK all messages since Batch was Succefull
             foreach ($jobs as $i => [$message, $ack]) {
@@ -163,6 +204,8 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
                     $ack->ack($message);
                 }
             }
+            
+            $this->entityManager->clear();
 
             if ($errorOccured && !empty($e)) {
                 // dump('Error occured!');
