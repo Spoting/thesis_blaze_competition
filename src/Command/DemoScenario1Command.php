@@ -13,6 +13,7 @@ use App\Service\MercurePublisherService; // Still needed for initial competition
 use App\Service\MessageProducerService; // To produce real submission messages
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -20,6 +21,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 #[AsCommand(
     name: 'app:demo-scenario-1',
@@ -43,6 +45,16 @@ class DemoScenario1Command extends Command
         parent::__construct();
     }
 
+
+    protected function configure(): void
+    {
+        $this
+            ->addOption('clear-only', null, InputOption::VALUE_NONE, 'If set, only clears existing demo competitions and exits.') // NEW: Add --clear-only option
+        ;
+    }
+
+
+    // docker compose exec rabbitmq sh -c "rabbitmqadmin -u guest -p guest list queues name -f tsv | xargs -I {} rabbitmqadmin -u guest -p guest purge queue name={}"
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -59,6 +71,8 @@ class DemoScenario1Command extends Command
         $io->text(sprintf('Using organizer user: %s', $organizerUser->getUserIdentifier()));
 
 
+        $this->redisManager->deleteKey(RedisKeyBuilder::GLOBAL_ANNOUNCEMENT_KEY);
+
         // --- NEW: Clear existing competitions with the same demo titles ---
         $io->section('Clearing Existing Demo Competitions...');
         $this->clearExistingCompetitions([
@@ -68,6 +82,11 @@ class DemoScenario1Command extends Command
             'Demo Comp D (10s Start)', // Include all demo competition titles
         ]);
         $io->success('Existing demo competitions and their data cleared.');
+
+        if ($input->getOption('clear-only')) {
+            $io->info('"--clear-only" option detected. Exiting after clearing data.');
+            return Command::SUCCESS;
+        }
 
         // --- 2. Create 3 Competitions with Specific Timings ---
         $io->section('Creating Competitions...');
@@ -145,27 +164,13 @@ class DemoScenario1Command extends Command
                         $dummyCompetitionEndTimestamp = $comp->getEndDate()->getTimestamp();
                         $priorityKey = $this->messageProducerService->identifyPriorityKey($dummyCompetitionEndTimestamp);
 
-                        $email = sprintf('user_%d_%d_%s@example.com', $comp->getId(), $totalSubmissionsProduced, uniqid('la'));
+                        $email = sprintf('user_%d_%d_%s@example.com', $comp->getId(), $totalSubmissionsProduced, uniqid());
                         $formData = [
                             'email' => $email,
                             'phoneNumber' => '696969690' . $priorityKey,
                             'priorityKey' => $priorityKey
                         ];
 
-                        // // Simulate a "failed" submission by sending it to the DLQ directly for demo purposes
-                        // // In a real app, this would happen if the consumer fails and retries are exhausted.
-                        // $isFailedDemo = (mt_rand(0, 100) / 100) < $failedSubmissionRate;
-
-                        // // For the demo, we'll use a dummy competition end timestamp for priority calculation.
-                        // // In a real scenario, this comes from the competition entity.
-                        // if ($isFailedDemo) {
-                        //     // To simulate a message going to DLQ, we would normally let the consumer fail.
-                        //     // For this demo, we can produce a message that's *intended* to fail for demonstration.
-                        //     // However, Messenger doesn't have a direct "produce to DLQ" method.
-                        //     // The most realistic way to demo DLQ is to have a consumer that *sometimes* throws an exception.
-                        //     // For now, we'll just produce regular messages and let the system naturally handle failures.
-                        //     // The DLQ chart will reflect actual failures from your consumers.
-                        // }
 
                         $this->messageProducerService->produceSubmissionMessage(
                             (string) $dummyCompetitionEndTimestamp,
@@ -216,65 +221,106 @@ class DemoScenario1Command extends Command
         return $competition;
     }
 
-    private function updateCompetition(Competition $competition) 
+    private function updateCompetition(Competition $competition)
     {
         $competition->setStatus('scheduled');
         $this->entityManager->flush();
     }
 
 
-      /**
-     * Clears existing demo competitions and their associated data.
+    /**
+     * Clears existing demo competitions and their associated data using raw SQL for children, and ORM for parent.
      *
      * @param array $titlesToDelete An array of competition titles to delete.
      */
     private function clearExistingCompetitions(array $titlesToDelete): void
     {
-        // Find existing competitions by title
-        $existingCompetitions = $this->competitionRepository->findBy(['title' => $titlesToDelete]);
+        /** @var Connection $connection */
+        $connection = $this->entityManager->getConnection();
 
-        if (empty($existingCompetitions)) {
-            // $this->logger->info('No existing demo competitions found to clear.');
+        // Find existing competitions by title to get their IDs
+        $existingCompetitionIds = $this->competitionRepository->createQueryBuilder('c')
+            ->select('c.id')
+            ->where('c.title IN (:titles)')
+            ->setParameter('titles', $titlesToDelete)
+            ->getQuery()
+            ->getSingleColumnResult(); // Get a flat array of IDs
+
+        if (empty($existingCompetitionIds)) {
+            $this->logger->info('No existing demo competitions found to clear.');
             return;
         }
 
-        // $this->logger->info(sprintf('Clearing %d existing demo competitions and their data.', count($existingCompetitions)));
+        $this->logger->info(sprintf('Clearing data for %d existing demo competitions.', count($existingCompetitionIds)));
 
-        foreach ($existingCompetitions as $competition) {
-            // $this->logger->info(sprintf('  Deleting data for Competition: %s (ID: %d)', $competition->getTitle(), $competition->getId()));
-            $competitionId = $competition->getId();
+        // Start a single transaction for all deletions to ensure atomicity
+        $connection->beginTransaction();
+        try {
+            // Use placeholders and PARAM_INT_ARRAY for safe and correct IN clause with executeStatement
+            // This ensures the array of IDs is handled properly by the database driver.
+
             // 1. Delete CompetitionStatsSnapshot records
-            $snapshots = $this->competitionStatsSnapshotRepository->findBy(['competition' => $competition]);
-            foreach ($snapshots as $snapshot) {
-                $this->entityManager->remove($snapshot);
-            }
-            $this->entityManager->flush();
-            // $this->logger->info(sprintf('    Removed %d snapshots.', count($snapshots)));
+            $this->logger->info(sprintf('  Deleting snapshots for competitions: %s', implode(',', $existingCompetitionIds)));
+            $connection->executeStatement(
+                "DELETE FROM competition_stats_snapshot WHERE competition_id IN (?)",
+                [$existingCompetitionIds],
+                [Connection::PARAM_INT_ARRAY] // Correct type for array of integers
+            );
 
-            // 2. Delete Submission records
-            $submissions = $this->submissionRepository->findBy(['competition' => $competition]);
-            foreach ($submissions as $submission) {
-                $this->entityManager->remove($submission);
+            // 2. Delete Winner records
+            $this->logger->info(sprintf('  Deleting winners for competitions: %s', implode(',', $existingCompetitionIds)));
+            $connection->executeStatement(
+                "DELETE FROM winner WHERE competition_id IN (?)",
+                [$existingCompetitionIds],
+                [Connection::PARAM_INT_ARRAY]
+            );
+
+            // 3. Delete Submission records
+            $this->logger->info(sprintf('  Deleting submissions for competitions: %s', implode(',', $existingCompetitionIds)));
+            $connection->executeStatement(
+                "DELETE FROM submission WHERE competition_id IN (?)",
+                [$existingCompetitionIds],
+                [Connection::PARAM_INT_ARRAY]
+            );
+
+            // 4. Delete the Competition entities themselves using ORM
+            foreach ($existingCompetitionIds as $competitionId) {
+                // Re-fetch the competition entity to ensure it's managed by the current EntityManager instance
+                // This is crucial after raw SQL operations which invalidate the EM's UnitOfWork for these entities.
+                $competition = $this->competitionRepository->find($competitionId);
+
+                if ($competition) { // Check if it still exists (might have been deleted by another process, though unlikely here)
+                    $this->entityManager->remove($competition);
+                    $this->logger->info(sprintf('    Marked Competition entity ID %d for removal.', $competitionId));
+                } else {
+                    $this->logger->warning(sprintf('Competition entity with ID %d not found for ORM deletion, skipping.', $competitionId));
+                }
             }
-            $this->entityManager->flush();
-            // NEW: 3. Delete Winner records
-            $winners = $this->winnerRepository->findBy(['competition' => $competition]);
-            foreach ($winners as $winner) {
-                $this->entityManager->remove($winner);
+            $this->entityManager->flush(); // Flush all marked Competition deletions
+            $this->logger->info('    Removed Competition entities via ORM.');
+
+
+            // 5. Reset Redis counters for these competitions
+            foreach ($existingCompetitionIds as $competitionId) {
+                $this->redisManager->deleteKey($this->redisKeyBuilder->getCompetitionCountKey($competitionId));
+                $this->logger->info(sprintf('    Cleared Redis counter for competition ID: %d.', $competitionId));
             }
-            // 3. Delete the Competition itself
-            $this->entityManager->remove($competition);
-            $this->entityManager->flush();
+
+            $connection->commit(); // Commit the entire transaction
+            $this->logger->info('All demo competition data cleared successfully via mixed SQL/ORM.');
+        } catch (\Throwable $e) {
+            // Rollback if any error occurs
+            if ($connection->isTransactionActive()) {
+                $connection->rollBack();
+            }
+            $this->logger->error(sprintf('Error clearing demo data with mixed SQL/ORM: %s', $e->getMessage()), ['exception' => $e]);
+            $this->logger->error('Transaction rolled back due to error.');
+            throw $e; // Re-throw to indicate command failure
+        } finally {
+            // Ensure EntityManager is clear after potential raw SQL operations
+            // This prevents it from holding stale data or detached entities for subsequent operations in the command.
             $this->entityManager->clear();
-            // $this->logger->info('    Removed Competition entity.');
-
-            // 4. Reset Redis counter for this competition
-            $this->redisManager->deleteKey($this->redisKeyBuilder->getCompetitionCountKey($competitionId));
-            // $this->logger->info('    Cleared Redis counter.');
         }
-
-        $this->entityManager->flush(); // Flush all deletions in one transaction
-        // $this->logger->info('All demo competition data flushed from database.');
     }
 }
 
