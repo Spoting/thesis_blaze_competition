@@ -15,6 +15,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
 
 
+// Since the most common Worker Errors will be Database errors, we should try not do any queries here.
 class WorkerSubscriber implements EventSubscriberInterface
 {
     public function __construct(
@@ -67,14 +68,11 @@ class WorkerSubscriber implements EventSubscriberInterface
             return;
         }
 
-        /** @var Competition */
-        $competition = $this->competitionRepository->find($message->getCompetitionId());
-
+        $organizerEmail = $message->getOrganizerEmail();
         if ($event->willRetry()) {
             // Publish RETRY Message Email Notification to Organizer
-            $organizerEmail = $competition->getCreatedBy()?->getEmail();
-            $emailSubject = 'Notification: RETRYING to Generate Winners for Competition ' . $competition->getId();
-            $emailText = $competition->getId() . ' is RETRYING to Generate Winners...! <br> We are sorry for the delay';
+            $emailSubject = 'Notification: RETRYING to Generate Winners for Competition ' . $message->getCompetitionId();
+            $emailText = $message->getCompetitionId() . ' is RETRYING to Generate Winners...! <br> We are sorry for the delay';
             if (!empty($organizerEmail)) {
                 $this->messageProducer->produceEmailNotificationMessage(
                     $message->getCompetitionId(),
@@ -88,9 +86,8 @@ class WorkerSubscriber implements EventSubscriberInterface
         }
 
         // Publish FAILURE Message Email Notification to Organizer
-        $organizerEmail = $competition->getCreatedBy()?->getEmail();
-        $emailSubject = 'Notification: FAILED to Generate Winners for Competition ' . $competition->getId();
-        $emailText = $competition->getTitle() . ' failed to Generate Winners...! <br> We are sorry for the inconvenience';
+        $emailSubject = 'Notification: FAILED to Generate Winners for Competition ' . $message->getCompetitionId();
+        $emailText = $message->getCompetitionId() . ' failed to Generate Winners...! <br> We are sorry for the inconvenience';
         if (!empty($organizerEmail)) {
             $this->messageProducer->produceEmailNotificationMessage(
                 $message->getCompetitionId(),
@@ -109,15 +106,12 @@ class WorkerSubscriber implements EventSubscriberInterface
         if (!($message instanceof CompetitionUpdateStatusMessage)) {
             return;
         }
-
-        /** @var Competition */
-        $competition = $this->competitionRepository->find($message->getCompetitionId());
-
+        
+        $organizerEmail = $message->getOrganizerEmail();
         if ($event->willRetry()) {
             // Publish RETRY Message Email Notification to Organizer
-            $organizerEmail = $competition->getCreatedBy()?->getEmail();
-            $emailSubject = 'Notification: RETRYING Competition Status Update for ' . $competition->getId();
-            $emailText = 'RETRYING Status Update - ' . $competition->getId() . ' for status: ' . Competition::STATUSES[$competition->getStatus()];
+            $emailSubject = 'Notification: RETRYING Competition Status Update for ' . $message->getCompetitionId();
+            $emailText = 'RETRYING Status Update - ' . $message->getCompetitionId() . ' for status: ' . Competition::STATUSES[$message->getTargetStatus()];
             if (!empty($organizerEmail)) {
                 $this->messageProducer->produceEmailNotificationMessage(
                     $message->getCompetitionId(),
@@ -132,9 +126,8 @@ class WorkerSubscriber implements EventSubscriberInterface
 
 
         // Publish FAILED Message Email Notification to Organizer
-        $organizerEmail = $competition->getCreatedBy()?->getEmail();
-        $emailSubject = 'Notification: FAILED Competition Status Update for ' . $competition->getId();
-        $emailText = 'FAILED Status Update - ' . $competition->getId() . ' for status: ' . Competition::STATUSES[$competition->getStatus()];
+        $emailSubject = 'Notification: FAILED Competition Status Update for ' . $message->getCompetitionId();
+        $emailText = 'FAILED Status Update - ' . $message->getCompetitionId() . ' for status: ' . Competition::STATUSES[$message->getTargetStatus()];
         if (!empty($organizerEmail)) {
             $this->messageProducer->produceEmailNotificationMessage(
                 $message->getCompetitionId(),

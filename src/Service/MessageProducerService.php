@@ -69,7 +69,7 @@ class MessageProducerService
         );
     }
 
-    public function produceCompetitionStatusUpdateMessage(int $competitionId, int $delay_ms, string $target_status)
+    public function produceCompetitionStatusUpdateMessage(int $competitionId, int $delay_ms, string $target_status, string $organizerEmail)
     {
         $message_attributes = [
             'content_type' => 'application/json',
@@ -83,7 +83,8 @@ class MessageProducerService
             $competitionId,
             $target_status,
             $now->format('Y-m-d H:i:s'),
-            $delay_ms
+            $delay_ms,
+            $organizerEmail
         );
 
         $this->messageBus->dispatch(
@@ -95,7 +96,7 @@ class MessageProducerService
         );
     }
 
-    public function produceWinnerTriggerMessage(int $competitionId, int $delay_ms)
+    public function produceWinnerTriggerMessage(int $competitionId, int $delay_ms, string $organizerEmail)
     {
         $message_attributes = [
             'content_type' => 'application/json',
@@ -108,7 +109,8 @@ class MessageProducerService
         $message = new WinnerTriggerMessage(
             $competitionId,
             $now->format('Y-m-d H:i:s'),
-            $delay_ms
+            $delay_ms,
+            $organizerEmail
         );
 
         $this->messageBus->dispatch(
