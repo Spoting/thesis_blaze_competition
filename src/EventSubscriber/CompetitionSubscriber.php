@@ -40,7 +40,6 @@ class CompetitionSubscriber
         if (!$entity instanceof Competition) {
             return;
         }
-
         $this->changeLog[spl_object_hash($entity)] = [
             'entity' => $entity,
             'changes' => $args->getEntityChangeSet(),
@@ -110,18 +109,21 @@ class CompetitionSubscriber
 
 
             if ($shouldDispatchStatusUpdateMessages) {
+                $organizerEmail = $entity->getCreatedBy()->getEmail();
                 $statusTransitionTimestamps = $this->competitionStatusManager->calculateStatusTransitionDelays($entity);
                 foreach ($statusTransitionTimestamps as $status => $delay_ms) {
                     if ($status == 'winners_announced') {
                         $this->messageProducerService->produceWinnerTriggerMessage(
                             $entity->getId(),
                             $delay_ms,
+                            $organizerEmail
                         );
                     } else {
                         $this->messageProducerService->produceCompetitionStatusUpdateMessage(
                             $entity->getId(),
                             $delay_ms,
                             $status,
+                            $organizerEmail
                         );
                     }
                 }
@@ -140,7 +142,7 @@ class CompetitionSubscriber
             return;
         }
 
-        // RealTime Update Competition -- No need. All Competitions will be Draft
+        // RealTime Update Competition -- No need. All Starting Competitions will be Draft
         // if ($entity->getStatus() != 'draft') {
         //     // Add Announcement to Redis
         //     $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$entity->getStatus()]);

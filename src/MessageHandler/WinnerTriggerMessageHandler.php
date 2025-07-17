@@ -13,14 +13,17 @@ use App\Service\MessageProducerService;
 use App\Service\RedisKeyBuilder;
 use App\Service\RedisManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 
 #[AsMessageHandler]
 final class WinnerTriggerMessageHandler
 {
-    // Inject the EntityManagerInterface via the constructor
+    private $output;
+
     public function __construct(
         private LoggerInterface $logger,
         private EntityManagerInterface $entityManager,
@@ -30,7 +33,9 @@ final class WinnerTriggerMessageHandler
         private RedisKeyBuilder $redisKeyBuilder,
         private SubmissionRepository $submissionRepository,
         private WinnerRepository $winnerRepository,
-    ) {}
+    ) {
+        $this->output = new ConsoleOutput();
+    }
 
     public function __invoke(WinnerTriggerMessage $message)
     {
@@ -44,7 +49,7 @@ final class WinnerTriggerMessageHandler
             . " | " . $message->getDelayTime());
 
 
-        $this->logger->info(sprintf(
+        $this->output->writeln(sprintf(
             'Attempting Winner Generation for competition ID: %s. Target Status: %s. Message created: %s. Delayed by: %d seconds.',
             $competitionId,
             $targetStatus,
@@ -55,16 +60,28 @@ final class WinnerTriggerMessageHandler
         try {
             $this->entityManager->getConnection()->beginTransaction();
 
-            /** @var Competition */
+           /** @var Competition */
             $competition = $this->entityManager->getRepository(Competition::class)->find($competitionId);
+            $currentStatus = $competition->getStatus();
 
-            // Validate Status Change
-            $isStatusValid = $this->competitionStatusManager->isStatusTransitionValid($competition, $targetStatus);
-            if (!$isStatusValid) {
-                // dont attempt retry
-
+            // If current status is Higher than current. Dont attempt retry
+            $isCurrentStatusHigher = $this->competitionStatusManager->isCurrentStatusEqualOrHigherThanNew($currentStatus, $targetStatus);
+            if ($isCurrentStatusHigher) {
                 throw new UnrecoverableMessageHandlingException(sprintf(
-                    'Invalid status transition for competition %s. Current status: %s, Target: %s.',
+                    'Invalid status ( Higher current Status ) for competition %s. Current status: %s, Target: %s.',
+                    $competitionId,
+                    $competition->getStatus(),
+                    $targetStatus
+                ));
+            }
+            
+            // If current status is Lower but the Transistion isnt Valid, then attempt retry.
+            // This means that the transistions didnt trigger as planned, yet. 
+            $isTransitionValid = $this->competitionStatusManager->isStatusTransitionValid($currentStatus, $targetStatus);
+            $isCurrentStatusLower = $this->competitionStatusManager->isCurrentStatusLowerThanNew($currentStatus, $targetStatus);
+            if ($isCurrentStatusLower && !$isTransitionValid) {
+                throw new \Exception(sprintf(
+                    'Invalid status ( Lower current Status ) transition for competition %s. Current status: %s, Target: %s.',
                     $competitionId,
                     $competition->getStatus(),
                     $targetStatus
@@ -72,7 +89,7 @@ final class WinnerTriggerMessageHandler
             }
 
             if ($this->winnersExistForCompetition($competition)) {
-                $this->logger->info(sprintf('Winner generation skipped for competition %s: Winners have already been generated. This message is unrecoverable.', $competitionId));
+                $this->output->writeln(sprintf('Winner generation skipped for competition %s: Winners have already been generated. This message is unrecoverable.', $competitionId));
                 // No need to retry, the work is already done.
                 throw new UnrecoverableMessageHandlingException(sprintf(
                     'Winners already exist for competition %s.',
@@ -99,17 +116,27 @@ final class WinnerTriggerMessageHandler
             $this->entityManager->flush();
             $this->entityManager->getConnection()->commit();
             $this->entityManager->clear();
+        } catch (\Doctrine\DBAL\Exception\ConnectionException $ce) {  //  | \Doctrine\DBAL\Exception\DriverException 
+            $this->output->writeln(sprintf('Connection Failed %s . %s', $ce->getMessage(), get_class($ce)));
+
+            throw $ce;
         } catch (\Throwable $e) {
             // Ensure rollback on any error if the transaction is still active.
             if ($this->entityManager->getConnection()->isTransactionActive()) {
-                $this->entityManager->getConnection()->rollBack();
+                try {
+                    $this->entityManager->getConnection()->rollBack();
+                } catch (Exception $rollbackException) {
+                    $this->output->writeln(sprintf('Failed to roll back transaction after error: %s', $rollbackException->getMessage()));
+                    // If rollback fails, connection might be broken, force close for next message
+                    $this->entityManager->getConnection()->close();
+                }
             }
 
-            $this->logger->error(sprintf(
+            $this->output->writeln(sprintf(
                 'Error during winner generation for competition %s: %s',
                 $competitionId,
                 $e->getMessage()
-            ), ['exception' => $e]);
+            ));
 
             throw $e;
         }
@@ -127,7 +154,8 @@ final class WinnerTriggerMessageHandler
                     $competitionId,
                     $winnerEmail,
                     $emailSubject,
-                    ['text' => $emailText]
+                    ['text' => $emailText],
+                    2 // High Priority
                 );
             }
         }
@@ -147,8 +175,7 @@ final class WinnerTriggerMessageHandler
             );
         }
 
-        $this->logger->info(sprintf('Winners successfully Generated/Announced for Competition: %s', $competitionId));
-        dump(sprintf('Winners Generated/Announced Competition: %s', $competitionId));
+        $this->output->writeln(sprintf('Winners successfully Generated/Announced for Competition: %s', $competitionId));
     }
 
     private function areAllSubmissionsProcessed(int $processedSubmissionCount, Competition $competition): bool

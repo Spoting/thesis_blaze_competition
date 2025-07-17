@@ -126,41 +126,10 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
         $errorOccured = false;
         $insertedEmails = [];
-        // ----------------------------------------------------
-        /** @var Connection $connection */
-        $connection = $this->entityManager->getConnection();
-
-        // Aggressive connection reset before starting processing
+        // ----------------------------------------------------        
         try {
-            // Check if connection is open and try to close it cleanly
-            if ($connection->isConnected()) {
-                if ($connection->isTransactionActive()) {
-                    $this->logger->warning('Found active transaction before batch processing. Attempting rollback.');
-                    $connection->rollBack(); // Try to roll back any lingering transaction
-                }
-                $connection->close(); // Close the physical connection
-                $this->logger->info('Database connection explicitly closed before batch processing.');
-            }
-            // Force EntityManager to clear its UnitOfWork and potentially reset internal state
-            // This is crucial for long-running processes like Messenger workers.
-            $this->entityManager->clear();
-            $this->logger->info('EntityManager cleared before batch processing.');
-
-        } catch (DriverException $e) {
-            $this->logger->error(sprintf('Error during pre-batch connection cleanup: %s. Forcing connection close.', $e->getMessage()), ['exception' => $e]);
-            // If even cleanup fails, ensure connection is closed aggressively
-            if ($connection->isConnected()) {
-                $connection->close();
-            }
-            // Don't throw here, try to proceed with the main logic,
-            // the subsequent beginTransaction will attempt to re-establish.
-        } catch (ORMException $e) { // Catch ORM specific exceptions during clear
-            $this->logger->error(sprintf('ORM Exception during pre-batch EM clear: %s', $e->getMessage()), ['exception' => $e]);
-            // Re-throw if EM is in a truly unusable state
-            throw $e;
-        }
-
-        try {
+            /** @var Connection $connection */
+            $connection = $this->entityManager->getConnection();
             $connection->beginTransaction();
             $statement = $connection->prepare($sql);
             // throw new Exception('aaa');
@@ -189,7 +158,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
             if ($connection->isTransactionActive()) {
                 try {
                     $connection->rollBack();
-                } catch (DriverException $rollbackException) {
+                } catch (Exception $rollbackException) {
                     $this->output->writeln(sprintf('Failed to roll back transaction after error: %s', $rollbackException->getMessage()));
                     // If rollback fails, connection might be broken, force close for next message
                     $connection->close();
