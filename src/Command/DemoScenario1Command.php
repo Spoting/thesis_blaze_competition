@@ -129,8 +129,8 @@ class DemoScenario1Command extends Command
 
         $comp4 = $this->createCompetition(
             'Demo Comp D (10s Start)',
-            new \DateTime()->modify('+10 seconds'),
-            new \DateTime()->modify('+30 seconds'),
+            new \DateTime()->modify('+5 seconds'),
+            new \DateTime()->modify('+220 seconds'),
         );
         $this->updateCompetition($comp4, $organizerUser);
         $competitions[] = $comp4;

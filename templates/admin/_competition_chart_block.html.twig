@@ -8,11 +8,9 @@ Parameters:
 
 <div 
         class="chart-container" 
-        style="position: relative; height:300px;"
+        style="position: relative; height:{{ height }};"
         data-controller="chart"
         data-chart-mercure-url-value="{{ mercureUrl }}"
-        class="chart-container"
-        style="position: relative; height:300px;"
 >
     {{ render_chart(chart) }}
 </div>

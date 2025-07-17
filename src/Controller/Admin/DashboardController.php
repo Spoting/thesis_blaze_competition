@@ -27,7 +27,8 @@ class DashboardController extends AbstractDashboardController
     public function __construct(
         private CompetitionRepository $competitionRepository,
         private CompetitionChartService $competitionChartService,
-        private AdminUrlGenerator $adminUrlGenerator
+        private AdminUrlGenerator $adminUrlGenerator,
+        private UrlGeneratorInterface $urlGenerator
     ) {}
 
     public function index(): Response
@@ -46,12 +47,15 @@ class DashboardController extends AbstractDashboardController
         // Loop through each running competition and use the service to build chart data
         foreach ($runningCompetitions as $competition) {
 
-            $detailedStatsUrl = $this->adminUrlGenerator
-                ->setController(\App\Controller\Admin\CompetitionStatsController::class) // Point to your custom controller
-                ->set('routeName', 'admin_competition_stats') // Explicitly set the routeName query parameter
-                ->set('routeParams', ['id' => $competition->getId()]) // Explicitly set the routeParams query parameter
-                ->generateUrl();
-                
+            $detailedStatsUrl = $this->urlGenerator->generate(
+                'admin_dashboard',
+                [
+                    'routeName' => 'admin_competition_stats', // Your custom Symfony route name
+                    'routeParams' => ['id' => $competition->getId()], // Parameters for your custom route
+                ],
+                UrlGeneratorInterface::ABSOLUTE_PATH // Generate a relative path (e.g., /admin?...)
+            );
+
             $chart_data = $this->competitionChartService->buildCompetitionChartData(
                 $competition,
                 'Submission Statistics for ' . $competition->getTitle() . ' ( ID: ' . $competition->getId() . ' )',
