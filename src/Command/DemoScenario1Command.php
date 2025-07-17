@@ -59,7 +59,6 @@ class DemoScenario1Command extends Command
         ;
     }
 
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -135,7 +134,7 @@ class DemoScenario1Command extends Command
         );
         $this->updateCompetition($comp4, $organizerUser);
         $competitions[] = $comp4;
-        $io->text(sprintf('Created Competition D (ID: %d): Starts in 10s, Ends in 130s', $comp4->getId()));
+        $io->text(sprintf('Created Competition D (ID: %d): Starts in 10s, Ends in 30s', $comp4->getId()));
 
         $this->entityManager->flush(); // Persist all competitions
 
@@ -154,14 +153,17 @@ class DemoScenario1Command extends Command
 
         $totalSubmissionsProduced = 0;
 
-
         for ($time = 0; $time <= $simulationDuration; $time += $interval) {
             $io->text(sprintf("\n--- Simulating at T+%d seconds ---", $time));
             sleep($interval); // Pause for real-time observation
-
             foreach ($competitions as $comp) {
-                // Only produce messages for competitions that are 'running' or 'scheduled'
-                if ($comp->getStatus() === 'running' || $comp->getStatus() === 'scheduled') {
+                try {
+                    $this->entityManager->refresh($comp);
+                } catch (\Throwable $e) {
+                    $io->error('Database is down.');
+                    $this->entityManager->getConnection()->close();
+                }
+                if ($comp->getStatus() === 'running') {
                     $io->text(sprintf('  Producing %d messages for Comp %s (ID: %d)...', $submissionsPerInterval, $comp->getTitle(), $comp->getId()));
                     
                     for ($i = 0; $i < $submissionsPerInterval; $i++) {
@@ -188,7 +190,7 @@ class DemoScenario1Command extends Command
                     }
                     $io->text(sprintf('  Produced %d messages for Comp %s (ID: %d). Total produced: %d', $submissionsPerInterval, $comp->getTitle(), $comp->getId(), $totalSubmissionsProduced));
                 } else {
-                    $io->text(sprintf('  Comp %s (ID: %d): Status "%s", not running or scheduled.', $comp->getTitle(), $comp->getId(), $comp->getStatus()));
+                    $io->text(sprintf('  Comp %s (ID: %d): Status "%s", not running.', $comp->getTitle(), $comp->getId(), $comp->getStatus()));
                 }
             }
         }
