@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Entity\CompetitionStatsSnapshot;
 use App\Repository\CompetitionRepository;
 use App\Repository\SubmissionRepository;
+use App\Service\CompetitionSnapshotService;
 use App\Service\MercurePublisherService;
 use App\Service\RabbitMqManagementService;
 use App\Service\RedisKeyBuilder;
@@ -32,6 +33,7 @@ class CaptureCompetitionStatsCommand extends Command
         private RabbitMqManagementService $rabbitMqManagement,
         private LoggerInterface $logger,
         private MercurePublisherService $mercurePublisher,
+        private CompetitionSnapshotService $competitionSnapshotService
     ) {
         parent::__construct();
     }
@@ -55,28 +57,15 @@ class CaptureCompetitionStatsCommand extends Command
         $capturedCount = 0;
         foreach ($activeCompetitions as $competition) {
             try {
-                $competitionId = $competition->getId();
-                $initiatedSubmissions = (int) $this->redisManager->getValue(
-                    $this->redisKeyBuilder->getCompetitionCountKey($competitionId)
-                ) ?? 0;
-                $processedSubmissions = $this->submissionRepository->countByCompetitionId($competitionId);
 
-                $failedSubmissions = $this->rabbitMqManagement->getQueueMessageCount('dlq_competition_submission_' . $competitionId);
-
-                $snapshot = new CompetitionStatsSnapshot();
-                $snapshot->setCompetition($competition);
-                $snapshot->setCapturedAt(new \DateTimeImmutable());
-                $snapshot->setInitiatedSubmissions($initiatedSubmissions);
-                $snapshot->setProcessedSubmissions($processedSubmissions);
-                $snapshot->setFailedSubmissions($failedSubmissions);
+                $snapshot = $this->competitionSnapshotService->generateSnapshotEntity($competition);
 
                 $this->entityManager->persist($snapshot);
                 $capturedCount++;
                 
-                $io->success(sprintf('Captured Snapshot for %d.', $competitionId));
+                $io->success(sprintf('Captured Snapshot for %d.', $competition->getId()));
                 
-                // TODO: Push Mercure Update
-                $this->mercurePublisher->publishUpdateChart($competitionId, $snapshot);
+                $this->mercurePublisher->publishUpdateChart($competition->getId(), $snapshot);
 
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(

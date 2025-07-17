@@ -34,12 +34,18 @@ export default class extends Controller {
         this.eventSource = new EventSource(this.mercureUrlValue, { withCredentials: true });
         console.log('Subscribed to ' + this.mercureUrlValue);
         this.eventSource.onmessage = (event) => {
-            const newData = JSON.parse(event.data);
-            this.updateChart(newData);
+            const update = JSON.parse(event.data);
+
+            if (update.type === 'snapshot') {
+                this.updateSnapshot(update.data);
+            } else if (update.type === 'status') {
+                this.updateAnnotation(update.annotation);
+            }
+
         };
     }
 
-    updateChart(newData) {
+    updateSnapshot(newData) {
         if (!this.chartInstance) return;
 
         // Append the new label
@@ -54,6 +60,47 @@ export default class extends Controller {
         });
 
         console.log('Mercure Updated  ' + newData);
+        this.chartInstance.update();
+    }
+
+
+    updateAnnotation(annotation) {
+        if (!this.chartInstance || !annotation) return;
+
+        const {
+            id,
+            value,
+            borderColor,
+            labelContent,
+            yAdjust = 0,
+        } = annotation;
+
+        // Ensure the annotation plugin exists
+        const annotations = this.chartInstance.options.plugins.annotation.annotations;
+
+        // Create the annotation config (matches your PHP-generated values)
+        annotations[id] = {
+            type: 'line',
+            mode: 'vertical',
+            scaleID: 'x',
+            value: value, // must match a string in chart.data.labels if using category scale
+            borderColor: borderColor,
+            borderWidth: 2,
+            label: {
+                display: true,
+                enabled: true,
+                content: labelContent,
+                backgroundColor: borderColor,
+                color: 'white',
+                font: {
+                    size: 10,
+                },
+                position: 'end',
+                yAdjust: yAdjust,
+            },
+        };
+
+        console.log('[Chart] Annotation added:', id, annotation);
         this.chartInstance.update();
     }
 }

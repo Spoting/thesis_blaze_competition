@@ -25,7 +25,7 @@ class CompetitionStatsSnapshot
     private ?int $failedSubmissions = null;
     
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Competition $competition = null;
     
     #[ORM\Column]

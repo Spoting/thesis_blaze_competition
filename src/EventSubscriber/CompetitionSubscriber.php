@@ -5,15 +5,20 @@ namespace App\EventSubscriber;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Events;
 use App\Entity\Competition;
+use App\Entity\CompetitionStatsSnapshot;
+use App\Entity\CompetitionStatusTransition;
 use App\Service\AnnouncementService;
+use App\Service\CompetitionSnapshotService;
 use App\Service\CompetitionStatusManagerService;
 use App\Service\MercurePublisherService;
 use App\Service\MessageProducerService;
 use App\Service\RedisManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 
 // #[AsDoctrineListener(event: Events::postPersist)]
 #[AsDoctrineListener(event: Events::preUpdate)]
@@ -29,7 +34,10 @@ class CompetitionSubscriber
         private AnnouncementService $announcementService,
         private LoggerInterface $logger,
         private CompetitionStatusManagerService $competitionStatusManager,
-        private MessageProducerService $messageProducerService
+        private MessageProducerService $messageProducerService,
+        private EntityManagerInterface $entityManager,
+        private CompetitionSnapshotService $competitionSnapshotService,
+        private ?Security $security = null // (can be null in console)
     ) {}
 
 
@@ -88,10 +96,21 @@ class CompetitionSubscriber
                             // Store to Redis & Mercure Publish Announcement
                             $message = sprintf('Competition "%s" %s!', $entity->getTitle(), Competition::STATUSES[$new]);
                             $this->announcementService->addAnnouncement($new, $message);
-
-                            // Publish Updates
                             $this->publisher->publishAnnouncement($new, $message);
-                        
+
+                            // Persist the status transition to the database
+                            $transition = $this->generateStatusTransitionEntity($entity, $old, $new);
+
+                            $snapshot = $this->competitionSnapshotService->generateSnapshotEntity($entity);
+
+                            $this->entityManager->persist($snapshot);
+                            $this->entityManager->persist($transition);
+                            $this->entityManager->flush();
+
+                            $this->publisher->publishUpdateChart($entity->getId(), $snapshot);
+                            $this->publisher->publishStatusTransitionAnnotation($entity, $transition);
+
+                            $this->logger->info(sprintf('Recorded status transition for Comp %d: %s -> %s', $entity->getId(), $old, $new));
                         }
 
                         break;
@@ -152,5 +171,22 @@ class CompetitionSubscriber
         //     $this->publisher->publishAnnouncement($entity->getStatus(), $message);
         //     $this->publisher->publishCompetitionUpdate($entity);
         // }
+    }
+
+    private function generateStatusTransitionEntity(Competition $competition, string $oldStatus, string $newStatus): CompetitionStatusTransition
+    {
+        $transition = new CompetitionStatusTransition();
+        $transition->setCompetition($competition);
+        $transition->setOldStatus($oldStatus);
+        $transition->setNewStatus($newStatus);
+        $transition->setTransitionedAt(new \DateTimeImmutable());
+        // Determine who triggered the change (system or user)
+        if ($this->security && $this->security->getUser()) {
+            $transition->setTriggeredBy($this->security->getUser()->getUserIdentifier());
+        } else {
+            $transition->setTriggeredBy('system_process'); // For console commands/workers
+        }
+
+        return $transition;
     }
 }

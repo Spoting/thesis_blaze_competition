@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Competition;
 use App\Entity\CompetitionStatsSnapshot;
+use App\Entity\CompetitionStatusTransition;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Twig\Environment;
@@ -87,21 +88,25 @@ class MercurePublisherService
         $newFailedData = (int) $snapshot->getFailedSubmissions();
 
         $data = [
-            'labels' => [$newLabels],
-            'datasets' => [
-                [
-                    'label' => 'Initiated Submissions (' . $newInitiatedData . ')' ,
-                    'data' => [$newInitiatedData],
+            'type' => 'snapshot',
+            'data' => [
+                'labels' => [$newLabels],
+                'datasets' => [
+                    [
+                        'label' => 'Initiated Submissions (' . $newInitiatedData . ')',
+                        'data' => [$newInitiatedData],
+                    ],
+                    [
+                        'label' => 'Processed Submissions (' . $newProcessedData . ')',
+                        'data' => [$newProcessedData],
+                    ],
+                    [
+                        'label' => 'Failed Submissions (DLQ) (' . $newFailedData . ')',
+                        'data' => [$newFailedData],
+                    ],
                 ],
-                [
-                    'label' => 'Processed Submissions (' . $newProcessedData . ')' ,
-                    'data' => [$newProcessedData],
-                ],
-                [
-                    'label' => 'Failed Submissions (DLQ) (' . $newFailedData . ')' ,
-                    'data' => [$newFailedData],
-                ],
-            ],
+            ]
+
         ];
 
         $topic = sprintf(self::COMPETITION_STATS, $competitionId);
@@ -109,6 +114,69 @@ class MercurePublisherService
         $update = new Update(
             $topic,
             json_encode($data)
+        );
+
+        $this->hub->publish($update);
+    }
+
+
+    public function publishStatusTransitionAnnotation(Competition $competition, CompetitionStatusTransition $transition, int $index = 0): void
+    {
+        $competitionId = $competition->getId();
+        $newStatus = $transition->getNewStatus();
+        $transitionTime = $transition->getTransitionedAt()->format('H:i:s'); // Must match chart label format
+        $timestamp = $transition->getTransitionedAt()->getTimestamp();
+
+        // Unique annotation ID for Chart.js
+        $annotationId = "status-{$newStatus}-{$index}-{$timestamp}";
+
+        $color = 'rgba(0,0,0,0.7)';
+        $yAdjust = 0;
+        $labelContent = Competition::STATUSES[$newStatus] ?? $newStatus;
+
+        switch ($newStatus) {
+            case 'draft':
+                $color = 'rgba(108, 117, 125, 0.7)';
+                $yAdjust = -100;
+                break;
+            case 'scheduled':
+                $color = 'rgba(0, 123, 255, 0.7)';
+                $yAdjust = -70;
+                break;
+            case 'running':
+                $color = 'rgba(40, 167, 69, 0.7)';
+                $yAdjust = -10;
+                break;
+            case 'submissions_ended':
+                $color = 'rgba(220, 53, 69, 0.7)';
+                $yAdjust = -30;
+                break;
+            case 'winners_announced':
+                $color = 'rgba(255, 193, 7, 0.7)';
+                $yAdjust = -50;
+                break;
+            case 'archived':
+                $color = 'rgba(0, 0, 0, 0.7)';
+                $yAdjust = -90;
+                break;
+        }
+
+        $annotationPayload = [
+            'type' => 'status',
+            'annotation' => [
+                'id' => $annotationId,
+                'value' => $transitionTime,
+                'borderColor' => $color,
+                'labelContent' => $labelContent,
+                'yAdjust' => $yAdjust,
+            ],
+        ];
+
+        $topic = sprintf(self::COMPETITION_STATS, $competitionId);
+
+        $update = new Update(
+            $topic,
+            json_encode($annotationPayload)
         );
 
         $this->hub->publish($update);

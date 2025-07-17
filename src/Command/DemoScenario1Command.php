@@ -24,6 +24,9 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
+
+// docker compose exec rabbitmq sh -c "rabbitmqadmin -u guest -p guest list queues name -f tsv | xargs -I {} rabbitmqadmin -u guest -p guest purge queue name={}"
+// php bin/console app:demo-scenario-1 --clear-only; php bin/console app:demo-scenario-1 400 30
 #[AsCommand(
     name: 'app:demo-scenario-1',
     description: 'Demonstrates competition lifecycle and real-time submission charts by producing real RabbitMQ messages.',
@@ -57,7 +60,6 @@ class DemoScenario1Command extends Command
     }
 
 
-    // docker compose exec rabbitmq sh -c "rabbitmqadmin -u guest -p guest list queues name -f tsv | xargs -I {} rabbitmqadmin -u guest -p guest purge queue name={}"
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

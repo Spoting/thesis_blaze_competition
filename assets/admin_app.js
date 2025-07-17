@@ -10,11 +10,18 @@ import './styles/admin_app.css';
 import { Chart } from 'chart.js';
 
 import zoomPlugin from 'chartjs-plugin-zoom';
+import annotationPlugin from 'chartjs-plugin-annotation';
+import 'chartjs-adapter-luxon';
+
+
+
 
 // Register the zoom plugin
 document.addEventListener('chartjs:init', function (event) {
     const Chart = event.detail.Chart;
     Chart.register(zoomPlugin); 
+    Chart.register(annotationPlugin);
+    // Chart.register(adapterPlugin);
 });
 
 // php bin/console tailwind:build --watch
