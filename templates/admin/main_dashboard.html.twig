@@ -28,12 +28,18 @@
                     <div class="card p-4">
                         {# <h2 class="text-xl text-black font-semibold mb-4">{{ chart_data.competitionTitle }} ( ID: {{ chart_data.competitionId }} )</h2> #}
 
+                            <a href="{{ chart_data.detailedStatsUrl }}" 
+                               class="text-blue-600 hover:text-blue-800 text-sm font-normal ml-2"
+                               title="View detailed statistics">
+                                <i class="fa fa-chart-line"></i> View Details
+                            </a>
+                        
                         {# Include the reusable chart partial #}
-                        {# Pass the chart object, Mercure URL, and competition title #}
                         {% include 'admin/_competition_chart_block.html.twig' with {
                             chart: chart_data.chart,
                             mercureUrl: chart_data.mercureUrl,
                         } %}
+
                     </div>
                 </div>
             {% endfor %}

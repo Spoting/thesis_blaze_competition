@@ -14,6 +14,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
@@ -25,7 +26,8 @@ class DashboardController extends AbstractDashboardController
     // Inject the new CompetitionChartService
     public function __construct(
         private CompetitionRepository $competitionRepository,
-        private CompetitionChartService $competitionChartService
+        private CompetitionChartService $competitionChartService,
+        private AdminUrlGenerator $adminUrlGenerator
     ) {}
 
     public function index(): Response
@@ -35,18 +37,29 @@ class DashboardController extends AbstractDashboardController
 
         // Fetch only running competitions created by the current user
         $runningCompetitions = $this->competitionRepository->findBy([
-            'status' => ['running', 'submissions_ended'],
+            'status' => ['scheduled', 'running', 'submissions_ended'],
             'createdBy' => $currentUser, // Filter by the current user
         ]);
-        
+
         $charts = []; // Array to hold data for each chart
-        
+
         // Loop through each running competition and use the service to build chart data
         foreach ($runningCompetitions as $competition) {
-            $charts[] = $this->competitionChartService->buildCompetitionChartData(
+
+            $detailedStatsUrl = $this->adminUrlGenerator
+                ->setController(\App\Controller\Admin\CompetitionStatsController::class) // Point to your custom controller
+                ->set('routeName', 'admin_competition_stats') // Explicitly set the routeName query parameter
+                ->set('routeParams', ['id' => $competition->getId()]) // Explicitly set the routeParams query parameter
+                ->generateUrl();
+                
+            $chart_data = $this->competitionChartService->buildCompetitionChartData(
                 $competition,
                 'Submission Statistics for ' . $competition->getTitle() . ' ( ID: ' . $competition->getId() . ' )',
             );
+
+            $chart_data['detailedStatsUrl'] = $detailedStatsUrl;
+
+            $charts[] = $chart_data;
         }
 
         // Render the main dashboard template, passing all chart data and user info
