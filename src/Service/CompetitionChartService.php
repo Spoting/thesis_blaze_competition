@@ -46,10 +46,14 @@ class CompetitionChartService
         $failedData = [];
 
         foreach ($snapshots as $snapshot) {
+            $initiated = $snapshot->getInitiatedSubmissions();
+            $processed = $snapshot->getProcessedSubmissions();
+            $failed = $snapshot->getFailedSubmissions();
+
             $labels[] = $snapshot->getCapturedAt()->format('H:i:s'); // Format time as HH:MM
-            $initiatedData[] = (int) $snapshot->getInitiatedSubmissions();
-            $processedData[] = (int) $snapshot->getProcessedSubmissions();
-            $failedData[] = (int) $snapshot->getFailedSubmissions();
+            $initiatedData[] = $initiated;
+            $processedData[] = $processed;
+            $failedData[] = $failed;
         }
 
         // Build the Chart.js object
@@ -59,7 +63,7 @@ class CompetitionChartService
             'labels' => $labels,
             'datasets' => [
                 [
-                    'label' => 'Initiated Submissions',
+                    'label' => 'Initiated Submissions (' . $initiated .')',
                     'data' => $initiatedData,
                     'borderColor' => 'rgba(54, 162, 235, 1)',
                     'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
@@ -67,7 +71,7 @@ class CompetitionChartService
                     'tension' => 0.1
                 ],
                 [
-                    'label' => 'Processed Submissions',
+                    'label' => 'Processed Submissions (' . $processed .')',
                     'data' => $processedData,
                     'borderColor' => 'rgba(75, 192, 192, 1)',
                     'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
@@ -75,7 +79,7 @@ class CompetitionChartService
                     'tension' => 0.1
                 ],
                 [
-                    'label' => 'Failed Submissions (DLQ)',
+                    'label' => 'Failed Submissions (DLQ) (' . $failed .')',
                     'data' => $failedData,
                     'borderColor' => 'rgba(255, 99, 132, 1)', // Red color
                     'backgroundColor' => 'rgba(255, 99, 132, 0.2)', // Light red fill

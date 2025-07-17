@@ -40,39 +40,10 @@ class CompetitionFixtures extends Fixture implements DependentFixtureInterface
             $this->getReference('user_competition_manager_3', User::class)
         ];
 
-        // $userIDs = [
-        //     '01978d99-e3fe-7844-afea-d2c3b3938d09',
-        //     '01978d99-e5f8-73ec-be03-49eb3c76c038',
-        //     '01978d99-e7d2-7643-a962-cb26f48d8a46',
-        // ];
-        // foreach ($userIDs as $uuid) {
-        //     $users[] = $manager->find(User::class, $uuid);
-        // }
-        $customFormFields = [
-            'name' => [
-                'type' => 'text',
-                'name' => 'name',
-                'label' => 'Full Name',
-                'required' => true
-            ],
-            'country' => [
-                'type' => 'select',
-                'name' => 'country',
-                'label' => 'Country of Residence',
-                'options' => ['USA', 'Canada', 'UK', 'Australia']
-            ],
-            'age' => [
-                'type' => 'number',
-                'name' => 'age',
-                'label' => 'Your Age',
-                'min' => 18
-            ]
-        ];
-
         // Create 10 competition entries
         for ($i = 0; $i < 9; $i++) {
             $competition = new Competition();
-            $competition->setTitle($this->faker->sentence(rand(3, 7)));
+            $competition->setTitle($this->faker->sentence(rand(3)));
             $competition->setDescription($this->faker->paragraph(rand(2, 5)));
             $competition->setPrizes($this->faker->text(200));
 
@@ -88,9 +59,6 @@ class CompetitionFixtures extends Fixture implements DependentFixtureInterface
             if ($i % 3 === 0) {
                 // Use default form fields
                 $competition->setFormFields(Competition::DEFAULT_FORM_FIELDS);
-            } elseif ($i % 3 === 1) {
-                // Use custom form fields
-                $competition->setFormFields($customFormFields);
             } else {
                 // Mix default and some custom fields
                 $mixedFields = array_merge(

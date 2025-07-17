@@ -25,7 +25,7 @@ class CompetitionStatsController extends AbstractController
         // The service will handle fetching snapshots and current data, and building the Chart object.
         $chartData = $this->competitionChartService->buildCompetitionChartData(
             $competition,
-            'Submission Statistics for ' . $competition->getTitle(),
+            'Submission Statistics for ' . $competition->getTitle() . ' ( ID: ' . $competition->getId() . ' )',
         );
 
         // The service returns an array, extract the chart and mercureUrl from it

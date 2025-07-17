@@ -35,7 +35,7 @@ class DashboardController extends AbstractDashboardController
 
         // Fetch only running competitions created by the current user
         $runningCompetitions = $this->competitionRepository->findBy([
-            'status' => 'running',
+            'status' => ['running', 'submissions_ended'],
             'createdBy' => $currentUser, // Filter by the current user
         ]);
         
@@ -45,7 +45,7 @@ class DashboardController extends AbstractDashboardController
         foreach ($runningCompetitions as $competition) {
             $charts[] = $this->competitionChartService->buildCompetitionChartData(
                 $competition,
-                'Submission Trends' // Title prefix for dashboard charts
+                'Submission Statistics for ' . $competition->getTitle() . ' ( ID: ' . $competition->getId() . ' )',
             );
         }
 

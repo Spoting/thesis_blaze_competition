@@ -11,7 +11,7 @@
     <div class="ea-content-body">
         <div class="row">
             <div class="col-12">
-                <h1 class="text-3xl text-blue-800 font-bold mb-6">Running Competition Statistics</h1>
+                <h1 class="text-3xl text-blue-900 font-bold mb-6">Running Competition Statistics</h1>
             </div>
         </div>
 
@@ -26,14 +26,13 @@
             {% for chart_data in charts_data %}
                 <div class="col-lg-6 mb-4">
                     <div class="card p-4">
-                        <h2 class="text-xl text-black font-semibold mb-4">{{ chart_data.competitionTitle }}</h2>
-                        
+                        {# <h2 class="text-xl text-black font-semibold mb-4">{{ chart_data.competitionTitle }} ( ID: {{ chart_data.competitionId }} )</h2> #}
+
                         {# Include the reusable chart partial #}
                         {# Pass the chart object, Mercure URL, and competition title #}
                         {% include 'admin/_competition_chart_block.html.twig' with {
                             chart: chart_data.chart,
                             mercureUrl: chart_data.mercureUrl,
-                            competitionTitle: chart_data.competitionTitle
                         } %}
                     </div>
                 </div>

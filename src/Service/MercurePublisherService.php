@@ -90,15 +90,15 @@ class MercurePublisherService
             'labels' => [$newLabels],
             'datasets' => [
                 [
-                    'label' => 'Initiated Submissions',
+                    'label' => 'Initiated Submissions (' . $newInitiatedData . ')' ,
                     'data' => [$newInitiatedData],
                 ],
                 [
-                    'label' => 'Processed Submissions',
+                    'label' => 'Processed Submissions (' . $newProcessedData . ')' ,
                     'data' => [$newProcessedData],
                 ],
                 [
-                    'label' => 'Failed Submissions (DLQ)',
+                    'label' => 'Failed Submissions (DLQ) (' . $newFailedData . ')' ,
                     'data' => [$newFailedData],
                 ],
             ],
