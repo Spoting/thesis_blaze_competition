@@ -3,11 +3,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Your custom admin-specific CSS (if any) goes below these directives */
-
+/* Custom CSS for cards in the EasyAdmin dashboard */
 .ea-content-body .card {
-    background-color: #e0f2f7;
-    border: 1px solid #e0e0e0; /* Light gray border */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Light shadow for depth */
-    border-radius: 0.5rem; /* Ensure rounded corners */
+    /* Harmonized Card Background */
+    background-color: #f8f9fa; /* A very light, almost white gray (common for Bootstrap/admin panels) */
+    /* Alternative: hsl(210, 20%, 98%); // A subtle cool gray */
+
+    border: 1px solid #dee2e6; /* Slightly darker, standard gray border for better definition */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Slightly more pronounced, but still subtle shadow */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1.5rem; /* Ensure consistent padding */
+}
+
+/* You can also target the chart container specifically if needed */
+/*
+.ea-content-body .card .chart-container {
+    background-color: #fcfcfc;
+    border-radius: 0.25rem;
+}
+*/
+
+/* Custom Styling for the Winners Table */
+.ea-content-body table {
+    /* Basic table styling */
+    background-color: #ffffff; /* Ensure table background is white */
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 1rem;
+    border: 1px solid #e9ecef; /* Overall table border */
+    border-radius: 0.25rem;
+    overflow: hidden; /* Ensures rounded corners apply to content */
+}
+
+.ea-content-body table thead {
+    /* Darker header background */
+    background-color: #343a40; /* Dark gray/black for header */
+    color: #ffffff; /* White text for header */
+}
+
+.ea-content-body table th,
+.ea-content-body table td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6; /* Cell borders */
+    text-align: left;
+}
+
+/* Alternating row colors */
+.ea-content-body table tbody tr:nth-child(odd) {
+    background-color: #ffffff; /* White for odd rows */
+}
+
+.ea-content-body table tbody tr:nth-child(even) {
+    background-color: #f8f9fa; /* Very light gray for even rows */
+}
+
+/* Hover effect for rows */
+.ea-content-body table tbody tr:hover {
+    background-color: #e2e6ea; /* Slightly darker gray on hover */
+}
+
+/* Ensure body text is readable */
+.ea-content-body table tbody td {
+    color: #343a40; /* Dark text color for body cells */
+}
+
+/* Ensure header text is readable (already set in thead) */
+.ea-content-body table thead th {
+    color: #ffffff; /* Explicitly ensure white text for header cells */
 }

@@ -143,7 +143,7 @@ class CompetitionCrudController extends AbstractCrudController
     }
 
 
-    public function configureActions(Actions $actions): Actions  
+    public function configureActions(Actions $actions): Actions
     {
         // Define the custom action to view competition stats
         $viewStats = Action::new('viewStats', 'View Stats', 'fa fa-chart-bar')
@@ -154,9 +154,22 @@ class CompetitionCrudController extends AbstractCrudController
             ->addCssClass('btn btn-info')
             ->setHtmlAttributes(['title' => 'View Competition Statistics Chart']);
 
+        // Define the custom action to view winners
+        $viewWinners = Action::new('viewWinners', 'View Winners', 'fa fa-trophy') // Using a trophy icon
+            ->linkToRoute('admin_competition_winners', function (Competition $competition) {
+                return ['id' => $competition->getId()];
+            })
+            ->addCssClass('btn btn-success') // Green button
+            ->setHtmlAttributes(['title' => 'View Competition Winners']);
+
+
         return $actions
+            // Add the 'viewStats' action
             ->add(Crud::PAGE_INDEX, $viewStats)
             ->add(Crud::PAGE_DETAIL, $viewStats)
+            // Add the 'viewWinners' action
+            ->add(Crud::PAGE_INDEX, $viewWinners) // Add the new action to the index page
+            ->add(Crud::PAGE_DETAIL, $viewWinners) // Add the new action to the detail page
             // Set permissions for other default actions as per your security roles
             ->setPermission(Action::NEW, 'ROLE_COMPETITION_MANAGER')
             ->setPermission(Action::EDIT, 'ROLE_COMPETITION_MANAGER')

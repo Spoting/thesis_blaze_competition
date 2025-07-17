@@ -48,6 +48,7 @@ export default class extends Controller {
         // Append new point to each dataset
         newData.datasets.forEach((newDs, idx) => {
             if (this.chartInstance.data.datasets[idx]) {
+                this.chartInstance.data.datasets[idx].label = newDs.label;
                 this.chartInstance.data.datasets[idx].data.push(...newDs.data);
             }
         });

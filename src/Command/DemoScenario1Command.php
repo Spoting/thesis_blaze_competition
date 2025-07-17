@@ -21,6 +21,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
 #[AsCommand(
@@ -50,6 +51,8 @@ class DemoScenario1Command extends Command
     {
         $this
             ->addOption('clear-only', null, InputOption::VALUE_NONE, 'If set, only clears existing demo competitions and exits.') // NEW: Add --clear-only option
+            ->addArgument('send-rate', InputArgument::OPTIONAL, 'Messages per second to attempt to send (0 for no rate limit)', 300)
+            ->addArgument('duration', InputArgument::OPTIONAL, 'Simulation Duration', 100)
         ;
     }
 
@@ -59,6 +62,9 @@ class DemoScenario1Command extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $io->title('Starting Demo Scenario 1: Competition Lifecycle & Real-time Charts with Real Messages');
+
+        $sendRate = (int) $input->getArgument('send-rate');
+        $duration = (int) $input->getArgument('duration');
 
         // --- 1. Get an Organizer User ---
         /** @var User|null $organizerUser */
@@ -95,41 +101,37 @@ class DemoScenario1Command extends Command
 
         // $comp1 = $this->createCompetition(
         //     'Demo Comp A (10s Start)',
-        //     $now->modify('+10 seconds'),
-        //     $now->modify('+4 minutes'),
-        //     $organizerUser
+        //     new \DateTime()->modify('+10 seconds'),
+        //     new \DateTime()->modify('+4 minutes'),
         // );
         // $competitions[] = $comp1;
-        // $this->updateCompetition($comp1);
+        // $this->updateCompetition($comp1, $organizerUser);
         // $io->text(sprintf('Created Competition A (ID: %d): Starts in 10s, Ends in 4m', $comp1->getId()));
 
         // $comp2 = $this->createCompetition(
         //     'Demo Comp B (20s Start)',
-        //     $now->modify('+20 seconds'),
-        //     $now->modify('+2 minutes'),
-        //     $organizerUser
+        //     new \DateTime()->modify('+20 seconds'),
+        //     new \DateTime()->modify('+2 minutes'),
         // );
-        // $this->updateCompetition($comp2);
+        // $this->updateCompetition($comp2, $organizerUser);
         // $competitions[] = $comp2;
         // $io->text(sprintf('Created Competition B (ID: %d): Starts in 20s, Ends in 2m', $comp2->getId()));
 
         // $comp3 = $this->createCompetition(
         //     'Demo Comp C (30s Start)',
-        //     $now->modify('+30 seconds'),
-        //     $now->modify('+1 minutes'),
-        //     $organizerUser
+        //     new \DateTime()->modify('+30 seconds'),
+        //     new \DateTime()->modify('+1 minutes'),
         // );
-        // $this->updateCompetition($comp3);
+        // $this->updateCompetition($comp3, $organizerUser);
         // $competitions[] = $comp3;
         // $io->text(sprintf('Created Competition C (ID: %d): Starts in 30s, Ends in 1m', $comp3->getId()));
 
         $comp4 = $this->createCompetition(
             'Demo Comp D (10s Start)',
-            $now->modify('+10 seconds'),
-            $now->modify('+130 seconds'),
-            $organizerUser
+            new \DateTime()->modify('+10 seconds'),
+            new \DateTime()->modify('+30 seconds'),
         );
-        $this->updateCompetition($comp4);
+        $this->updateCompetition($comp4, $organizerUser);
         $competitions[] = $comp4;
         $io->text(sprintf('Created Competition D (ID: %d): Starts in 10s, Ends in 130s', $comp4->getId()));
 
@@ -143,9 +145,9 @@ class DemoScenario1Command extends Command
         $io->text('Ensure your Messenger consumers are running.');
         $io->text('Ensure Scheduler/Cronjob is running to capture snapshots.');
 
-        $simulationDuration = 120; // Total simulation time in seconds
+        $simulationDuration = $duration; // Total simulation time in seconds
         $interval = 1; // Simulate activity every 5 seconds (produce messages every X seconds)
-        $submissionsPerInterval = 1000; // Number of submissions to produce per interval
+        $submissionsPerInterval = $sendRate; // Number of submissions to produce per interval
         $failedSubmissionRate = 0.1; // 10% of submissions will be marked as "failed" for demo
 
         $totalSubmissionsProduced = 0;
@@ -159,7 +161,7 @@ class DemoScenario1Command extends Command
                 // Only produce messages for competitions that are 'running' or 'scheduled'
                 if ($comp->getStatus() === 'running' || $comp->getStatus() === 'scheduled') {
                     $io->text(sprintf('  Producing %d messages for Comp %s (ID: %d)...', $submissionsPerInterval, $comp->getTitle(), $comp->getId()));
-
+                    
                     for ($i = 0; $i < $submissionsPerInterval; $i++) {
                         $dummyCompetitionEndTimestamp = $comp->getEndDate()->getTimestamp();
                         $priorityKey = $this->messageProducerService->identifyPriorityKey($dummyCompetitionEndTimestamp);
@@ -198,7 +200,7 @@ class DemoScenario1Command extends Command
     /**
      * Helper to create and persist a Competition entity.
      */
-    private function createCompetition(string $title, \DateTime $startDate, \DateTime $endDate, User $createdBy): Competition
+    private function createCompetition(string $title, \DateTime $startDate, \DateTime $endDate): Competition
     {
         $competition = new Competition();
         $competition->setTitle($title);
@@ -207,9 +209,8 @@ class DemoScenario1Command extends Command
         $competition->setStartDate($startDate);
         $competition->setEndDate($endDate);
         $competition->setMaxParticipants(100000);
-        $competition->setNumberOfWinners(rand(1, 5));
+        $competition->setNumberOfWinners(rand(2, 5));
         $competition->setStatus('draft'); // Start as draft
-        $competition->setCreatedBy($createdBy);
 
         $this->entityManager->persist($competition);
         $this->entityManager->flush();
@@ -221,9 +222,10 @@ class DemoScenario1Command extends Command
         return $competition;
     }
 
-    private function updateCompetition(Competition $competition)
+    private function updateCompetition(Competition $competition, User $createdBy)
     {
         $competition->setStatus('scheduled');
+        $competition->setCreatedBy($createdBy);
         $this->entityManager->flush();
     }
 
