@@ -112,6 +112,23 @@ php bin/console importmap:require chartjs-plugin-zoom
 
 ## !!!! Do not use `die;` in code. Please just dont. It will require a restart
 
+
+# Production Process
+- Build Production Image
+```
+docker compose -f compose.yaml -f compose.prod.yaml build --pull --no-cache
+```
+
+- Tag and Push to microk8s registry.
+```
+
+```
+
+- Post Deployment Script Run
+```
+composer run-script --no-dev post-install-cmd;
+```
+
 ---
 ---
 ---
