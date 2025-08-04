@@ -92,7 +92,7 @@ class CompetitionStatusManagerService
     /** Returns Scheduling Delays in Milliseconds  */
     public function calculateStatusTransitionDelays(
         Competition $competition,
-        int $winnerGracePeriod = 15,     // 15 seconds
+        int $winnerGracePeriod = 10,     // 10 seconds
         int $archiveAfter = 259200       // 3 days in seconds
     ): array {
 

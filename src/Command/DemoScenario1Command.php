@@ -129,12 +129,12 @@ class DemoScenario1Command extends Command
 
         $comp4 = $this->createCompetition(
             'Demo Comp D (10s Start)',
-            new \DateTime()->modify('+5 seconds'),
-            new \DateTime()->modify('+220 seconds'),
+            new \DateTime()->modify('+8 seconds'),
+            new \DateTime()->modify('+30 seconds'),
         );
         $this->updateCompetition($comp4, $organizerUser);
         $competitions[] = $comp4;
-        $io->text(sprintf('Created Competition D (ID: %d): Starts in 10s, Ends in 30s', $comp4->getId()));
+        $io->text(sprintf('Created Competition D (ID: %d): Starts in 8s, Ends in 30s', $comp4->getId()));
 
         $this->entityManager->flush(); // Persist all competitions
 
@@ -331,17 +331,30 @@ class DemoScenario1Command extends Command
 }
 
 
-        // Adjusted thresholds for demonstration
-        // if ($timeRemainingSeconds <= 10) { // Less than 10 seconds
-        //     return 5;
-        // } elseif ($timeRemainingSeconds <= 20) { // Less than 20 seconds
-        //     return 4;
-        // } elseif ($timeRemainingSeconds <= 30) { // Less than 30 seconds
-        //     return 3;
-        // } elseif ($timeRemainingSeconds <= 60) { // Less than 1 minute
-        //     return 2;
-        // } elseif ($timeRemainingSeconds <= 120) { // Less than 2 minutes
-        //     return 1;
-        // } else {
-        //     return 0; // 2 minutes and up
-        // }
+    // Adjusted thresholds for demonstration
+    // /** Returns Scheduling Delays in Milliseconds  */
+    // public function calculateStatusTransitionDelays(
+    //     Competition $competition,
+    //     int $winnerGracePeriod = 10,     // 10 seconds
+    //     int $archiveAfter = 259200       // 3 days in seconds
+    // ): array {
+
+    //     $now = new \DateTimeImmutable('now');
+    //     $now = $now->getTimestamp();
+
+    //     $start = $competition->getStartDate()->getTimestamp();
+    //     $end = $competition->getEndDate()->getTimestamp();
+
+    //     $runningDelay = $start - $now;
+    //     $submissionsEndedDelay = $end - $now;
+
+    //     $winnersGeneratedDelay = ($end + $winnerGracePeriod) - $now;
+    //     $archivedDelay = ($end + $archiveAfter) - $now;
+
+    //     return [
+    //         'running' => (int) $runningDelay * 1000,
+    //         'submissions_ended' => (int) $submissionsEndedDelay * 1000,
+    //         'winners_announced' => (int) $winnersGeneratedDelay * 1000,
+    //         'archived' => (int) $archivedDelay * 1000,
+    //     ];
+    // }
