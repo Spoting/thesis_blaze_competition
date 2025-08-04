@@ -1,7 +1,7 @@
 framework:
     cache:
         app: cache.adapter.redis_tag_aware
-        system: cache.adapter.redis_tag_aware
+        system: cache.adapter.system
         default_redis_provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
 
         pools:
@@ -14,9 +14,9 @@ framework:
                 provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
     
             doctrine.metadata_cache_pool:
-                adapter: cache.adapter.redis
-                provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
+                adapter: cache.adapter.system
+                # provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
     
-            doctrine.system_cache_pool:
-                adapter: cache.adapter.redis
-                provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
+            # doctrine.system_cache_pool:
+            #     adapter: cache.adapter.system
+            #     # provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'

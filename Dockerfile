@@ -107,9 +107,20 @@ RUN set -eux; \
 COPY --link . ./
 RUN rm -Rf frankenphp/
 
+# Setup permissions before switching user
+RUN chown -R ${USER}:${USER} .
+
+USER ${USER}
+
+# Redis is not reachable during build time. So clear cache will hang. 
+# So we just put dummy ENV for Redis so it will be bypassed. 
+# https://github.com/dunglas/symfony-docker/issues/383
+ENV REDIS_URL=redis://localhost:1234
+ENV REDIS_SYMFONY_DB=999
+
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
 	composer dump-env prod; \
-	composer run-script --no-dev post-install-cmd; \
+	composer -vvv run-script --no-dev post-install-cmd; \
 	chmod +x bin/console; sync;

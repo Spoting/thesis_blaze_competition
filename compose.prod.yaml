@@ -4,12 +4,15 @@ services:
     build:
       context: .
       target: frankenphp_prod
+    image: app-php-prod
     environment:
-      CADDY_SERVER_EXTRA_DIRECTIVES: "tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key"
+      CADDY_EXTRA_CONFIG: |
+        https:// {
+          tls /etc/caddy/certs/tls.crt /etc/caddy/certs/tls.key
+        }
       APP_SECRET: ${APP_SECRET}
-      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
-      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
-      MERCURE_EXTRA_DIRECTIVES: demo
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET}
       APP_ENV: prod
   
 
