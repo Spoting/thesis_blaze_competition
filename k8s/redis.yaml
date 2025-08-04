@@ -1,0 +1,50 @@
+# TODO: Add Persistence
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: blaze-competition-redis
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blaze-competition-redis
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blaze-competition-redis
+  template:
+    metadata:
+      labels:
+        app: blaze-competition-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          envFrom:
+            - configMapRef:
+                name: blaze-competition-config
+          ports:
+            - containerPort: 6379
+          resources:
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+            requests:
+              cpu: "100m"
+              memory: "64Mi"

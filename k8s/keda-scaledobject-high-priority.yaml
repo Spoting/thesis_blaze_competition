@@ -1,0 +1,20 @@
+# k8s/keda-scaledobject-high-priority.yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: rabbitmq-high-priority-scaler
+  namespace: blaze-competition-dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: messenger-worker-submission-high-priority # Target the specific high-priority worker
+  pollingInterval: 10
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  triggers:
+  - type: rabbitmq
+    metadata:
+      host: amqp://guest:guest@rabbitmq-service:5672/%2f # Use credentials from ConfigMap if not using TriggerAuthentication
+      queueName: submission_high_priority_queue
+      queueLength: "50"

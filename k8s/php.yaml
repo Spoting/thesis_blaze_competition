@@ -1,0 +1,84 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-php
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: 443
+      protocol: TCP
+  selector:
+    app: blaze-competition-php
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blaze-competition-php
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-php
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blaze-competition-php
+  template:
+    metadata:
+      labels:
+        app: blaze-competition-php
+    spec:
+      containers:
+        - name: php
+          image: localhost:32000/app-php-prod:v0.0.2
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: blaze-competition-config
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          volumeMounts:
+            - name: caddy-data
+              mountPath: /data
+            - name: caddy-config
+              mountPath: /config
+            - name: tls-certs # Mount the TLS secret
+              mountPath: /etc/caddy/certs
+              readOnly: true
+          resources:
+            limits:
+              cpu: "2000m"
+              memory: "1Gi"
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: caddy-data
+          emptyDir: {}
+        - name: caddy-config
+          emptyDir: {}
+        - name: tls-certs # Define the TLS secret volume
+          secret: # kubectl create secret tls blaze-competition-tls --cert=tls.crt --key=tls.key --namespace=blaze-competition
+            secretName: blaze-competition-tls # Reference your new secret name

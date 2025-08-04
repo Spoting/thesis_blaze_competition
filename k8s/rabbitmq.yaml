@@ -1,0 +1,64 @@
+# k8s-rabbitmq.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-rabbitmq
+spec:
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      protocol: TCP
+    - name: management
+      port: 15672
+      targetPort: 15672
+      protocol: TCP
+  selector:
+    app: blaze-competition-rabbitmq
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blaze-competition-rabbitmq
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blaze-competition-rabbitmq
+  template:
+    metadata:
+      labels:
+        app: blaze-competition-rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: heidiks/rabbitmq-delayed-message-exchange:4.1.0-management
+          envFrom:
+            - configMapRef:
+                name: blaze-competition-config
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          resources:
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "status"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3

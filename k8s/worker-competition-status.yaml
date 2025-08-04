@@ -1,0 +1,51 @@
+# k8s/messenger-worker-competition-status.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messenger-worker-competition-status
+  namespace: blaze-competition-dev
+  labels:
+    app: messenger-worker-competition-status
+spec:
+  replicas: 1 # This worker might not need KEDA, a fixed replica is often fine
+  selector:
+    matchLabels:
+      app: messenger-worker-competition-status
+  template:
+    metadata:
+      labels:
+        app: messenger-worker-competition-status
+    spec:
+      containers:
+      - name: worker
+        image: 192.168.56.11:32000/blaze-competition/app:latest
+        command: ["php", "bin/console", "messenger:consume", "competition_status_amqp", "--verbose", "--time-limit=3600", "--memory-limit=128M"]
+        envFrom:
+        - configMapRef: { name: app-config }
+        - secretRef: { name: app-secrets }
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: var-volume
+          mountPath: /app/var
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "192Mi"
+          requests:
+            cpu: "50m"
+            memory: "96Mi"
+      volumes:
+      - name: app-code
+        emptyDir: {}
+      - name: var-volume
+        emptyDir: {}
+      initContainers:
+      - name: copy-code
+        image: 192.168.56.11:32000/blaze-competition/app:latest
+        command: ["sh", "-c", "cp -a /app/. /app_tmp && composer install --no-dev --optimize-autoloader --classmap-authoritative -d /app_tmp && cp -a /app_tmp/. /app"]
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: var-volume
+          mountPath: /app_tmp/var

@@ -1,0 +1,85 @@
+# TODO: convert to Stateful State when handling multiple
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-data-pvc
+  namespace: blaze-competition
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-db
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: blaze-competition-db
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blaze-competition-db
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blaze-competition-db
+  template:
+    metadata:
+      labels:
+        app: blaze-competition-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          envFrom:
+            - configMapRef:
+                name: blaze-competition-config
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: database-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+          livenessProbe:
+            exec:
+              command: ["/bin/bash", "-c", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["/bin/bash", "-c", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+      volumes:
+        - name: database-data
+          persistentVolumeClaim:
+            claimName: database-data-pvc
