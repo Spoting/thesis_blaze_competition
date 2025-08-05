@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailer
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-mailer
+spec:
+  ports:
+    - name: smtp
+      port: 1025
+      targetPort: 1025
+      protocol: TCP
+    - name: http-ui
+      port: 8025
+      targetPort: 8025
+      protocol: TCP
+  selector:
+    app: blaze-competition-mailer
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blaze-competition-mailer
+  namespace: blaze-competition
+  labels:
+    app: blaze-competition-mailer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blaze-competition-mailer
+  template:
+    metadata:
+      labels:
+        app: blaze-competition-mailer
+    spec:
+      containers:
+        - name: mailer
+          image: axllent/mailpit:latest # Using latest for demo, consider specific version for prod
+          ports:
+            - containerPort: 1025 # SMTP port for Symfony
+            - containerPort: 8025 # Web UI port
+          env: # Environment variables specific to Mailpit
+            - name: MP_SMTP_AUTH_ACCEPT_ANY
+              value: "1"
+            - name: MP_SMTP_AUTH_ALLOW_INSECURE
+              value: "1"
+          resources:
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8025 # Check the web UI port for liveness
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8025 # Check the web UI port for readiness
+            initialDelaySeconds: 5
+            periodSeconds: 3

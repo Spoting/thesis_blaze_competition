@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: blaze-competition-cronjob
+  namespace: blaze-competition
+spec:
+  schedule: "*/1 * * * *" # Runs every minute (cron format)
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: cronjob
+              image: localhost:32000/app-php-prod:v0.0.2
+              imagePullPolicy: Always
+              command:
+                - php
+                - bin/console
+                - app:capture-competition-stats
+              envFrom:
+                - configMapRef:
+                    name: blaze-competition-config # Pulls common environment variables
+              env: # Override specific environment variables for cronjob
+                - name: RUN_MIGRATIONS
+                  value: "false"
+              resources:
+                limits:
+                  memory: "128Mi"
+                  cpu: "500m"
+                requests:
+                  memory: "64Mi"
+                  cpu: "250m"
+          restartPolicy: OnFailure

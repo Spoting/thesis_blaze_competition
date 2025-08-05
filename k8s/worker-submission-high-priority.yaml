@@ -1,51 +1,60 @@
-# k8s/messenger-worker-submission-high-priority.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: messenger-worker-submission-high-priority
-  namespace: blaze-competition-dev
+  name: blaze-competition-php-worker-submission-high-priority
+  namespace: blaze-competition
   labels:
-    app: messenger-worker-submission-high-priority
+    app: blaze-competition-php-worker-high-priority
 spec:
-  replicas: 0 # KEDA will manage the replica count, start at 0 or 1
+  replicas: 0
   selector:
     matchLabels:
-      app: messenger-worker-submission-high-priority
+      app: blaze-competition-php-worker-high-priority
   template:
     metadata:
       labels:
-        app: messenger-worker-submission-high-priority
+        app: blaze-competition-php-worker-high-priority
     spec:
       containers:
-      - name: worker
-        image: 192.168.56.11:32000/blaze-competition/app:latest
+      - name: php-worker
+        image: localhost:32000/app-php-prod:v0.0.2
+        imagePullPolicy: IfNotPresent
         command: ["php", "bin/console", "messenger:consume", "submission_amqp", "--queues=submission_high_priority_queue", "--verbose", "--time-limit=3600", "--memory-limit=128M"]
         envFrom:
-        - configMapRef: { name: app-config }
-        - secretRef: { name: app-secrets }
-        volumeMounts:
-        - name: app-code
-          mountPath: /app
-        - name: var-volume
-          mountPath: /app/var
+        - configMapRef: { name: blaze-competition-config }
+        env:
+          - name: RUN_MIGRATIONS
+            value: "false"
+        # volumeMounts:
+        # - name: app-code
+        #   mountPath: /app
+        # - name: var-volume
+        #   mountPath: /app/var
         resources:
           limits:
-            cpu: "500m" # Potentially higher limits for high priority
-            memory: "512Mi"
+            memory: "128Mi" 
+            cpu: "500m" 
           requests:
+            memory: "64Mi"
             cpu: "250m"
-            memory: "256Mi"
-      volumes:
-      - name: app-code
-        emptyDir: {}
-      - name: var-volume
-        emptyDir: {}
-      initContainers:
-      - name: copy-code
-        image: 192.168.56.11:32000/blaze-competition/app:latest
-        command: ["sh", "-c", "cp -a /app/. /app_tmp && composer install --no-dev --optimize-autoloader --classmap-authoritative -d /app_tmp && cp -a /app_tmp/. /app"]
-        volumeMounts:
-        - name: app-code
-          mountPath: /app
-        - name: var-volume
-          mountPath: /app_tmp/var
+      # volumes:
+      # - name: app-code
+      #   emptyDir: {}
+      # - name: var-volume
+      #   emptyDir: {}
+        livenessProbe:
+          exec:
+            command: ["php", "bin/console", "about"]
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command: ["php", "bin/console", "about"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
