@@ -106,6 +106,7 @@ class CompetitionController extends AbstractController
 
                 // Generate Verification Token.
                 $verificationToken = $uuidFactory->create()->toRfc4122();
+                $verificationToken = 1234; // Demo: Manually override
                 $emailTokenExpirationDateTime = (new \DateTimeImmutable())
                     ->modify('+' . RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS . ' seconds');
 
@@ -124,10 +125,14 @@ class CompetitionController extends AbstractController
                 $emailTokenExpirationString = $emailTokenExpirationDateTime->format('Y-m-d H:i:s');
 
                 // Send the email and token to the verification_email queue.
-                $this->messageProducerService->produceEmailVerificationMessage($emailTokenExpirationString, $verificationToken, $receiverEmail);
+                $this->messageProducerService->produceEmailVerificationMessage(
+                    $verificationToken, 
+                    $receiverEmail,
+                    $emailTokenExpirationString, 
+                );
 
 
-                $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
+                // $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
                 return $this->redirectToRoute('app_verification_form', ['email' => $receiverEmail]);
                 
             } catch (\Exception $e) {

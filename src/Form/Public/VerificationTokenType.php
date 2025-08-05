@@ -25,7 +25,7 @@ class VerificationTokenType extends AbstractType
                         'message' => 'Please enter a verification code.',
                     ]),
                     new Length([
-                        'min' => 36, // Assuming UUID v4
+                        'min' => 3,
                         'max' => 36,
                         'exactMessage' => 'The verification code must be exactly {{ limit }} characters long.',
                     ]),

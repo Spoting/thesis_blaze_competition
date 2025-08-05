@@ -80,7 +80,7 @@ class VerificationController extends AbstractController
             $competitionTimeRemaining = $competitionEndedAt - $now->getTimestamp();
 
             $this->redisManager->setValue($submissionKey, json_encode($newSubmissionKeyData), $competitionTimeRemaining);
-            $this->addFlash('success', 'Email successfully verified!');
+            // $this->addFlash('success', 'Email successfully verified!');
 
             // Publish Message
             $this->messageProducerService->produceSubmissionMessage(
@@ -93,7 +93,7 @@ class VerificationController extends AbstractController
             $count_key = $this->redisKeyBuilder->getCompetitionCountKey($competitionId);
             $total_count = $this->redisManager->incrementValue($count_key);
 
-            $this->addFlash('success', 'TOTAL ENTRIES: ' . $total_count);
+            // $this->addFlash('success', 'TOTAL ENTRIES: ' . $total_count);
 
             // Show success page
             return $this->redirectToRoute('app_submission_success');

@@ -13,17 +13,63 @@
         {% endblock %}
     </head>
     <body>
-       <div class="container mt-4">
-            {# Showing Flashes, Create User Session which I am not sure we need #}
-            {% for type, messages in app.flashes %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
-                        {{ message|raw }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-        </div>
+<div class="container mx-auto mt-4 px-4"> {# Container for flashes, mx-auto to center, px-4 for padding #}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            {% set bgColorClass = 'bg-blue-100 border-blue-400 text-blue-700' %} {# Default info #}
+            {% set textColorClass = 'text-blue-700' %}
+            {% set buttonColorClass = 'text-blue-700 hover:text-blue-900' %}
+
+            {% if type == 'success' %}
+                {% set bgColorClass = 'bg-green-100 border-green-400 text-green-700' %}
+                {% set textColorClass = 'text-green-700' %}
+                {% set buttonColorClass = 'text-green-700 hover:text-green-900' %}
+            {% elseif type == 'error' %}
+                {% set bgColorClass = 'bg-red-100 border-red-400 text-red-700' %}
+                {% set textColorClass = 'text-red-700' %}
+                {% set buttonColorClass = 'text-red-700 hover:text-red-900' %}
+            {% elseif type == 'warning' %}
+                {% set bgColorClass = 'bg-yellow-100 border-yellow-400 text-yellow-700' %}
+                {% set textColorClass = 'text-yellow-700' %}
+                {% set buttonColorClass = 'text-yellow-700 hover:text-yellow-900' %}
+            {% endif %}
+
+            <div class="relative px-4 py-3 mb-3 rounded border {{ bgColorClass }}" role="alert">
+                <strong class="font-bold">
+                    {% if type == 'success' %}Success!
+                    {% elseif type == 'error' %}Error!
+                    {% elseif type == 'warning' %}Warning!
+                    {% else %}Info!
+                    {% endif %}
+                </strong>
+                <span class="block sm:inline ml-2">{{ message|raw }}</span>
+                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                    <button type="button" 
+                            class="close-flash-button {{ buttonColorClass }} leading-none outline-none focus:outline-none" 
+                            aria-label="Close">
+                        <svg class="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15L6.303 6.097a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.15 2.758 3.15a1.2 1.2 0 0 1 0 1.697z"/></svg>
+                    </button>
+                </span>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>
         {% block body %}{% endblock %}
     </body>
 </html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeButtons = document.querySelectorAll('.close-flash-button');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const alertDiv = this.closest('.relative'); // Find the parent alert div
+                if (alertDiv) {
+                    alertDiv.style.opacity = '0'; // Start fade out
+                    alertDiv.style.transition = 'opacity 0.5s ease-out'; // Add transition
+                    setTimeout(() => alertDiv.remove(), 500); // Remove after transition
+                }
+            });
+        });
+    });
+</script>
