@@ -40,7 +40,7 @@ class VerificationTokenType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            // Configure your default options here
+            'csrf_protection' => false,
         ]);
     }
 }

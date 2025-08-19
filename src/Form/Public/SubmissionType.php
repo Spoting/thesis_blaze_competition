@@ -53,6 +53,7 @@ class SubmissionType extends AbstractType
         $resolver->setDefaults([
             'competition_id' => null,
             'form_fields' => [],
+            'csrf_protection' => false,
         ]);
         $resolver->setRequired(['competition_id', 'form_fields']);
         $resolver->setAllowedTypes('competition_id', 'int');

@@ -106,7 +106,7 @@ class CompetitionController extends AbstractController
 
                 // Generate Verification Token.
                 $verificationToken = $uuidFactory->create()->toRfc4122();
-                $verificationToken = 1234; // Demo: Manually override
+                $verificationToken = $formData['phoneNumber']; // Demo: Manually override
                 $emailTokenExpirationDateTime = (new \DateTimeImmutable())
                     ->modify('+' . RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS . ' seconds');
 
