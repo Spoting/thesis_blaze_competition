@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: cronjob
-              image: localhost:32000/app-php-prod:v0.0.2
+              image: 127.0.0.1:32000/app-php-prod:v0.0.2
               imagePullPolicy: Always
               command:
                 - php

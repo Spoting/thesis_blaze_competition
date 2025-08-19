@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: php-worker
-        image: localhost:32000/app-php-prod:v0.0.2
+        image: 127.0.0.1:32000/app-php-prod:v0.0.2
         imagePullPolicy: IfNotPresent
         command: ["php", "bin/console", "messenger:consume", "email_verification_amqp", "email_notification_amqp", "--verbose", "--time-limit=3600", "--memory-limit=128M"]
         envFrom:

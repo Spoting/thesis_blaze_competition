@@ -4,20 +4,20 @@ metadata:
   name: blaze-competition-php-worker-submission-low-priority
   namespace: blaze-competition
   labels:
-    app: blaze-competition-php-worker-low-priority
+    app: blaze-competition-php-worker-submission-low-priority
 spec:
-  replicas: 0
+  # replicas: 0
   selector:
     matchLabels:
-      app: blaze-competition-php-worker-low-priority
+      app: blaze-competition-php-worker-submission-low-priority
   template:
     metadata:
       labels:
-        app: blaze-competition-php-worker-low-priority
+        app: blaze-competition-php-worker-submission-low-priority
     spec:
       containers:
       - name: php-worker
-        image: localhost:32000/app-php-prod:v0.0.2
+        image: 127.0.0.1:32000/app-php-prod:v0.0.2
         imagePullPolicy: IfNotPresent
         command: ["php", "bin/console", "messenger:consume", "submission_amqp", "--queues=submission_low_priority_queue", "--verbose", "--time-limit=3600", "--memory-limit=128M"]
         envFrom:

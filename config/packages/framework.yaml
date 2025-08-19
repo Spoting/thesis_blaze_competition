@@ -14,7 +14,11 @@ framework:
             verify_peer: false
     #esi: true
     #fragments: true
-
+    
+    # csrf_protection: false
+    # form:
+    #     csrf_protection:
+    #         enabled: false
 
 when@test:
     framework:

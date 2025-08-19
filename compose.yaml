@@ -85,22 +85,6 @@ services:
     # volumes:
     #   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
-  # RabbitMQ Topology Declaration Service
-  # rabbitmq_topology:
-  #   image: heidiks/rabbitmq-delayed-message-exchange:latest
-  #   environment:
-  #     MESSAGE_QUEUE_MAX_PRIORITY: ${MESSAGE_QUEUE_MAX_PRIORITY-5}
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./rabbitmq/rabbitmq_topology.sh:/usr/local/bin/rabbitmq_topology.sh:ro
-  #   entrypoint: ["/bin/bash", "-c", "/usr/local/bin/rabbitmq_topology.sh"]
-  #   restart: "no"
-  
-  ## Maybe Add 2 Instances of Redis?
-  ## 1 for Cache
-  ## 1 for Functionality Keys that will have Persistence 
   redis:
     image: redis:7-alpine
     restart: always
