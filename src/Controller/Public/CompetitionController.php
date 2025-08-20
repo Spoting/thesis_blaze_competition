@@ -114,11 +114,14 @@ class CompetitionController extends AbstractController
                 $verificationData = [
                     'email' => $receiverEmail,
                     'competition_id' => $competitionId,
+                    'verification_token' => $verificationToken,
                     // 'created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
                     'email_token_expires_at' => $emailTokenExpirationDateTime->getTimestamp(),
                     // 'competition_ends_at' => $competition->getEndDate()->getTimestamp(),
                 ];
-                $verificationKey = $this->redisKeyBuilder->getVerificationTokenKey($verificationToken);
+
+                $verificationIdentifier = base64_encode(json_encode(['competition_id' => $competitionId, 'email' => $receiverEmail]));
+                $verificationKey = $this->redisKeyBuilder->getVerificationTokenKey($verificationIdentifier);
                 $this->redisManager->setValue($verificationKey, json_encode($verificationData), RedisKeyBuilder::VERIFICATION_TOKEN_TTL_SECONDS);
 
 
@@ -133,7 +136,7 @@ class CompetitionController extends AbstractController
 
 
                 // $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
-                return $this->redirectToRoute('app_verification_form', ['email' => $receiverEmail]);
+                return $this->redirectToRoute('app_verification_form', ['identifier' => $verificationIdentifier]);
                 
             } catch (\Exception $e) {
                 // $this->logger->error(sprintf('Error during initial form submission for email %s: %s', $receiverEmail, $e->getMessage()));

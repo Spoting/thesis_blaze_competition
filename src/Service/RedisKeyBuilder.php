@@ -26,8 +26,8 @@ class RedisKeyBuilder
         return sprintf(self::COMPETITION_SUBMISSION_KEY, $competitionId, $hash);
     }
 
-    public function getVerificationTokenKey(string $verificationToken): string
+    public function getVerificationTokenKey(string $identifierBase64): string
     {
-        return sprintf(self::VERIFICATION_TOKEN_KEY, $verificationToken);
+        return sprintf(self::VERIFICATION_TOKEN_KEY, $identifierBase64);
     }
 }

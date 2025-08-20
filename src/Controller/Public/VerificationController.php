@@ -22,8 +22,8 @@ class VerificationController extends AbstractController
         private MessageProducerService $messageProducerService,
     ) {}
 
-    #[Route('/verify/{email}', name: 'app_verification_form')]
-    public function showVerificationForm(Request $request, string $email): Response
+    #[Route('/verify/{identifier}', name: 'app_verification_form')]
+    public function showVerificationForm(Request $request, string $identifier): Response
     {
         $token = $request->query->get('token'); // Get token from URL query parameter
 
@@ -37,7 +37,7 @@ class VerificationController extends AbstractController
             $formData = $form->getData();
             $submittedToken = $formData['token'];
 
-            $verificationKey = $this->redisKeyBuilder->getVerificationTokenKey($submittedToken);
+            $verificationKey = $this->redisKeyBuilder->getVerificationTokenKey($identifier);
             $verificationData = $this->redisManager->getValue($verificationKey);
 
             // Throw Error if Verification Key doesnt exist.
@@ -46,16 +46,18 @@ class VerificationController extends AbstractController
                 // $this->logger->warning(sprintf('Failed verification attempt for token: %s (not found in Redis).', $submittedToken));
                 return $this->render('public/verification_form.html.twig', [
                     'form' => $form,
-                    'email' => $email,
+                    'identifier' => $identifier,
                 ]);
             }
 
             $verificationData = json_decode($verificationData, true);
-            // Confirm that Email matches
-            if ($email && $verificationData['email'] !== $email) {
+            $email = $verificationData['email'];
+            
+            // Confirm that Token matches
+            if ($submittedToken && $verificationData['verification_token'] !== $submittedToken) {
                 $this->addFlash('error', 'The token does not match the provided email.');
                 //  $this->logger->warning(sprintf('Token %s mismatch for email %s vs Redis email %s', $submittedToken, $email, $verificationData['email']));
-                return $this->render('public/verification_form.html.twig', ['form' => $form, 'email' => $email]);
+                return $this->render('public/verification_form.html.twig', ['form' => $form, 'identifier' => $identifier]);
             }
 
             // Remove the verification token from Redis
@@ -66,7 +68,6 @@ class VerificationController extends AbstractController
             $submissionKeyData = $this->redisManager->getValue($submissionKey);
             $submissionKeyData = json_decode($submissionKeyData, true);
             $competitionId = $submissionKeyData['competition_id'];
-            // $status = $submissionKeyData['status'];
             $submissionFormFields = $submissionKeyData['formData'];
             $competitionEndedAt = $submissionKeyData['competition_ended_at'];
 
@@ -101,7 +102,7 @@ class VerificationController extends AbstractController
 
         return $this->render('public/verification_form.html.twig', [
             'form' => $form,
-            'email' => $email,
+            'identifier' => $identifier,
         ]);
     }
 
