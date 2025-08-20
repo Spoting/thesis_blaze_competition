@@ -12,13 +12,14 @@ use App\Service\RedisManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\Cache;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Uid\Factory\UuidFactory;
 // use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class CompetitionController extends AbstractController
 {
-    
+
     public function __construct(
         private MessageProducerService $messageProducerService,
         private RedisManager $redisManager,
@@ -26,6 +27,7 @@ class CompetitionController extends AbstractController
     ) {}
 
     #[Route('/', name: 'public_competitions_list', methods: ['GET'])]
+    #[Cache(smaxage: 3600, public: true)]
     public function public_competition_list(CompetitionRepository $competitionRepository): Response
     {
         $publicStatuses = Competition::PUBLIC_STATUSES;
@@ -55,9 +57,11 @@ class CompetitionController extends AbstractController
     }
 
     #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
+    #[Cache(smaxage: 3600, public: true)]
     public function handleSubmitForm(Competition $competition, Request $request, UuidFactory $uuidFactory): Response
     {
-        if (!$competition->canAcceptSubmissions()){
+        $message = null;
+        if (!$competition->canAcceptSubmissions()) {
             throw new \Exception('You cannot Submit to this Competition');
         }
 
@@ -84,13 +88,23 @@ class CompetitionController extends AbstractController
             // User Already Submitted form. Either he is pending email approval or already confirmed.
             if (!empty($submissionKeyData)) {
                 if ($submissionKeyData['status'] == RedisKeyBuilder::VERIFICATION_PENDING_VALUE) {
-                    $this->addFlash('warning', 'You have recently attempted to submit for this competition. Please check your email for a verification link.');
+                    // $this->addFlash('warning', 'You have recently attempted to submit for this competition. Please check your email for a verification link.');
+                    $message = [
+                        'type' => 'warning',
+                        'text' => 'You have recently attempted to submit for this competition. Please check your email for a verification link.'
+                    ];
                 } else {
-                    $this->addFlash('warning', 'Your submission is ALREADY been received and verified! Chill while we process it...');
+                    // $this->addFlash('warning', 'Your submission is ALREADY been received and verified! Chill while we process it...');
+                    $message = [
+                        'type' => 'warning',
+                        'text' => 'Your submission has ALREADY been received and verified! Chill while we process it...'
+                    ];
                 }
                 return $this->render('public/submit_form.html.twig', [
                     'competition' => $competition,
                     'form' => $form->createView(),
+                    'statusLabels' => Competition::STATUSES,
+                    'message' => $message,
                 ]);
             }
 
@@ -129,21 +143,26 @@ class CompetitionController extends AbstractController
 
                 // Send the email and token to the verification_email queue.
                 $this->messageProducerService->produceEmailVerificationMessage(
-                    $verificationToken, 
+                    $verificationToken,
                     $receiverEmail,
-                    $emailTokenExpirationString, 
+                    $emailTokenExpirationString,
                 );
 
 
                 // $this->addFlash('success', 'A verification email has been sent to your email address. Please check your inbox and spam folder.');
                 return $this->redirectToRoute('app_verification_form', ['identifier' => $verificationIdentifier]);
-                
             } catch (\Exception $e) {
                 // $this->logger->error(sprintf('Error during initial form submission for email %s: %s', $receiverEmail, $e->getMessage()));
-                $this->addFlash('error', 'An error occurred during submission. Please try again. ' . $e->getMessage());
+                // $this->addFlash('error', 'An error occurred during submission. Please try again. ' . $e->getMessage());
+                
                 // If Error happened remove Keys from Redis
                 $this->redisManager->deleteKey($submissionKey);
                 $this->redisManager->deleteKey($verificationKey);
+
+                $message = [
+                    'type' => 'error',
+                    'text' => 'An error occurred during submission. Please try again. ' . $e->getMessage()
+                ];
             }
 
             // return $this->redirectToRoute('public_competitions');
@@ -153,6 +172,7 @@ class CompetitionController extends AbstractController
             'competition' => $competition,
             'form' => $form->createView(),
             'statusLabels' => Competition::STATUSES,
+            'message' => $message,
         ]);
     }
 
