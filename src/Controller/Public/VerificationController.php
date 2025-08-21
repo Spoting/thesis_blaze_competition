@@ -23,12 +23,13 @@ class VerificationController extends AbstractController
         private MessageProducerService $messageProducerService,
     ) {}
 
-    #[Route('/verify/{identifier}', name: 'app_verification_form')]
+    #[Route('/verify', name: 'app_verification_form')]
     #[Cache(smaxage: 3600, public: true)]
-    public function showVerificationForm(Request $request, string $identifier): Response
+    public function showVerificationForm(Request $request): Response
     {
         $message = null;
 
+        $identifier = $request->query->get('identifier');
         $token = $request->query->get('token'); // Get token from URL query parameter
 
         // Create the form and pre-fill the 'token' field if it exists

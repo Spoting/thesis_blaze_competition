@@ -143,6 +143,7 @@ class CompetitionController extends AbstractController
 
                 // Send the email and token to the verification_email queue.
                 $this->messageProducerService->produceEmailVerificationMessage(
+                    $verificationIdentifier,
                     $verificationToken,
                     $receiverEmail,
                     $emailTokenExpirationString,

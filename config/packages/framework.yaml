@@ -12,6 +12,12 @@ framework:
     http_client:
         default_options:
             verify_peer: false
+
+    http_cache:
+        enabled: true
+        trace_level: full
+        trace_header: X-Symfony-Cache
+        debug: true
     #esi: true
     #fragments: true
     
@@ -19,6 +25,13 @@ framework:
     # form:
     #     csrf_protection:
     #         enabled: false
+
+    router:
+        default_uri: '%env(APP_URL)%'
+
+# when@prod:
+#     framework:
+#         http_cache: true
 
 when@test:
     framework:

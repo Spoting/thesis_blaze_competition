@@ -24,7 +24,7 @@ class VerificationEmailMessageHandler
         $verificationUrl = $this->router->generate(
             'app_verification_form', 
             [
-                'email' => $message->getRecipientEmail(),
+                'identifier' => $message->getIdentifier(),
                 'token' => $message->getVerificationToken(),
             ],
             UrlGeneratorInterface::ABSOLUTE_URL
