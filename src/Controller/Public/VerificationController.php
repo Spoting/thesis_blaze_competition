@@ -9,6 +9,7 @@ use App\Form\Public\VerificationTokenType;
 use App\Service\MessageProducerService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\Cache;
 use Symfony\Component\Routing\Annotation\Route;
 // use Symfony\Contracts\Cache\CacheInterface;
 // use Psr\Log\LoggerInterface;
@@ -22,9 +23,13 @@ class VerificationController extends AbstractController
         private MessageProducerService $messageProducerService,
     ) {}
 
-    #[Route('/verify/{identifier}', name: 'app_verification_form')]
-    public function showVerificationForm(Request $request, string $identifier): Response
+    #[Route('/verify', name: 'app_verification_form')]
+    #[Cache(smaxage: 3600, public: true)]
+    public function showVerificationForm(Request $request): Response
     {
+        $message = null;
+
+        $identifier = $request->query->get('identifier');
         $token = $request->query->get('token'); // Get token from URL query parameter
 
         // Create the form and pre-fill the 'token' field if it exists
@@ -42,22 +47,36 @@ class VerificationController extends AbstractController
 
             // Throw Error if Verification Key doesnt exist.
             if (!$verificationData) {
-                $this->addFlash('error', 'Invalid or expired verification token. Please re-enter or request a new one.');
+                // $this->addFlash('error', 'Invalid or expired verification token. Please re-enter or request a new one.');
                 // $this->logger->warning(sprintf('Failed verification attempt for token: %s (not found in Redis).', $submittedToken));
+                $message = [
+                    'type' => 'error',
+                    'text' => 'Invalid or expired verification token. Please re-enter or request a new one.'
+                ];
                 return $this->render('public/verification_form.html.twig', [
                     'form' => $form,
                     'identifier' => $identifier,
+                    'message' => $message,
                 ]);
             }
 
             $verificationData = json_decode($verificationData, true);
             $email = $verificationData['email'];
-            
+
             // Confirm that Token matches
             if ($submittedToken && $verificationData['verification_token'] !== $submittedToken) {
-                $this->addFlash('error', 'The token does not match the provided email.');
+                // $this->addFlash('error', 'The token does not match the provided email.');
                 //  $this->logger->warning(sprintf('Token %s mismatch for email %s vs Redis email %s', $submittedToken, $email, $verificationData['email']));
-                return $this->render('public/verification_form.html.twig', ['form' => $form, 'identifier' => $identifier]);
+                $message = [
+                    'type' => 'error',
+                    'text' => 'The provided token is incorrect. Please check and try again.'
+                ];
+
+                return $this->render('public/verification_form.html.twig', [
+                    'form' => $form->createView(),
+                    'identifier' => $identifier,
+                    'message' => $message,
+                ]);
             }
 
             // Remove the verification token from Redis
@@ -88,8 +107,9 @@ class VerificationController extends AbstractController
                 $competitionEndedAt,
                 $submissionFormFields,
                 $competitionId,
-                $email);
-           
+                $email
+            );
+
             // Increment the Total Count for this Competition
             $count_key = $this->redisKeyBuilder->getCompetitionCountKey($competitionId);
             $total_count = $this->redisManager->incrementValue($count_key);
@@ -103,6 +123,7 @@ class VerificationController extends AbstractController
         return $this->render('public/verification_form.html.twig', [
             'form' => $form,
             'identifier' => $identifier,
+            'message' => $message
         ]);
     }
 
@@ -111,9 +132,9 @@ class VerificationController extends AbstractController
     // app_resend_verification_email (implement similar logic to initial submission, but only for existing, unverified entries)
 
     #[Route('/submission-success', name: 'app_submission_success')]
+    #[Cache(smaxage: 3600, public: true)]
     public function submissionSuccess(): Response
     {
         return $this->render('public/submission_success.html.twig');
     }
-
 }

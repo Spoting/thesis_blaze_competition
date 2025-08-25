@@ -95,13 +95,13 @@ docker compose exec php bin/console app:produce-messages "$MESSAGE_COUNT" "$TARG
 echo "Done Producing Messages for Benchmark ###"
 
 echo ""
-echo ""
+echo "Pausing..."
+sleep 5
 
 echo "###Scaling $WORKER_COUNT Workers"
 docker compose up -d --scale "$WORKER_SERVICE"="$WORKER_COUNT"
 echo "Done Scaling Workers ###"
 
-echo ""
 echo ""
 
 # --- Monitor for a period or until conditions are met ---

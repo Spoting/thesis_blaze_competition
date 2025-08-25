@@ -28,9 +28,10 @@ class MessageProducerService
     ) {}
 
 
-    public function produceEmailVerificationMessage(string $verificationToken, string $receiverEmail, string $emailTokenExpirationString)
+    public function produceEmailVerificationMessage(string $identifier, string $verificationToken, string $receiverEmail, string $emailTokenExpirationString)
     {
         $message = new VerificationEmailMessage(
+            $identifier,
             $verificationToken,
             $receiverEmail,
             $emailTokenExpirationString,

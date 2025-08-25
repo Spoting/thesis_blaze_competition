@@ -17,6 +17,7 @@ use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\Cache;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -288,11 +289,14 @@ class TestController extends AbstractController
         ]);
     }
 
-    #[Route('/test', name: 'test')]
+    #[Route('/test-test', name: 'test')]
+    #[Cache(smaxage: 3600, public: true)]
     public function testTheTestie(): Response
     {
-        phpinfo();
-        return new Response('OK');
+        $response = new Response('<html><body>Hello</body></html>');
+        // $response->setPublic();
+        // $response->setSharedMaxAge(30); // 30 seconds
+        return $response;
         // return $this->render('mailer/email_status.html.twig', [
         //     'status' => 'Templated email send attempt complete.',
         // ]);

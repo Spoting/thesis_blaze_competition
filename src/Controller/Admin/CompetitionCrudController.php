@@ -94,7 +94,7 @@ class CompetitionCrudController extends AbstractCrudController
             }
 
             $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-            $startDateConstraints[] = new GreaterThan([
+            $startDateConstraints[] = new GreaterThanOrEqual([
                 'value' => $now->modify('+1 minutes'),
                 'message' => 'Start time must be at least 1 minutes in the future.',
             ]);

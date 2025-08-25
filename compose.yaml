@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     environment:
       SERVER_NAME: ${SERVER_NAME:-localhost}, php:80
+      APP_URL: ${APP_URL:-localhost}
+      WORKER_URL: ${SERVER_NAME:-localhost}
       SYMFONY_VERSION: ${SYMFONY_VERSION:-}
       STABILITY: ${STABILITY:-stable}
       MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
@@ -65,7 +67,7 @@ services:
     networks:
       - monitoring_network
 
-  rabbitmq: # TODO: change latest
+  rabbitmq:
     image: heidiks/rabbitmq-delayed-message-exchange:4.1.0-management
     ports:
       - "5672:5672" # AMQP port
@@ -104,6 +106,8 @@ services:
     #   target: frankenphp_dev
     restart: unless-stopped
     environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost}
+      APP_URL: https://${SERVER_NAME:-localhost}
       APP_ENV: "${APP_ENV:-dev}"
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
       RUN_MIGRATIONS: false
@@ -134,14 +138,14 @@ services:
     deploy:
       resources:
         limits:
-          # cpus: '0.5'
+          cpus: '0.25'
           memory: 64M 
     networks:
       - monitoring_network
     command: php bin/console messenger:consume submission_amqp --queues=submission_low_priority_queue --verbose --time-limit=3600 --memory-limit=128M
 
   php_worker_submission_high_priority:
-    scale: 1
+    scale: 0
     extends:
       php_worker_submission_low_priority
     # image: ${IMAGES_PREFIX:-}app-php-worker-submission-high-priority
@@ -198,68 +202,68 @@ services:
 
 
  # Add monitoring services below this line
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   container_name: prometheus
-  #   ports:
-  #     - "9090:9090" # Prometheus UI
-  #   volumes:
-  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro # Mount Prometheus config
-  #     - prometheus_data:/prometheus # Persistent storage for metrics
-  #   command:
-  #     - '--config.file=/etc/prometheus/prometheus.yml'
-  #     - '--web.enable-lifecycle' # Allows config reload via API, useful for testing
-  #   restart: unless-stopped
-  #   networks:
-  #     - monitoring_network
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090" # Prometheus UI
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro # Mount Prometheus config
+      - prometheus_data:/prometheus # Persistent storage for metrics
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle' # Allows config reload via API, useful for testing
+    restart: unless-stopped
+    networks:
+      - monitoring_network
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   container_name: grafana
-  #   ports:
-  #     - "3000:3000" # Grafana UI
-  #   volumes:
-  #     - grafana_data:/var/lib/grafana # Persistent storage for Grafana data
-  #     - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning:ro # Auto-provision data sources
-  #   depends_on:
-  #     - prometheus
-  #   restart: unless-stopped
-  #   networks:
-  #     - monitoring_network
-  #   environment:
-  #     # Optional: Set admin password from env var
-  #     GF_SECURITY_ADMIN_USER: admin
-  #     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin} # Set a strong password in .env!
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000" # Grafana UI
+    volumes:
+      - grafana_data:/var/lib/grafana # Persistent storage for Grafana data
+      - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning:ro # Auto-provision data sources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+    environment:
+      # Optional: Set admin password from env var
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin} # Set a strong password in .env!
 
-  # # Node Exporter: Monitors the host system where Docker is running (CPU, memory, disk I/O)
-  # node_exporter:
-  #   image: quay.io/prometheus/node-exporter:latest
-  #   container_name: node_exporter
-  #   command:
-  #     - '--path.rootfs=/host'
-  #   # Crucial for host metrics:
-  #   pid: "host" # Allows access to host process information
-  #   volumes:
-  #     - '/:/host:ro,rslave' # Mounts host root filesystem for metrics
-  #   restart: unless-stopped
-  #   networks:
-  #     - monitoring_network
+  # Node Exporter: Monitors the host system where Docker is running (CPU, memory, disk I/O)
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    # Crucial for host metrics:
+    pid: "host" # Allows access to host process information
+    volumes:
+      - '/:/host:ro,rslave' # Mounts host root filesystem for metrics
+    restart: unless-stopped
+    networks:
+      - monitoring_network
 
-  # # cAdvisor: Collects and exposes Docker container metrics (CPU, memory, network, disk per container)
-  # cadvisor:
-  #   image: gcr.io/cadvisor/cadvisor:latest
-  #   container_name: cadvisor
-  #   ports:
-  #     - "8080:8080" # cAdvisor UI
-  #   volumes:
-  #     - /:/rootfs:ro
-  #     - /var/run:/var/run:rw
-  #     - /sys:/sys:ro
-  #     - /var/lib/docker/:/var/lib/docker:ro
-  #     - /dev/disk/:/dev/disk:ro
-  #   restart: unless-stopped
-  #   networks:
-  #     - monitoring_network
+  # cAdvisor: Collects and exposes Docker container metrics (CPU, memory, network, disk per container)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080" # cAdvisor UI
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+    networks:
+      - monitoring_network
 
 
 volumes:
