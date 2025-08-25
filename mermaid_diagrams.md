@@ -116,21 +116,18 @@ sequenceDiagram
 
     participant RMQ_D as RabbitMQ (x-delay Exchange)
     participant CSW as Competition Status Worker
-    %% participant WGW as Winner Generation Worker
     participant RED as Redis
     participant MER as Mercure
     participant RMQ_E as RabbitMQ (Email Queue)
     participant MW as Email Worker
 
-    OU->>WA: Organizer User <br> Create/Update Competition
+    OU->>WA: Organizer User <br> Update Competition
     activate WA
-    WA->>PG: INSERT/UPDATE Competition
+    WA->>PG: UPDATE Competition
     PG-->>WA: Success
     deactivate WA
     activate CS
     WA-->>CS: CompetitionSubscriber is triggered
-    CS->>MER: Publish Event: CompetitionPagesUpdate
-    MER-->>OU: Real-Time Update Competition Pages to Public User 
 
     CS->>CS: shouldDispatchStatusUpdateMessages <br> (start_date|end_date is Updated or new Status='scheduled')
     deactivate CS
@@ -138,47 +135,131 @@ sequenceDiagram
         activate CS
         CS->>RMQ_D: Publish x-delay Message: UpdateStatus <br>(type: "start", competition_id) @delay CompetitionStartTime
         CS->>RMQ_D: Publish x-delay Message: UpdateStatus <br>(type: "end", competition_id) @delay CompetitionEndTime
+        CS->>RMQ_D: Publish x-delay Message: UpdateStatus <br>(type: "archived", competition_id) @delay CompetitionEndTime + ArchivedPeriod
+        CS->>RMQ_D: Publish x-delay Message: WinnerGenerationTrigger <br>(competition_id) @delay CompetitionEndTime + GracePeriod
         deactivate CS
-        %% CS->>RMQ_D: Publish x-delay Message: WinnerGenerationTrigger <br>(competition_id) @delay CompetitionEndTime + GracePeriod
+        
         activate CSW
         RMQ_D-->>CSW: Deliver Message: UpdateStatus
-        CSW-->>CSW: Validate Status Transistiton 
-        alt Transisition Valid
+        CSW-->>CSW: Validate Status Transitition <br> (isCurrentStatusLowerThanNew && !isStatusTransitionValid)
+        alt Transitition Valid 
             CSW->>PG: UPDATE Competition Status
             PG-->>CSW: Success
             CSW-->>CS: CompetitionSubscriber is triggered
             CSW->>RMQ_D: ACK Mesage
             CSW->>RMQ_E: Publish Message: SuccessEmail
             RMQ_E->>MW: Send Notification Email
-        else 
-            CSW->>RMQ_D: NACK Mesage
-            note over CSW: Messenger retries messages...
-            loop Max Retries Occurs
-            note over CSW: WorkerSubscriber is triggered
+        else Transitition NOT Valid
+            alt CurrentStatusEqualOrHigherThanNew=false
+                CSW->>RMQ_D: NACK Mesage and Retry
+                note over CSW: Messenger retries messages...
+                loop Max Retries Occurs
+                note over CSW: WorkerSubscriber is triggered
+                    CSW->>RMQ_E: Publish Message: FailedEmail
+                    RMQ_E->>MW: Send Notification Email
+                end
+            else CurrentStatusEqualOrHigherThanNew=true
+                CSW->>RMQ_D: NACK Mesage and do NOT Retry
+                note over CSW: WorkerSubscriber is triggered
                 CSW->>RMQ_E: Publish Message: FailedEmail
                 RMQ_E->>MW: Send Notification Email
             end
         end
         deactivate CSW
     end
+```
+
+# 4.4 Real Time Ενημερώσεις Competition και Announcements
+
+## Sequence
+```mermaid
+sequenceDiagram
+    participant U as Users
+    participant CSW as Competition Status Worker
+    participant PG as PostgreSQL
+    %% participant WA as WebApp (Symfony)
+    participant CS as Competition Subscriber
+    participant MER as Mercure
+    participant RED as Redis
+
+    alt Organizer User Updates Competition
+        U->>PG:  UPDATE Competition
+    else Status Transitition StatusUpdateMessage
+        CSW->>PG: UPDATE Competition
+    end
+
+    activate CS
+    PG-->>CS: CompetitionSubscriber is triggered
+    CS->>MER: Publish Event: CompetitionListUpdate
+    MER-->>U: Real-Time Update Competition List to Public User 
+
 
     activate CS
     CS->>CS: Check if Status is Updated
     alt Status Updated
         CS->>RED: addToList global_announcements Key
+        CS->>RED: trimList global_announcements Key
         CS->>MER: Publish Event: AnnouncementUpdate
-        MER-->>OU: Real-Time Update Announcement Sections to Public Users
-        CS->>PG: INSERT CompeititionStatusTransistion && INSERT CompeititionStatSnapshot
-        PG-->>CS: Success
-        CS->>MER: Publish Event: ChartDataUpdate && Publish Event: ChartStatusAnnotationUpdate
-        MER-->>OU: Real-Time Update Competition Chart to Organizer User 
+        MER-->>U: Real-Time Update Announcement Sections to Public Users
     end
     deactivate CS
 ```
 
 
+# 4.5 Real Time Ενημερώσεις Chart & Καταγραφή Στατιστικών Διαγωνσμού.
+## Sequence
+```mermaid
+sequenceDiagram
+    participant U as Orgnizer User
+    participant CSW as Competition Status <br> Worker
+    participant SC as Scheduler<br>(Cronjob)
+    participant PG as PostgreSQL
+    %% participant WA as WebApp (Symfony)
+    participant CS as Competition Subscriber
+    participant MER as Mercure
+    participant RED as Redis
+    participant RAQ as RabbitMQ DLQ
 
-# 4.4 Δημιουργία Τυχαίων Νικητών
+    alt Organizer User Updates Competition
+        U->>PG:  UPDATE Competition
+    else Status Transitition StatusUpdateMessage
+        CSW->>PG: UPDATE Competition
+    end
+
+    activate CS
+    PG-->>CS: CompetitionSubscriber is triggered
+    CS->>CS: Check if Status is Updated
+    alt Status Updated
+        CS->>PG: INSERT CompeititionStatusTransistion <br> (currentStatus, newStatus)
+        PG-->>CS: Success
+        %% CS->>MER: Publish Event: ChartDataUpdate 
+        %% MER-->>U: Real-Time Update Competition Chart to Organizer User 
+        CS->>MER: Publish Event: ChartStatusAnnotationUpdate
+        activate MER
+        MER-->>U: Real-Time Update Competition Chart to Organizer User 
+        deactivate MER
+    end
+    deactivate CS
+    activate SC
+    note over SC: Creates CompetitionStatSnapshot at Interval.
+    SC->>RED: GET CompCountKey competition:{competition_id}:submission:count
+    RED-->>SC: Return InitiatedSubmissions
+    SC->>PG: SELECT count from Submission
+    PG-->>SC: Return ProcessedSubmissions
+    SC->>RAQ: GET Queue Length of DLQ (competitiond_id)
+    RAQ-->>SC: Return FailedSubmissions
+    activate PG
+    SC->>PG: INSERT CompeititionStatSnapshot <br> (InitiatedSubmissions, ProcessedSubmissions, FailedSubmissions)
+    PG-->>SC: Sucess 
+    deactivate SC
+    
+    CS->>MER: Publish Event: ChartDataUpdate 
+    activate MER
+    MER-->>U: Real-Time Update Competition Chart to Organizer User 
+    deactivate MER
+```
+
+# 4.6 Δημιουργία Τυχαίων Νικητών
 ## Sequence
 ```mermaid
 sequenceDiagram
@@ -191,17 +272,17 @@ sequenceDiagram
 
     RMQ_S->>WGW: Deliver Message:<br>WinnerTriggerMessage
     activate WGW
-    note over WGW: Check & Validate Competition Status
-    WGW->>DB: Check processed submissions count
+    WGW->>DB: Get processed submissions count
     DB-->>WGW: Return Processed count
     WGW->>RED: Get initiated submissions count
     RED-->>WGW: Return Initiated count
     alt Initiated < Processed
-        WGW->>RED: Heal Submission Counter "SET SubmissionCount Key (Processed Count)
+        WGW->>RED: Heal Submission Counter "SET CompCountKey Key (Processed Count)
     end
+    note over WGW: Check if all Submissions are Processed
     alt Initiated == Processed
-        note over WGW: Start Reservoir Sampling
-        WGW->>DB: SELECT winning submissions
+        note over WGW: Execute Reservoir Sampling
+        WGW->>DB: Iterate submissions
         activate DB
         DB-->>WGW: Return winning submissions
         deactivate DB
