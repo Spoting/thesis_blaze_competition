@@ -115,7 +115,7 @@ RUN rm -Rf frankenphp/
 # RUN chown -R ${USER}:${USER} .
 
 RUN mkdir -p var/cache var/log && \
-    chown -R ${USER}:${USER} var
+    chown -R ${USER}:${USER} var vendor
 
 USER ${USER}
 
