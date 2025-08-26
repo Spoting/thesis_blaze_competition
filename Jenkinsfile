@@ -34,7 +34,10 @@ pipeline {
             steps {
                 script {
                     // -- Step 1: Update the Kustomization manifest --
-                    echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
+                    echo "Checking out the main branch..."
+                    sh "git checkout main"
+
+		    echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
                     // Use sed to find the 'newTag:' line and replace it
                     sh "sed -i 's|newTag: .*|newTag: ${IMAGE_TAG}|' k8s/kustomization.yaml"
 
