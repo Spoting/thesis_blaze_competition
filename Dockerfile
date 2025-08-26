@@ -104,11 +104,11 @@ RUN set -eux; \
 	composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
 # copy sources
-COPY --link . ./
-RUN rm -Rf frankenphp/
-
 # Setup permissions before switching user
-RUN chown -R ${USER}:${USER} .
+# COPY --link . ./
+COPY --chown=${USER}:${USER} --link . ./
+
+RUN rm -Rf frankenphp/
 
 USER ${USER}
 

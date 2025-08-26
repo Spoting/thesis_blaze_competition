@@ -35,7 +35,7 @@ ssh-keygen -t rsa -b 2048 // Enter no passphrase
 1. GOTO: `http://localhost:8099/manage/credentials/store/system/domain/_/newCredentials` and pass your private key of Github.
 2. Modify Setting: Host Key Verification Strategy -> 'Accept First Connection'
 3. Create new Item (Pipeline) with Pooling instead of Webhook ( since we are localhost ).
-
+4. Remember to configure 'Polling ignores commits in certain paths' Exclude k8s/.* , to avoid infinite build loops
 
 # Create your Jenkinsfile to / of application.
 1. Trigger a commit.
