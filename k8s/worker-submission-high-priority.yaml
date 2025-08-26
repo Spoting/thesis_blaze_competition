@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: php-worker
-        image: 127.0.0.1:32000/app-php-prod:v0.0.2
+        image: 127.0.0.1:32000/app-php-prod:latest
         imagePullPolicy: IfNotPresent
         command: ["php", "bin/console", "messenger:consume", "submission_amqp", "--queues=submission_high_priority_queue", "--verbose", "--time-limit=3600", "--memory-limit=128M"]
         envFrom:
@@ -32,10 +32,10 @@ spec:
         #   mountPath: /app/var
         resources:
           limits:
-            memory: "128Mi" 
+            memory: "64Mi" 
             cpu: "500m" 
           requests:
-            memory: "64Mi"
+            memory: "32Mi"
             cpu: "250m"
       # volumes:
       # - name: app-code

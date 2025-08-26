@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: cronjob
-              image: 127.0.0.1:32000/app-php-prod:v0.0.2
+              image: 127.0.0.1:32000/app-php-prod:latest
               imagePullPolicy: Always
               command:
                 - php
@@ -26,8 +26,8 @@ spec:
               resources:
                 limits:
                   memory: "128Mi"
-                  cpu: "500m"
-                requests:
-                  memory: "64Mi"
                   cpu: "250m"
+                requests:
+                  memory: "32Mi"
+                  cpu: "100m"
           restartPolicy: OnFailure
