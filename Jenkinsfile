@@ -46,7 +46,7 @@ pipeline {
                     sshagent (credentials: ['github-ssh']) {
                         sh '''
                             git config user.email "jenkins@your-ci.com"
-                            git config user.name "Jenkins CI"
+                            git config user.name "jenkins-bot"
 
                             git add k8s/kustomization.yaml
                             git commit -m "ci: Deploy new image ${IMAGE_TAG}" || echo "No changes to commit"
