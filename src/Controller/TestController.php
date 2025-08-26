@@ -293,10 +293,12 @@ class TestController extends AbstractController
     #[Cache(smaxage: 3600, public: true)]
     public function testTheTestie(): Response
     {
-        $response = new Response('<html><body>Hello</body></html>');
-        // $response->setPublic();
-        // $response->setSharedMaxAge(30); // 30 seconds
-        return $response;
+        return $this->render('public/secret_page.html.twig', [
+        ]);
+        // $response = new Response('<html><body>Hello</body></html>');
+        // // $response->setPublic();
+        // // $response->setSharedMaxAge(30); // 30 seconds
+        // return $response;
         // return $this->render('mailer/email_status.html.twig', [
         //     'status' => 'Templated email send attempt complete.',
         // ]);

@@ -37,19 +37,21 @@ pipeline {
                     echo "Checking out the main branch..."
                     sh "git checkout main"
 
-		    echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
+		            echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
                     // Use sed to find the 'newTag:' line and replace it
                     sh "sed -i 's|newTag: .*|newTag: ${IMAGE_TAG}|' k8s/kustomization.yaml"
 
                     // -- Step 2: Commit and push the updated manifest to Git --
                     echo "Committing manifest changes to Git..."
-                    withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh', keyFileVariable: 'GIT_SSH_KEY')]) {
-                        sh 'git config --global user.email "jenkins@your-ci.com"'
-                        sh 'git config --global user.name "Jenkins CI"'
+                    sshagent (credentials: ['github-ssh']) {
+                        sh '''
+                            git config user.email "jenkins@your-ci.com"
+                            git config user.name "Jenkins CI"
 
-                        sh 'git add k8s/kustomization.yaml'
-                        sh 'git commit -m "ci: Deploy new image ${IMAGE_TAG}"'
-                        sh 'git push origin main'
+                            git add k8s/kustomization.yaml
+                            git commit -m "ci: Deploy new image ${IMAGE_TAG}" || echo "No changes to commit"
+                            git push origin main
+                        '''
                     }
 
                     // -- Step 3: Apply the manifests to the Kubernetes cluster --
