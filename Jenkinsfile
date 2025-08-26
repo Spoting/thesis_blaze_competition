@@ -33,30 +33,28 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // -- Step 1: Update the Kustomization manifest --
-                    echo "Checking out the main branch..."
-                    sh "git checkout main"
-
-		            echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
-                    // Use sed to find the 'newTag:' line and replace it
-                    sh "sed -i 's|newTag: .*|newTag: ${IMAGE_TAG}|' k8s/kustomization.yaml"
-
-                    // -- Step 2: Commit and push the updated manifest to Git --
-                    echo "Committing manifest changes to Git..."
                     sshagent (credentials: ['github-ssh']) {
                         sh '''
                             git config user.email "jenkins@your-ci.com"
                             git config user.name "jenkins-bot"
 
+                            echo "Rebasing 'main' branch..."
+                            git fetch origin main
+                            git checkout main
+                            git rebase origin/main
+                            
+                            echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
+                            sed -i 's|newTag: .*|newTag: ${IMAGE_TAG}|' k8s/kustomization.yaml
+
+                            echo "Committing manifest changes to Git..."
                             git add k8s/kustomization.yaml
                             git commit -m "ci: Deploy new image ${IMAGE_TAG}" || echo "No changes to commit"
                             git push origin main
                         '''
                     }
 
-                    // -- Step 3: Apply the manifests to the Kubernetes cluster --
+                    // -- Apply the manifests to the Kubernetes cluster --
                     echo "Applying manifests to Kubernetes via Kustomize..."
-                    // The -k flag tells kubectl to use the kustomization.yaml file
                     sh "kubectl apply -k k8s/"
                 }
             }
