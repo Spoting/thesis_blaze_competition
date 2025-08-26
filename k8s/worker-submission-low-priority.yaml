@@ -18,7 +18,7 @@ spec:
       containers:
       - name: php-worker
         image: 127.0.0.1:32000/app-php-prod:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["php", "bin/console", "messenger:consume", "submission_amqp", "--queues=submission_low_priority_queue", "--verbose", "--time-limit=3600", "--memory-limit=128M"]
         envFrom:
         - configMapRef: { name: blaze-competition-config }

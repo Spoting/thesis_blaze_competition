@@ -40,7 +40,7 @@ spec:
       containers:
         - name: php
           image: 127.0.0.1:32000/app-php-prod:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: blaze-competition-config
