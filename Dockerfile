@@ -24,6 +24,8 @@ RUN \
 
 WORKDIR /app
 
+RUN chown ${USER}:${USER} /app
+
 VOLUME /app/var/
 
 # persistent / runtime deps
