@@ -40,7 +40,7 @@ pipeline {
 
                     // -- Step 2: Commit and push the updated manifest to Git --
                     echo "Committing manifest changes to Git..."
-                    withCredentials([sshUserPrivateKey(credentialsId: 'git', keyFileVariable: 'GIT_SSH_KEY')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh', keyFileVariable: 'GIT_SSH_KEY')]) {
                         sh 'git config --global user.email "jenkins@your-ci.com"'
                         sh 'git config --global user.name "Jenkins CI"'
 
