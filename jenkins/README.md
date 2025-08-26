@@ -22,3 +22,11 @@
 1. GOTO: `http://localhost:8099/manage/credentials/store/system/domain/_/newCredentials` and pass your private key of Github.
 2. Modify Setting: Host Key Verification Strategy -> 'Accept First Connection'
 3. Create new Item (Pipeline) with Pooling instead of Webhook ( since we are localhost ).
+
+
+# Create your Jenkinsfile to / of application.
+1. Trigger a commit.
+2. Check pipeline success
+3. Check microk8s registry `curl 192.168.56.11:32000/v2/app-php-prod/tags/list`
+
+GG Young Padawan
