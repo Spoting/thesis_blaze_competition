@@ -89,45 +89,55 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
+# This stage is dedicated to installing Composer dependencies
+FROM frankenphp_base AS frankenphp_vendor
+
+ARG USER=appuser
+
+# Copy only composer files
+COPY --link --chown=${USER}:${USER} composer.* symfony.* ./
+
+# Install dependencies AS THE NON-ROOT USER
+# This ensures the entire /vendor directory is created with the correct ownership
+USER ${USER}
+RUN set -eux; \
+    composer install --no-cache --prefer-dist --no-dev --no-scripts --no-progress
+
+
 # Prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod
 
+ARG USER=appuser
 ENV APP_ENV=prod
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 
-# prevent the reinstallation of vendors at every changes in the source code
-# COPY --link composer.* symfony.* ./
-COPY --link --chown=${USER}:${USER} composer.* symfony.* ./
+# Create and set permissions for var/, which is fast
+RUN mkdir -p var/cache var/log && \
+    chown -R ${USER}:${USER} var
 
-RUN set -eux; \
-	composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
+# Copy the pre-built vendor directory from the vendor stage
+# This is extremely fast and preserves permissions.
+COPY --from=frankenphp_vendor --chown=${USER}:${USER} /app/vendor ./vendor
 
-# copy sources
-# COPY --link . ./
+# Copy the rest of the application source code
 COPY --link --chown=${USER}:${USER} . ./
-
 RUN rm -Rf frankenphp/
 
-# Setup permissions before switching user
-# RUN chown -R ${USER}:${USER} .
-
-RUN mkdir -p var/cache var/log && \
-    chown -R ${USER}:${USER} var vendor
-
+# Switch to the non-root user
 USER ${USER}
 
-# Redis is not reachable during build time. So clear cache will hang. 
-# So we just put dummy ENV for Redis so it will be bypassed. 
+# Redis is not reachable during build time. So clear cache will hang.
+# So we just put dummy ENV for Redis so it will be bypassed.
 # https://github.com/dunglas/symfony-docker/issues/383
 ENV REDIS_URL=redis://localhost:1234
 ENV REDIS_SYMFONY_DB=999
 
 RUN set -eux; \
-	# mkdir -p var/cache var/log; \
-	composer dump-autoload --classmap-authoritative --no-dev; \
-	composer dump-env prod; \
-	composer -vvv run-script --no-dev post-install-cmd; \
-	chmod +x bin/console; sync;
+    # dump-autoload and other scripts will now work perfectly
+    composer dump-autoload --classmap-authoritative --no-dev; \
+    composer dump-env prod; \
+    composer -vvv run-script --no-dev post-install-cmd; \
+    chmod +x bin/console; sync;
