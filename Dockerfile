@@ -99,16 +99,23 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 
 # prevent the reinstallation of vendors at every changes in the source code
-COPY --chown=${USER}:${USER} --link composer.* symfony.* ./
+# COPY --link composer.* symfony.* ./
+COPY --link --chown=${USER}:${USER} composer.* symfony.* ./
+
 RUN set -eux; \
 	composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
 # copy sources
-# Setup permissions before switching user
 # COPY --link . ./
-COPY --chown=${USER}:${USER} --link . ./
+COPY --link --chown=${USER}:${USER} . ./
 
 RUN rm -Rf frankenphp/
+
+# Setup permissions before switching user
+# RUN chown -R ${USER}:${USER} .
+
+RUN mkdir -p var/cache var/log && \
+    chown -R ${USER}:${USER} var
 
 USER ${USER}
 
@@ -119,7 +126,7 @@ ENV REDIS_URL=redis://localhost:1234
 ENV REDIS_SYMFONY_DB=999
 
 RUN set -eux; \
-	mkdir -p var/cache var/log; \
+	# mkdir -p var/cache var/log; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
 	composer dump-env prod; \
 	composer -vvv run-script --no-dev post-install-cmd; \
