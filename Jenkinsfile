@@ -44,7 +44,7 @@ pipeline {
                             git rebase origin/main
                             
                             echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
-                            sed -i 's|newTag: .*|newTag: ${IMAGE_TAG}|' k8s/kustomization.yaml
+                            sed -i "s|newTag: .*|newTag: ${IMAGE_TAG}|" k8s/kustomization.yaml
 
                             echo "Committing manifest changes to Git..."
                             git add k8s/kustomization.yaml
