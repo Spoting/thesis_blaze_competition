@@ -1,17 +1,3 @@
-# TODO: convert to Stateful State when handling multiple
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: database-data-pvc
-  namespace: blaze-competition
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -24,18 +10,19 @@ spec:
     - port: 5432
       targetPort: 5432
       protocol: TCP
+  clusterIP: None # <-- Makes the service headless for the StatefulSet
   selector:
     app: blaze-competition-db
-  type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet # <-- Changed from Deployment
 metadata:
   name: blaze-competition-db
   namespace: blaze-competition
   labels:
     app: blaze-competition-db
 spec:
+  serviceName: "database" # <-- Links to the headless service above
   replicas: 1
   selector:
     matchLabels:
@@ -54,7 +41,7 @@ spec:
           ports:
             - containerPort: 5432
           volumeMounts:
-            - name: database-data
+            - name: database-data # <-- This name must match the template below
               mountPath: /var/lib/postgresql/data
           resources:
             limits:
@@ -68,18 +55,16 @@ spec:
               command: ["/bin/bash", "-c", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
             initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
           readinessProbe:
             exec:
               command: ["/bin/bash", "-c", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
             initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
-      volumes:
-        - name: database-data
-          persistentVolumeClaim:
-            claimName: database-data-pvc
+  volumeClaimTemplates: # <-- Automatically creates a PersistentVolumeClaim
+  - metadata:
+      name: database-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

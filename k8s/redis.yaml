@@ -12,18 +12,19 @@ spec:
     - port: 6379
       targetPort: 6379
       protocol: TCP
+  clusterIP: None # <-- Headless
   selector:
     app: blaze-competition-redis
-  type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet # <-- Changed from Deployment
 metadata:
   name: blaze-competition-redis
   namespace: blaze-competition
   labels:
     app: blaze-competition-redis
 spec:
+  serviceName: "redis"
   replicas: 1
   selector:
     matchLabels:
@@ -41,6 +42,9 @@ spec:
                 name: blaze-competition-config
           ports:
             - containerPort: 6379
+          volumeMounts: # <-- Added to use persistent volume
+            - name: redis-data
+              mountPath: /data
           resources:
             limits:
               cpu: "200m"
@@ -48,3 +52,11 @@ spec:
             requests:
               cpu: "100m"
               memory: "64Mi"
+  volumeClaimTemplates: # <-- Added to create persistent volume
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

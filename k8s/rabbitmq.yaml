@@ -1,5 +1,3 @@
-# k8s-rabbitmq.yaml
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -12,23 +10,22 @@ spec:
     - name: amqp
       port: 5672
       targetPort: 5672
-      protocol: TCP
     - name: management
       port: 15672
       targetPort: 15672
-      protocol: TCP
+  clusterIP: None # Headless
   selector:
     app: blaze-competition-rabbitmq
-  type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: blaze-competition-rabbitmq
   namespace: blaze-competition
   labels:
     app: blaze-competition-rabbitmq
 spec:
+  serviceName: "rabbitmq"
   replicas: 1
   selector:
     matchLabels:
@@ -47,6 +44,9 @@ spec:
           ports:
             - containerPort: 5672
             - containerPort: 15672
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
           resources:
             limits:
               cpu: "2000m"
@@ -60,5 +60,13 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 30
-            successThreshold: 1
-            failureThreshold: 3
+            successThreshold: 5
+            failureThreshold: 10
+  volumeClaimTemplates:
+  - metadata:
+      name: rabbitmq-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi # Adjust storage as needed
