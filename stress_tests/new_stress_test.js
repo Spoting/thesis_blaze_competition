@@ -22,8 +22,8 @@ export const options = {
 
 // The main function that each virtual user will execute repeatedly.
 export default function () {
-  const competitionId = 457;
-  const baseUrl = 'https://symfony.localhost';
+  const competitionId = 364;
+  const baseUrl = 'https://blaze-competition.demo';
 
   // Generate unique data for each iteration
   const uniqueEmail = `user-${__VU}-${__ITER}@test.com`;
@@ -48,6 +48,7 @@ export default function () {
   const verificationIdentifier = encoding.b64encode(JSON.stringify(identifierObject));
   
   const verifyUrl = `${baseUrl}/verify/${verificationIdentifier}`;
+  console.log(verifyUrl, uniquePhoneNumber);
   const verifyPageRes = http.get(verifyUrl);
   const step2Check = check(verifyPageRes, { 'Step 2 - Verification page loads': (r) => r.status === 200 });
 

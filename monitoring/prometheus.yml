@@ -5,20 +5,20 @@ global:
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090'] # Prometheus scrapes itself
+      - targets: ['localhost:9090']
 
   - job_name: 'cadvisor'
     static_configs:
-      - targets: ['cadvisor:8080'] # cAdvisor container
+      - targets: ['cadvisor:8080']
 
   - job_name: 'node_exporter'
     static_configs:
-      - targets: ['node_exporter:9100'] # Node Exporter container (for host metrics)
+      - targets: ['node_exporter:9100']
 
   - job_name: 'rabbitmq'
     static_configs:
-      - targets: ['rabbitmq:15692'] # RabbitMQ Management UI port for Prometheus metrics
-    metrics_path: '/metrics' # Default path for RabbitMQ's Prometheus plugin
+      - targets: ['rabbitmq:15692'] 
+    metrics_path: '/metrics'
 
   # https://grafana.com/grafana/dashboards/20700-rabbitmq-queues-overview-seventh-state-rabbitmq-support/
   - job_name: 'rabbitmq-details-exporter'
@@ -37,26 +37,5 @@ scrape_configs:
 
 
   - job_name: 'symfony_app'
-    # If your Symfony 'php' service or workers expose custom metrics:
-    # You would need to add a bundle/library to expose metrics from your Symfony app
-    # e.g., 'symfony/prometheus-bundle' if it exists or roll your own endpoint.
-    # For a basic Symfony app, you might only monitor the web server (Caddy/php service)
-    # and the workers' resource usage via cAdvisor/Node Exporter.
-    # This example assumes your 'php' service exposes metrics on /metrics (unlikely for a default symfony setup)
-    # If your Symfony app has a custom /metrics endpoint, adapt the target below.
-    # For most cases, you'll rely on cAdvisor for container metrics and Node Exporter for host.
-    # static_configs:
-    #   - targets: ['php:80'] # Or whatever port your php service uses if it exposes metrics
-    # metrics_path: '/metrics' # Example, unlikely to exist by default.
 
   - job_name: 'symfony_workers'
-    # This will monitor the individual worker containers using cAdvisor metrics by container name
-    # You would typically rely on cAdvisor for per-container metrics and PromQL to filter
-    # or you'd instrument your individual workers if they were separate applications.
-    # Since your workers are all 'php_worker_submission_low_priority', 'php_worker_submission_high_priority', etc.,
-    # cAdvisor will give you metrics for these container names.
-    # No direct scrape config for each worker is usually needed if cAdvisor is doing its job.
-    # If you were to add application-level metrics to your Symfony workers,
-    # each worker would need its own metrics endpoint and a scrape config here.
-    # For now, rely on cAdvisor's container_cpu_usage_seconds_total, container_memory_usage_bytes, etc.
-    # Filtering in Grafana will be key here.

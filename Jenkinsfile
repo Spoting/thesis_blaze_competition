@@ -16,15 +16,15 @@ pipeline {
 
         stage('Build and Push Image') {
             steps {
-                // Step 1: Build the image using compose.prod since we want production image
+                // Build the image using compose.prod since we want production image
                 echo "Building image from compose files..."
                 sh "docker compose -f compose.yaml -f compose.prod.yaml build"
 
-                // Step 2: Tag the built image for the microk8s registry
+                // Tag image
                 echo "Tagging image as ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
                 sh "docker tag ${IMAGE_NAME}:latest ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-                // Step 3: Push the newly tagged image to microk8s registry
+                // Push microk8s registry
                 echo "Pushing image to registry..."
                 sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
