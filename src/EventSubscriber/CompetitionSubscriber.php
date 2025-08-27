@@ -21,6 +21,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\HttpCache\StoreInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 // #[AsDoctrineListener(event: Events::postPersist)]
 #[AsDoctrineListener(event: Events::preUpdate)]
@@ -41,6 +42,7 @@ class CompetitionSubscriber
         private CompetitionSnapshotService $competitionSnapshotService,
         private StoreInterface $store, // Service for HTTP cache interaction
         private UrlGeneratorInterface $router, // Service for generating URLs
+        private TagAwareCacheInterface $resultCachePool,
         private ?Security $security = null // (can be null in console)
     ) {}
 
@@ -70,6 +72,9 @@ class CompetitionSubscriber
         if (isset($this->changeLog[$hash])) {
             // Purge the relevant pages from the HTTP cache
             $this->purgeHttpCache($entity);
+
+            // Purge competition list result
+            $this->resultCachePool->invalidateTags(['competitions_list']);
 
             // Publish Updated Competition's Data.
             $this->publisher->publishCompetitionUpdate($entity);

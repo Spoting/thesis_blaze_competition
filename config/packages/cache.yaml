@@ -6,8 +6,10 @@ framework:
 
         pools:
             doctrine.result_cache_pool:
-                adapter: cache.adapter.redis
+                adapter: cache.adapter.redis_tag_aware
                 provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
+                # adapter: cache.adapter.redis
+                # provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
     
             doctrine.query_cache_pool:
                 adapter: cache.adapter.redis
