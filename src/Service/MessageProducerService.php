@@ -161,18 +161,18 @@ class MessageProducerService
         
         
         // Adjusted thresholds for demonstration
-        if ($timeRemainingSeconds <= 10) { // Less than 10 seconds
+        if ($timeRemainingSeconds <= 10) { // Less than 5 seconds
             return 5;
-        } elseif ($timeRemainingSeconds <= 20) { // Less than 20 seconds
+        } elseif ($timeRemainingSeconds <= 15) { // Less than 10
             return 4;
-        } elseif ($timeRemainingSeconds <= 30) { // Less than 30 seconds
+        } elseif ($timeRemainingSeconds <= 20) { // Less than 25
             return 3;
-        } elseif ($timeRemainingSeconds <= 60) { // Less than 1 minute
+        } elseif ($timeRemainingSeconds <= 25) { // Less than 40
             return 2;
-        } elseif ($timeRemainingSeconds <= 120) { // Less than 2 minutes
+        } elseif ($timeRemainingSeconds <= 40) { // Less than 55
             return 1;
         } else {
-            return 0; // 2 minutes and up
+            return 0; // 1 minutes and up
         }
 
         // if ($timeRemainingSeconds <= 28800) { // Less than 8 hour
