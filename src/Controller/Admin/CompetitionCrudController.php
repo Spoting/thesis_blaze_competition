@@ -93,11 +93,11 @@ class CompetitionCrudController extends AbstractCrudController
                 $statusField->setDisabled();
             }
 
-            $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-            $startDateConstraints[] = new GreaterThanOrEqual([
-                'value' => $now->modify('+1 minutes'),
-                'message' => 'Start time must be at least 1 minutes in the future.',
-            ]);
+            // $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+            // $startDateConstraints[] = new GreaterThanOrEqual([
+            //     'value' => $now->modify('+1 minutes'),
+            //     'message' => 'Start time must be at least 1 minutes in the future.',
+            // ]);
         }
 
         if (Crud::PAGE_EDIT === $pageName) {

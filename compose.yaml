@@ -42,6 +42,11 @@ services:
       - target: 443
         published: ${HTTP3_PORT:-443}
         protocol: udp
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          # memory: 64M 
     networks:
       - monitoring_network
 

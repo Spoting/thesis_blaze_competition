@@ -106,10 +106,10 @@ framework:
                 serializer: messenger.transport.symfony_serializer
                 failure_transport: dead_letter_amqp # Route failures to dead_letter_amqp
                 retry_strategy:
-                    max_retries: 1
-                    delay: 1000
-                    multiplier: 2
-                    max_delay: 0
+                    max_retries: 0
+                    # delay: 1000
+                    # multiplier: 2
+                    # max_delay: 0
                 options:
                     exchange:
                         name: email_exchange # Use the same email exchange
