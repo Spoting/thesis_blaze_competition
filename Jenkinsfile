@@ -20,7 +20,7 @@ pipeline {
                 echo "Building image from compose files..."
                 sh "docker compose -f compose.yaml -f compose.prod.yaml build"
 
-                // Tag image
+                // Tag image pr
                 echo "Tagging image as ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
                 sh "docker tag ${IMAGE_NAME}:latest ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
 
