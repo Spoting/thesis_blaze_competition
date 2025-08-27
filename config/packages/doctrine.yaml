@@ -11,6 +11,19 @@ doctrine:
         options:
             lazy: true
     orm:
+        second_level_cache:
+            enabled: true
+            region_cache_driver:
+                type: pool
+                pool: doctrine.second_level_cache_pool            
+            # Configure cache regions for your entities
+            regions:
+                competitions_region:
+                    lifetime: 600 # 10 minutes (Redis TTL)
+                    cache_driver:
+                        type: pool
+                        pool: doctrine.second_level_cache_pool
+
         metadata_cache_driver:
             type: pool
             pool: doctrine.metadata_cache_pool

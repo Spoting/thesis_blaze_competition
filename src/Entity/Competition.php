@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CompetitionRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'competitions_region')]
 class Competition
 {
     #[ORM\Id]

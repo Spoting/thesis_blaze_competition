@@ -16,7 +16,11 @@ framework:
             doctrine.metadata_cache_pool:
                 adapter: cache.adapter.system
                 # provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
-    
+
+            doctrine.second_level_cache_pool:
+                adapter: cache.adapter.redis
+                provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
+
             # doctrine.system_cache_pool:
             #     adapter: cache.adapter.system
             #     # provider: '%env(REDIS_URL)%/%env(REDIS_SYMFONY_DB)%'
