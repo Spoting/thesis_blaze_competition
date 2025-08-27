@@ -1,12 +1,46 @@
 #syntax=docker/dockerfile:1
 
+# https://github.com/dunglas/frankenphp/blob/main/docs/docker.md
+FROM dunglas/frankenphp:builder AS builder
+
+# Copy xcaddy in the builder image
+COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
+
+RUN curl -L https://go.dev/dl/go1.25.0.linux-amd64.tar.gz -o go1.25.0.linux-amd64.tar.gz \
+    && rm -rf /usr/local/go \
+    && tar -C /usr/local -xzf go1.25.0.linux-amd64.tar.gz \
+    && rm go1.25.0.linux-amd64.tar.gz \
+    && export PATH=$PATH:/usr/local/go/bin
+
+# CGO must be enabled to build FrankenPHP
+RUN CGO_ENABLED=1 \
+    XCADDY_SETCAP=1 \
+    XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s' -tags=nobadger,nomysql,nopgx" \
+    CGO_CFLAGS=$(php-config --includes) \
+    CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
+    xcaddy build \
+        --output /usr/local/bin/frankenphp \
+        --with github.com/dunglas/frankenphp=./ \
+        --with github.com/dunglas/frankenphp/caddy=./caddy/ \
+        --with github.com/dunglas/caddy-cbrotli \
+        # Mercure and Vulcain are included in the official build, but feel free to remove them
+        --with github.com/dunglas/mercure/caddy \
+        --with github.com/dunglas/vulcain/caddy \
+        # Add extra Caddy modules here
+    	--with github.com/caddyserver/cache-handler
+    # Or use the following lines instead of the cache-handler one for the latest improvements
+    # @65cb24114d76a7de3f4e8c7b8ef7df3efd028899 can be removed when a new release of `darkweak/souin` will be published
+    #--with github.com/darkweak/souin/plugins/caddy@65cb24114d76a7de3f4e8c7b8ef7df3efd028899 \
+    #--with github.com/darkweak/souin@65cb24114d76a7de3f4e8c7b8ef7df3efd028899 \
+    #--with github.com/darkweak/storages/otter/caddy
+	
 # Versions
 FROM dunglas/frankenphp:1-php8.4 AS frankenphp_upstream
 
 # The different stages of this Dockerfile are meant to be built into separate images
 # https://docs.docker.com/develop/develop-images/multistage-build/#stop-at-a-specific-build-stage
 # https://docs.docker.com/compose/compose-file/#target
-
+COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 
 # Base FrankenPHP image
 FROM frankenphp_upstream AS frankenphp_base
