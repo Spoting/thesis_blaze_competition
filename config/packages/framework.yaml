@@ -13,11 +13,11 @@ framework:
         default_options:
             verify_peer: false
 
-    # http_cache:
-    #     enabled: true
-    #     trace_level: full
-    #     trace_header: X-Symfony-Cache
-    #     debug: true
+    http_cache:
+        enabled: true
+        trace_level: full
+        trace_header: X-Symfony-Cache
+        debug: true
     #esi: true
     #fragments: true
     

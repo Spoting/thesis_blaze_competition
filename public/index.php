@@ -9,7 +9,7 @@ return function (array $context) {
     $kernel = new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
 
     // if ('prod' === $context['APP_ENV']) {
-        // return new CacheKernel($kernel);
+        return new CacheKernel($kernel);
     // }
 
     return $kernel;

@@ -27,8 +27,6 @@
 		}
 	}
 
-	cache
-
 	root /app/public
 	encode zstd br gzip
 
