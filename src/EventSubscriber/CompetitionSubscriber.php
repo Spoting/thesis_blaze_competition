@@ -19,6 +19,8 @@ use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpKernel\HttpCache\StoreInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 // #[AsDoctrineListener(event: Events::postPersist)]
 #[AsDoctrineListener(event: Events::preUpdate)]
@@ -37,6 +39,8 @@ class CompetitionSubscriber
         private MessageProducerService $messageProducerService,
         private EntityManagerInterface $entityManager,
         private CompetitionSnapshotService $competitionSnapshotService,
+        private StoreInterface $store, // Service for HTTP cache interaction
+        private UrlGeneratorInterface $router, // Service for generating URLs
         private ?Security $security = null // (can be null in console)
     ) {}
 
@@ -64,6 +68,9 @@ class CompetitionSubscriber
         $hash = spl_object_hash($entity);
 
         if (isset($this->changeLog[$hash])) {
+            // Purge the relevant pages from the HTTP cache
+            $this->purgeHttpCache($entity);
+
             // Publish Updated Competition's Data.
             $this->publisher->publishCompetitionUpdate($entity);
 
@@ -171,6 +178,27 @@ class CompetitionSubscriber
         //     $this->publisher->publishAnnouncement($entity->getStatus(), $message);
         //     $this->publisher->publishCompetitionUpdate($entity);
         // }
+    }
+
+    /**
+     * Purges relevant pages from the HTTP cache for a given competition.
+     */
+    private function purgeHttpCache(Competition $competition): void
+    {
+        $urlsToPurge = [];
+
+        // 1. Generate the URL for the main competitions list page
+        $urlsToPurge[] = $this->router->generate('public_competitions_list', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        // 2. Generate the URL for this specific competition's submit page
+        $urlsToPurge[] = $this->router->generate('public_competition_submit', [
+            'id' => $competition->getId()
+        ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        foreach ($urlsToPurge as $urlToPurge) {
+            $this->store->purge($urlToPurge);
+        }
+        $this->logger->info('Purged HTTP cache for URLs: ' . implode(', ', $urlsToPurge));
     }
 
     private function generateStatusTransitionEntity(Competition $competition, string $oldStatus, string $newStatus): CompetitionStatusTransition

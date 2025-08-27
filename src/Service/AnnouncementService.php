@@ -6,7 +6,7 @@ class AnnouncementService
 {
     private RedisManager $redisManager;
     private string $redisKey = RedisKeyBuilder::GLOBAL_ANNOUNCEMENT_KEY;
-    private int $maxAnnouncements = 12; 
+    private int $maxAnnouncements = 8; 
 
     public function __construct(RedisManager $redisManager)
     {
