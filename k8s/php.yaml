@@ -28,7 +28,6 @@ metadata:
   labels:
     app: blaze-competition-php
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: blaze-competition-php

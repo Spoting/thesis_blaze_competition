@@ -5,6 +5,8 @@ metadata:
   namespace: blaze-competition
 spec:
   schedule: "*/1 * * * *" # Runs every minute (cron format)
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
   jobTemplate:
     spec:
       template:

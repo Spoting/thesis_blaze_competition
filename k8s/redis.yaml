@@ -42,7 +42,7 @@ spec:
                 name: blaze-competition-config
           ports:
             - containerPort: 6379
-          volumeMounts: # <-- Added to use persistent volume
+          volumeMounts:
             - name: redis-data
               mountPath: /data
           resources:
@@ -52,7 +52,7 @@ spec:
             requests:
               cpu: "100m"
               memory: "64Mi"
-  volumeClaimTemplates: # <-- Added to create persistent volume
+  volumeClaimTemplates:
   - metadata:
       name: redis-data
     spec:
