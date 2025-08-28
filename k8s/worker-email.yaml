@@ -33,10 +33,10 @@ spec:
         resources:
           limits:
             memory: "64Mi" 
-            cpu: "250m" 
+            cpu: "100m" 
           requests:
             memory: "32Mi"
-            cpu: "100m"
+            cpu: "50m"
       # volumes:
       # - name: app-code
       #   emptyDir: {}

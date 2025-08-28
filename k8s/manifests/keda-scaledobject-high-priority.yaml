@@ -8,7 +8,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: blaze-competition-php-worker-submission-high-priority # Target the high-priority worker Deployment
-  minReplicaCount: 0 # Scale down to 0 when queue is empty
+  minReplicaCount: 1 # Scale down to 0 when queue is empty
   maxReplicaCount: 4 # Maximum number of worker pods for high priority
   pollingInterval: 10 # Check queue more frequently for high priority (e.g., every 15 seconds)
   cooldownPeriod: 30 # Scale down faster for high priority (e.g., 3 minutes)
@@ -18,7 +18,7 @@ spec:
         queueName: submission_high_priority_queue # The name of the high-priority queue
         # host: rabbitmq:5672 # The internal service name and AMQP port of RabbitMQ
         host: amqp://guest:guest@rabbitmq.blaze-competition.svc.cluster.local:5672/%2f
-        queueLength: "50" # Scale up if queue length exceeds 1 message for high priority
+        queueLength: "500" # Scale up if queue length exceeds 1 message for high priority
         protocol: amqp # Protocol to connect to RabbitMQ
       # authenticationRef:
       #   name: rabbitmq-auth

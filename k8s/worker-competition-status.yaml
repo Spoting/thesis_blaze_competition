@@ -32,7 +32,7 @@ spec:
         #   mountPath: /app/var
         resources:
           limits:
-            memory: "64Mi" 
+            memory: "128Mi" 
             cpu: "200m" 
           requests:
             memory: "32Mi"
@@ -47,7 +47,7 @@ spec:
             command: ["php", "bin/console", "about"]
           initialDelaySeconds: 15
           periodSeconds: 10
-          timeoutSeconds: 5
+          timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3
         readinessProbe:
@@ -55,6 +55,6 @@ spec:
             command: ["php", "bin/console", "about"]
           initialDelaySeconds: 5
           periodSeconds: 10
-          timeoutSeconds: 5
+          timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3

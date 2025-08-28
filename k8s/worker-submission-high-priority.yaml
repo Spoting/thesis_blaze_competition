@@ -33,10 +33,10 @@ spec:
         resources:
           limits:
             memory: "64Mi" 
-            cpu: "500m" 
+            cpu: "250m" 
           requests:
             memory: "32Mi"
-            cpu: "250m"
+            cpu: "100m"
       # volumes:
       # - name: app-code
       #   emptyDir: {}
@@ -47,7 +47,7 @@ spec:
             command: ["php", "bin/console", "about"]
           initialDelaySeconds: 15
           periodSeconds: 10
-          timeoutSeconds: 5
+          timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3
         readinessProbe:
@@ -55,6 +55,6 @@ spec:
             command: ["php", "bin/console", "about"]
           initialDelaySeconds: 5
           periodSeconds: 10
-          timeoutSeconds: 5
+          timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3
