@@ -47,15 +47,15 @@ class WorkerSubscriber implements EventSubscriberInterface
         $this->redisManager->decrementValue($count_key);
 
         // Sent Email
-        $emailSubject = 'Failed Submission for ' . $message->getCompetitionId();
-        $emailText = 'We are sorry, there is been a Server Error. Your Submission Failed for Competition: ' . $message->getCompetitionId();
-        $this->messageProducer->produceEmailNotificationMessage(
-            $message->getCompetitionId(),
-            $message->getEmail(),
-            $emailSubject,
-            ['text' => $emailText],
-            2 // High Priority
-        );
+        // $emailSubject = 'Failed Submission for ' . $message->getCompetitionId();
+        // $emailText = 'We are sorry, there is been a Server Error. Your Submission Failed for Competition: ' . $message->getCompetitionId();
+        // $this->messageProducer->produceEmailNotificationMessage(
+        //     $message->getCompetitionId(),
+        //     $message->getEmail(),
+        //     $emailSubject,
+        //     ['text' => $emailText],
+        //     2 // High Priority
+        // );
     }
 
 
