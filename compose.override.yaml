@@ -12,7 +12,6 @@ services:
       #- /app/vendor
       - ./frankenphp/certs:/etc/caddy/certs:ro
     environment:
-      # CADDY_SERVER_EXTRA_DIRECTIVES: "tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key"
       CADDY_EXTRA_CONFIG: |
           https:// {
               tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key
@@ -43,6 +42,70 @@ services:
     #   - RI_REDIS_ALIAS=MyLocalRedis
     #   - RI_REDIS_USERNAME=default
     #   - RI_REDIS_PASSWORD=your_strong_password
+
+ # Add monitoring services below this line
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090" # Prometheus UI
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro # Mount Prometheus config
+      - prometheus_data:/prometheus # Persistent storage for metrics
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle' # Allows config reload via API, useful for testing
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000" # Grafana UI
+    volumes:
+      - grafana_data:/var/lib/grafana # Persistent storage for Grafana data
+      - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning:ro # Auto-provision data sources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+    environment:
+      # Optional: Set admin password from env var
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin} # Set a strong password in .env!
+
+  # Node Exporter: Monitors the host system where Docker is running (CPU, memory, disk I/O)
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    # Crucial for host metrics:
+    pid: "host" # Allows access to host process information
+    volumes:
+      - '/:/host:ro,rslave' # Mounts host root filesystem for metrics
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  # cAdvisor: Collects and exposes Docker container metrics (CPU, memory, network, disk per container)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080" # cAdvisor UI
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+    networks:
+      - monitoring_network
 
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
