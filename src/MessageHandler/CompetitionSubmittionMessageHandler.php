@@ -128,6 +128,11 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         $insertedEmails = [];
         // ----------------------------------------------------        
         try {
+            $shouldFail = rand(1,10);
+            if ($shouldFail == 1) {
+                throw new Exception('FORCE FAILURE');
+            }
+
             /** @var Connection $connection */
             $connection = $this->entityManager->getConnection();
             $connection->beginTransaction();
@@ -187,31 +192,31 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
 
 
         // Sent Corresponding Emails.
-        foreach ($insertedEmails as $successEmail) {
-            // Sent Success Email
-            $emailSubject = 'Submissions Accepted';
-            $emailText = 'Your Submission is Accepted for Competition: ' . $emailCompetitionIdMapping[$successEmail];
-            $this->messageProducer->produceEmailNotificationMessage(
-                $emailCompetitionIdMapping[$successEmail],
-                $successEmail,
-                $emailSubject,
-                ['text' => $emailText]
-            );
-        }
+        // foreach ($insertedEmails as $successEmail) {
+        //     // Sent Success Email
+        //     $emailSubject = 'Submissions Accepted';
+        //     $emailText = 'Your Submission is Accepted for Competition: ' . $emailCompetitionIdMapping[$successEmail];
+        //     $this->messageProducer->produceEmailNotificationMessage(
+        //         $emailCompetitionIdMapping[$successEmail],
+        //         $successEmail,
+        //         $emailSubject,
+        //         ['text' => $emailText]
+        //     );
+        // }
 
         $attemptedEmails = array_keys($emailCompetitionIdMapping);
         $failedEmails = array_diff($attemptedEmails, $insertedEmails);
         if (!empty($failedEmails)) {
             foreach ($failedEmails as $failedEmail) {
                 // Sent Failed Email
-                $emailSubject = 'Problem with Submission';
-                $emailText = 'Seems you have already Submitted. Your Submission Failed for Competition: ' . $emailCompetitionIdMapping[$failedEmail];
-                $this->messageProducer->produceEmailNotificationMessage(
-                    $emailCompetitionIdMapping[$failedEmail],
-                    $failedEmail,
-                    $emailSubject,
-                    ['text' => $emailText]
-                );
+                // $emailSubject = 'Problem with Submission';
+                // $emailText = 'Seems you have already Submitted. Your Submission Failed for Competition: ' . $emailCompetitionIdMapping[$failedEmail];
+                // $this->messageProducer->produceEmailNotificationMessage(
+                //     $emailCompetitionIdMapping[$failedEmail],
+                //     $failedEmail,
+                //     $emailSubject,
+                //     ['text' => $emailText]
+                // );
                 // Decrement the Total Count for this Competition
                 $count_key = $this->redisKeyBuilder->getCompetitionCountKey($emailCompetitionIdMapping[$failedEmail]);
                 $this->redisManager->decrementValue($count_key);

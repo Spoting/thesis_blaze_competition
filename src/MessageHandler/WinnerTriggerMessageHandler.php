@@ -63,6 +63,15 @@ final class WinnerTriggerMessageHandler
            /** @var Competition */
             $competition = $this->entityManager->getRepository(Competition::class)->find($competitionId);
             $currentStatus = $competition->getStatus();
+            if (strstr($competition->getTitle(), 'Demo Comp C')) {
+                throw new UnrecoverableMessageHandlingException(sprintf(
+                    'FORCE FAILURE for competition %s. Current status: %s, Target: %s.',
+                    $competitionId,
+                    $competition->getStatus(),
+                    $targetStatus
+                ));
+            }
+
 
             // If current status is Higher than current. Dont attempt retry
             $isCurrentStatusHigher = $this->competitionStatusManager->isCurrentStatusEqualOrHigherThanNew($currentStatus, $targetStatus);

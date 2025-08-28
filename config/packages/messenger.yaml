@@ -7,15 +7,15 @@ framework:
 
         transports:
             # Define a dedicated transport for dead-letter messages
-            dead_letter_amqp:
+            status_dead_letter_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
-                        name: dead_letter_exchange
+                        name: status_dead_letter_exchange
                         type: topic
                     queues:
-                        dead_letter_queue:
+                        status_dead_letter_amqp:
                             binding_keys: ["#"]
 
             submission_amqp:
@@ -26,10 +26,10 @@ framework:
                 # serializer: App\Messenger\CelerySerializer
                 serializer: messenger.transport.symfony_serializer
                 retry_strategy:
-                    max_retries: 0
+                    max_retries: 3
                     delay: 1000
                     multiplier: 2
-                    max_delay: 0
+                    # max_delay: 0
                 # retry_strategy:
                 #     max_retries: 0
                 options:
@@ -55,12 +55,12 @@ framework:
             competition_status_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
-                failure_transport: dead_letter_amqp
+                failure_transport: status_dead_letter_amqp
                 retry_strategy:
-                    max_retries: 60
-                    delay: 1000
+                    max_retries: 30
+                    delay: 3000
                     multiplier: 1
-                    max_delay: 1000
+                    # max_delay: 3000
                 options:
                     exchange:
                         name: delayed_competition_status_exchange
@@ -87,12 +87,12 @@ framework:
             email_verification_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
-                failure_transport: dead_letter_amqp 
+                # failure_transport: dead_letter_amqp 
                 retry_strategy:
                     max_retries: 3
                     delay: 1000
                     multiplier: 2
-                    max_delay: 0
+                    # max_delay: 0
                 options:
                     exchange:
                         name: email_exchange # Use the same email exchange
@@ -104,7 +104,7 @@ framework:
             email_notification_amqp:
                 dsn: "%env(MESSENGER_TRANSPORT_DSN)%"
                 serializer: messenger.transport.symfony_serializer
-                failure_transport: dead_letter_amqp # Route failures to dead_letter_amqp
+                # failure_transport: dead_letter_amqp # Route failures to dead_letter_amqp
                 retry_strategy:
                     max_retries: 0
                     # delay: 1000
