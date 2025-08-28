@@ -44,8 +44,10 @@ class DynamicCompetitionDlqSender
         }
 
         $payload = $this->serializer->serialize($message, 'json');
-        // TODO: add ErrorMessage
-        $amqpMessage = new AMQPMessage($payload, ['delivery_mode' => 2]);
+        // $payload = json_decode($payload);
+        // $payload['error_message'] = $errorMessage;
+        // $payload = json_encode($payload);
+        $amqpMessage = new AMQPMessage($payload . "_$errorMessage", ['delivery_mode' => 2]);
 
         $this->channel->basic_publish($amqpMessage, '', $queueName);
     }
