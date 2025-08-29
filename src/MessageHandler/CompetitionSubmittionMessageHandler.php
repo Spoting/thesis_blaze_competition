@@ -15,6 +15,7 @@ use Doctrine\ORM\Exception\ORMException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Handler\BatchHandlerInterface;
 use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
@@ -130,7 +131,7 @@ class CompetitionSubmittionMessageHandler implements BatchHandlerInterface
         try {
             $shouldFail = rand(1,10);
             if ($shouldFail == 1) {
-                throw new Exception('FORCE FAILURE');
+                throw new UnrecoverableMessageHandlingException('FORCE FAILURE');
             }
 
             /** @var Connection $connection */

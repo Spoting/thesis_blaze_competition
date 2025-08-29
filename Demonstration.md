@@ -31,5 +31,5 @@ what it tests, what will it prove, what are the parameters
 
 - Run
 ```
-php bin/console app:demo-scenario-2 --clear-only; php bin/console app:demo-scenario-2 1500;
+php bin/console app:demo-scenario-2 --clear-only; php bin/console app:demo-scenario-2 1000;
 ```

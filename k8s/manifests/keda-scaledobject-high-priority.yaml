@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: blaze-competition-php-worker-submission-high-priority # Target the high-priority worker Deployment
   minReplicaCount: 1 # Scale down to 0 when queue is empty
-  maxReplicaCount: 4 # Maximum number of worker pods for high priority
+  maxReplicaCount: 3 # Maximum number of worker pods for high priority
   pollingInterval: 10 # Check queue more frequently for high priority (e.g., every 15 seconds)
   cooldownPeriod: 30 # Scale down faster for high priority (e.g., 3 minutes)
   triggers:
