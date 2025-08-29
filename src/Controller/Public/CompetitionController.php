@@ -27,7 +27,7 @@ class CompetitionController extends AbstractController
     ) {}
 
     #[Route('/', name: 'public_competitions_list', methods: ['GET'])]
-    #[Cache(smaxage: 3600, public: true)]
+    #[Cache(public: true)]
     public function public_competition_list(CompetitionRepository $competitionRepository): Response
     {
         $publicStatuses = Competition::PUBLIC_STATUSES;
@@ -57,7 +57,7 @@ class CompetitionController extends AbstractController
     }
 
     #[Route('/competition/{id}/submit', name: 'public_competition_submit', methods: ['GET', 'POST'])]
-    #[Cache(smaxage: 3600, public: true)]
+    #[Cache(public: true)]
     public function handleSubmitForm(Competition $competition, Request $request, UuidFactory $uuidFactory): Response
     {
         $message = null;

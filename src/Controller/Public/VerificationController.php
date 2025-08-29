@@ -24,7 +24,7 @@ class VerificationController extends AbstractController
     ) {}
 
     #[Route('/verify', name: 'app_verification_form')]
-    #[Cache(smaxage: 3600, public: true)]
+    #[Cache(public: true)]
     public function showVerificationForm(Request $request): Response
     {
         $message = null;
@@ -132,7 +132,7 @@ class VerificationController extends AbstractController
     // app_resend_verification_email (implement similar logic to initial submission, but only for existing, unverified entries)
 
     #[Route('/submission-success', name: 'app_submission_success')]
-    #[Cache(smaxage: 3600, public: true)]
+    #[Cache(public: true)]
     public function submissionSuccess(): Response
     {
         return $this->render('public/submission_success.html.twig');
