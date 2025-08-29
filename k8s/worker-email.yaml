@@ -32,8 +32,8 @@ spec:
         #   mountPath: /app/var
         resources:
           limits:
-            memory: "64Mi" 
-            cpu: "100m" 
+            memory: "128Mi" 
+            cpu: "200m" 
           requests:
             memory: "32Mi"
             cpu: "50m"

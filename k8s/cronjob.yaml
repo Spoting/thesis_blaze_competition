@@ -16,9 +16,18 @@ spec:
               image: 127.0.0.1:32000/app-php-prod:latest
               imagePullPolicy: Always
               command:
-                - php
-                - bin/console
-                - app:capture-competition-stats
+                - /bin/sh
+                - -c
+              # 2. Provide the loop as a multi-line argument
+              args:
+                - |
+                  for i in 1 2 3; do
+                    echo "--> Starting run $i of 3..."
+                    php bin/console app:capture-competition-stats
+                    echo "--> Run $i finished. Waiting 10 seconds..."
+                    sleep 10
+                  done
+                  echo "--> All 3 runs complete."
               envFrom:
                 - configMapRef:
                     name: blaze-competition-config # Pulls common environment variables
@@ -27,8 +36,8 @@ spec:
                   value: "false"
               resources:
                 limits:
-                  memory: "128Mi"
-                  cpu: "250m"
+                  memory: "256Mi"
+                  cpu: "500m"
                 requests:
                   memory: "32Mi"
                   cpu: "100m"

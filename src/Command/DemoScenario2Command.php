@@ -177,10 +177,10 @@ class DemoScenario2Command extends Command
                             $burstMessage = ' (BURST x5 - First 10s)';
                         }
                         $secondsUntilEnd = $comp->getEndDate()->getTimestamp() - $loopTime->getTimestamp();
-                        if ($secondsUntilEnd > 0 && $secondsUntilEnd <= 20) {
-                            continue;
-                            // $currentIntervalRate *= 5;
-                            // $burstMessage = ' (BURST x2 - Final 10s)';
+                        if ($secondsUntilEnd > 0 && $secondsUntilEnd <= 10) {
+                            // continue;
+                            $currentIntervalRate *= 3;
+                            $burstMessage = ' (BURST x3 - Final 10s)';
                         }
                     }
 

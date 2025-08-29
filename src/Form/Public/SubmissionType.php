@@ -4,8 +4,11 @@
 namespace App\Form\Public;
 
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -37,7 +40,12 @@ class SubmissionType extends AbstractType
                 case 'tel':
                     $builder->add($fieldName, TelType::class, $fieldOptions);
                     break;
-                // TODO: Add More.
+                case 'checkbox':
+                    $builder->add($fieldName, CheckboxType::class, $fieldOptions);
+                    break;
+                case 'number':
+                    $builder->add($fieldName, NumberType::class, $fieldOptions);
+                    break;
                 default:
                     $builder->add($fieldName, TextType::class, $fieldOptions);
                     break;

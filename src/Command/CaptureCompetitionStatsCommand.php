@@ -57,7 +57,7 @@ class CaptureCompetitionStatsCommand extends Command
         $capturedCount = 0;
         foreach ($activeCompetitions as $competition) {
             try {
-
+                $this->entityManager->refresh($competition); 
                 $snapshot = $this->competitionSnapshotService->generateSnapshotEntity($competition);
 
                 $this->entityManager->persist($snapshot);

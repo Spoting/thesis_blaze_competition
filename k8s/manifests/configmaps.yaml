@@ -7,6 +7,7 @@ data:
   APP_ENV: "prod"
   APP_SECRET: ""
   SERVER_NAME: "blaze-competition.demo, php:80"
+  APP_URL: "https://blaze-competition.demo"
   POSTGRES_VERSION: "16"
   POSTGRES_DB: "app"
   POSTGRES_USER: "app"
