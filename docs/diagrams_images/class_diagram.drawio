@@ -1,0 +1,492 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" version="28.1.0">
+  <diagram name="Page-1" id="Ll_HzV_8jkpDdLq3Myu-">
+    <mxGraphModel dx="3773" dy="2722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-62" value="Entities" style="swimlane;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="560" width="460" height="640" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-13" value="Submission" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-62">
+          <mxGeometry x="253.5" y="41" width="160" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-14" value="+ id: int&lt;br&gt;+ competition: Competition&lt;div&gt;+ email: string&lt;/div&gt;&lt;div&gt;+ submissionData: array&lt;/div&gt;&lt;div&gt;+ createdAt: datetime&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-13">
+          <mxGeometry y="26" width="160" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-15" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-13">
+          <mxGeometry y="110" width="160" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-9" value="Competition" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-62">
+          <mxGeometry x="247" y="190" width="173" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-10" value="+ id: int&lt;br&gt;+ title: string&lt;br&gt;+ description: string&lt;br&gt;+ prizes: string&lt;br&gt;+ startDate: datetime&lt;br&gt;+ endDate: datetime&lt;br&gt;+ maxParticipants: int&lt;br&gt;+ numberOfWinners: int&lt;br&gt;+ status: string&lt;br&gt;+ formFields: array&lt;br&gt;&lt;div&gt;+ createdAt: datetime&lt;br&gt;+ upda&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;tedAt: datetime&lt;br&gt;+&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;createdBy: User&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-9">
+          <mxGeometry y="26" width="173" height="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-11" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-9">
+          <mxGeometry y="230" width="173" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-12" value="+ &lt;b&gt;canAcceptSubmissions&lt;/b&gt;(): bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-9">
+          <mxGeometry y="238" width="173" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-29" value="User / Organizer" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-62">
+          <mxGeometry x="247" y="510" width="160" height="98" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-30" value="+ id: uuid&lt;br&gt;+ roles: array&lt;br&gt;+ email: string&lt;br&gt;+ password: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-29">
+          <mxGeometry y="26" width="160" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-31" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-29">
+          <mxGeometry y="90" width="160" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-17" value="CompetitionStatusTransition" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-62">
+          <mxGeometry x="20" y="390" width="180" height="138" as="geometry">
+            <mxRectangle x="50" y="390" width="180" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-18" value="+ id: int&lt;br&gt;+ competition: Competition&lt;br&gt;+ oldStatus: string&lt;br&gt;+ newStatus: string&lt;br&gt;+ transitionedAt: datetime&lt;br&gt;+ triggerdBy: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-17">
+          <mxGeometry y="26" width="180" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-19" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-17">
+          <mxGeometry y="130" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-21" value="CompetitionStatsSnapshot" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-62">
+          <mxGeometry x="20" y="230" width="180" height="138" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-22" value="+ id: int&lt;br&gt;+ competition: Competition&lt;br&gt;+ initiatedSubmissions: int&lt;br&gt;+ processedSubmissions: int&lt;br&gt;+ failedSubmissions: int&lt;br&gt;+ capturedAt: datetime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-21">
+          <mxGeometry y="26" width="180" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-23" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-21">
+          <mxGeometry y="130" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-283" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.012;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-62" source="NCMBcJRMP1_jPOXvUPL3-10" target="NCMBcJRMP1_jPOXvUPL3-18">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="147" y="240" as="sourcePoint" />
+            <mxPoint x="247" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-284" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;exitX=0.003;exitY=0.081;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-62" source="NCMBcJRMP1_jPOXvUPL3-10" target="NCMBcJRMP1_jPOXvUPL3-22">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="299" y="179" as="sourcePoint" />
+            <mxPoint x="250" y="179" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-297" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;exitX=1;exitY=0.406;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-62" source="NCMBcJRMP1_jPOXvUPL3-30" target="NCMBcJRMP1_jPOXvUPL3-10">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="290" y="800" as="sourcePoint" />
+            <mxPoint x="390" y="700" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="460" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-298" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-62" target="NCMBcJRMP1_jPOXvUPL3-14">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="420" y="250" as="sourcePoint" />
+            <mxPoint x="433" y="160" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="473" y="252" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-25" value="Winner" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-62">
+          <mxGeometry x="20" y="41" width="180" height="138" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-26" value="+ id: int&lt;div&gt;+ competition: Competition&lt;/div&gt;&lt;div&gt;+ submission:&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Submission&lt;/span&gt;&lt;/div&gt;&lt;div&gt;+ email: string&lt;/div&gt;&lt;div&gt;+ rank: int&lt;/div&gt;&lt;div&gt;+ createdAt: datetime&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-25">
+          <mxGeometry y="26" width="180" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-27" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-25">
+          <mxGeometry y="130" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-299" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERmandOne;startArrow=ERmandOne;rounded=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-62" source="NCMBcJRMP1_jPOXvUPL3-26" target="NCMBcJRMP1_jPOXvUPL3-14">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="260" y="770" as="sourcePoint" />
+            <mxPoint x="360" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-300" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;exitX=0.017;exitY=0.054;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.006;entryY=0.856;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-62" source="NCMBcJRMP1_jPOXvUPL3-9" target="NCMBcJRMP1_jPOXvUPL3-26">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="258" y="760" as="sourcePoint" />
+            <mxPoint x="110" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-242" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;curved=0;strokeColor=default;startSize=12;entryX=-0.004;entryY=0.568;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-88" target="NCMBcJRMP1_jPOXvUPL3-129">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="950" y="400" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="250" y="520" />
+              <mxPoint x="950" y="520" />
+              <mxPoint x="950" y="364" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-243" value="Use" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-242">
+          <mxGeometry x="-0.8021" relative="1" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-88" value="Subscribers" style="swimlane;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="560" width="280" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-93" value="CompetitionSubscriber" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-88">
+          <mxGeometry x="40" y="240" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-95" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-93">
+          <mxGeometry y="26" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-96" value="+ postUpdate(Event event): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-93">
+          <mxGeometry y="34" width="200" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-89" value="WorkerMessageHandlerSubscriber" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-88">
+          <mxGeometry x="10" y="59" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-91" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-89">
+          <mxGeometry y="26" width="260" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-92" value="+ &lt;b&gt;onStatusUpdateMessageFailed&lt;/b&gt;(Event event): void&lt;br&gt;+ &lt;b&gt;onWinnerTriggerMessageFailed&lt;/b&gt;(Event event): void&lt;br&gt;+ &lt;b&gt;onSubmissionMessageFailed&lt;/b&gt;(Event event): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-89">
+          <mxGeometry y="34" width="260" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-97" value="Services" style="swimlane;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="-50" width="1490" height="510" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-102" value="CompetitionChartService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="440" y="120" width="250" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-104" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-102">
+          <mxGeometry y="26" width="250" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-105" value="+ &lt;b&gt;buildCompetitionChartData&lt;/b&gt;(Competition competition, string chartTitlePrefix): array&lt;br&gt;+ &lt;b&gt;buildTransititonAnnotations&lt;/b&gt;(int competitionId): array" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-102">
+          <mxGeometry y="34" width="250" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-98" value="RabbitMQManagementService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="330" y="395" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-100" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-98">
+          <mxGeometry y="26" width="240" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-101" value="+ &lt;b&gt;getQueueMessageCount&lt;/b&gt;(string queueName, string vhost): int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-98">
+          <mxGeometry y="34" width="240" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-106" value="CompetitionStatusManagerService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="600" y="280" width="290" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-108" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-106">
+          <mxGeometry y="26" width="290" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-109" value="+ &lt;b&gt;isCurrentStatusLowerThanNew&lt;/b&gt;(string currentStatus, string newStatus): bool&lt;br&gt;+&amp;nbsp;&lt;b&gt;isCurrentStatusEqualOrHigherThanNew&lt;/b&gt;(string currentStatus, string newStatus): bool&lt;br&gt;+&amp;nbsp;&lt;b&gt;isStatusTransitionValid&lt;/b&gt;(string currentStatus, string newStatus): bool&lt;br&gt;+&amp;nbsp;&lt;b&gt;calculateStatusTransitionDelays&lt;/b&gt;(Competition competition, int winnerGenGracePeriod, int archiveAfter): array" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-106">
+          <mxGeometry y="34" width="290" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-110" value="MercurePublisherService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="30" y="70" width="350" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-112" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-110">
+          <mxGeometry y="26" width="350" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-113" value="+ &lt;b&gt;publishAnnouncement&lt;/b&gt;(string status, string message): void&lt;br&gt;+&amp;nbsp;&lt;b&gt;publishCompetitionUpdate&lt;/b&gt;(Competition competition): void&lt;br&gt;+&amp;nbsp;&lt;b&gt;publishUpdateChart&lt;/b&gt;(int competitionId, CompetitionStatsSnapshot snapshot): void&lt;br&gt;+&amp;nbsp;&lt;b&gt;publishStatusTransitionChartAnnotation&lt;/b&gt;(Competition competition, CompetitionStatusTransition transition, int index): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-110">
+          <mxGeometry y="34" width="350" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-118" value="CompetitionSnapshotService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="30" y="390" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-120" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-118">
+          <mxGeometry y="26" width="240" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-121" value="+ &lt;b&gt;generateSnapshotEntity&lt;/b&gt;(Competition competition):&lt;b&gt;&amp;nbsp;&lt;/b&gt;CompetitionStatsSnapshot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-118">
+          <mxGeometry y="34" width="240" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-122" value="DynamicCompetitionDlqSender" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="340" y="270" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-124" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-122">
+          <mxGeometry y="26" width="210" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-125" value="+ &lt;b&gt;sendMessageToDlq&lt;/b&gt;(string queueName, object message, string errorMessage): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-122">
+          <mxGeometry y="34" width="210" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-126" value="MessageProducerService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="960" y="280" width="460" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-128" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-126">
+          <mxGeometry y="26" width="460" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-129" value="+&amp;nbsp;&lt;b&gt;produceEmailVerificationMessage&lt;/b&gt;(string verificationToken, string receiverEmail, string emailTokenExpirationString): void&lt;br&gt;+ &lt;b&gt;produceEmailNotificationMessage&lt;/b&gt;(int competitionId, string receiverEmail, string emailSubject, array templateContext, int maxPriority): void&lt;div&gt;+ &lt;b&gt;produceCompetitionStatusUpdateMessage&lt;/b&gt;(int competitionId, int delayMs, string targetStatus, string organizerEmail): void&lt;/div&gt;&lt;div&gt;+ &lt;b&gt;produceWinnerTriggerMessage&lt;/b&gt;(int competitionId, int $delayMs, string organizerEmail): void&lt;/div&gt;&lt;div&gt;+ &lt;b&gt;produceSubmissionMessage&lt;/b&gt;(string competitionEndTimestamp, array submissionFormFields, int competitionId, string email): void&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-126">
+          <mxGeometry y="34" width="460" height="176" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-114" value="AnnouncementService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-97">
+          <mxGeometry x="30" y="250" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-116" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-114">
+          <mxGeometry y="26" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-117" value="+ &lt;b&gt;addAnnouncement&lt;/b&gt;(string status, string message): void&lt;br&gt;+&amp;nbsp;&lt;b&gt;getAnnouncements&lt;/b&gt;(): array&lt;br&gt;+&amp;nbsp;&lt;b&gt;clearAnnouncements&lt;/b&gt;(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-114">
+          <mxGeometry y="34" width="180" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-279" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-97" source="NCMBcJRMP1_jPOXvUPL3-121" target="NCMBcJRMP1_jPOXvUPL3-101">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-239" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-130" target="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1250" y="530" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1010" y="540" />
+              <mxPoint x="1275" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-240" value="Handles" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-239">
+          <mxGeometry x="0.1543" relative="1" as="geometry">
+            <mxPoint x="-29" y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-130" value="Message Handlers" style="swimlane;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="850" y="560" width="320" height="640" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-131" value="UpdateStatusMessageHandler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-130">
+          <mxGeometry x="15" y="140" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-133" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-131">
+          <mxGeometry y="26" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-134" value="+ invoke(CompetitionUpdateStatusMessage message): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-131">
+          <mxGeometry y="34" width="280" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-135" value="SubmissionHandlerMessageHandler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-130">
+          <mxGeometry x="15" y="45" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-137" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-135">
+          <mxGeometry y="26" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-138" value="+ process(array[CompetitionSubmittionMessage] jobs): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-135">
+          <mxGeometry y="34" width="280" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-140" value="WinnerTriggerMessageHandler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-130">
+          <mxGeometry x="15" y="240" width="280" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-142" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-140">
+          <mxGeometry y="26" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-143" value="+ invoke(WinnerTriggerMessage message): type&lt;br&gt;+&amp;nbsp;&lt;b&gt;areAllSubmissionsProcessed&lt;/b&gt;(int $processedSubmissionCount, Competition competition): bool&lt;br&gt;+&amp;nbsp;&lt;b&gt;winnersExistForCompetition&lt;/b&gt;(Competition competition): bool&lt;br&gt;+&amp;nbsp;&lt;b&gt;generateWinners&lt;/b&gt;(Competition competition): array" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-140">
+          <mxGeometry y="34" width="280" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-144" value="VerificationEmailMessageHandler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-130">
+          <mxGeometry x="15" y="440" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-146" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-144">
+          <mxGeometry y="26" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-147" value="+ invoke(VerificationEmailMessage message): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-144">
+          <mxGeometry y="34" width="280" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-148" value="EmailNotificationMessageHandler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-130">
+          <mxGeometry x="15" y="550" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-150" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-148">
+          <mxGeometry y="26" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-151" value="+ invoke(EmailNotificationMessage message): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-148">
+          <mxGeometry y="34" width="280" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-198" value="Messages" style="swimlane;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="560" width="340" height="640" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-203" value="SubmissionHandlerMessage" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry x="60" y="270" width="190" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-205" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-203">
+          <mxGeometry y="26" width="190" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-204" value="+ applicantEmail: string&lt;br&gt;+ formData: array&lt;br&gt;+&amp;nbsp;competitionId: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-203">
+          <mxGeometry y="34" width="190" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-207" value="WinnerTriggerMessage" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry x="10" y="210" width="140" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-209" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-207">
+          <mxGeometry y="26" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-211" value="VerificationEmailMessage" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry x="60" y="390" width="190" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-212" value="&lt;div&gt;+ verificationToken:&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;string&lt;/span&gt;&lt;/div&gt;&lt;div&gt;+ recipientEmail:&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;string&lt;/span&gt;&lt;/div&gt;&lt;div&gt;+ expiration:&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;string&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-211">
+          <mxGeometry y="26" width="190" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-213" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-211">
+          <mxGeometry y="80" width="190" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-215" value="EmailNotificationMessage" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry x="60" y="500" width="190" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-216" value="&lt;div&gt;+ competitionId: string&lt;/div&gt;&lt;div&gt;+ recipientEmail: string&lt;/div&gt;&lt;div&gt;+ subject: string&lt;/div&gt;&lt;div&gt;+ templateId: string&lt;/div&gt;&lt;div&gt;+ templateContext: array&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-215">
+          <mxGeometry y="26" width="190" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-217" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-215">
+          <mxGeometry y="110" width="190" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-221" value="AbstractStatusMessage" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry x="40" y="50" width="240" height="98" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-222" value="&lt;div&gt;+ messageCreationDate: string&lt;/div&gt;&lt;div&gt;+ delayTime: int&lt;/div&gt;&lt;div&gt;+ organizerEmail: string&lt;br&gt;+&amp;nbsp;competitionId: int&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-221">
+          <mxGeometry y="26" width="240" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-223" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-221">
+          <mxGeometry y="90" width="240" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-224" value="UpdateStatusMessage" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry x="160" y="198" width="150" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-225" value="&lt;div&gt;+ targetStatus: string&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-224">
+          <mxGeometry y="26" width="150" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-226" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="NCMBcJRMP1_jPOXvUPL3-224">
+          <mxGeometry y="50" width="150" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-294" value="Extends" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-198" source="NCMBcJRMP1_jPOXvUPL3-207" target="NCMBcJRMP1_jPOXvUPL3-221">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="-550" y="360" as="sourcePoint" />
+            <mxPoint x="-390" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-295" value="Extends" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;exitX=0.461;exitY=0.02;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;exitPerimeter=0;" edge="1" parent="NCMBcJRMP1_jPOXvUPL3-198" source="NCMBcJRMP1_jPOXvUPL3-224" target="NCMBcJRMP1_jPOXvUPL3-221">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="190" y="232" as="sourcePoint" />
+            <mxPoint x="210" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-233" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-126" target="NCMBcJRMP1_jPOXvUPL3-198">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-234" value="Produces" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-233">
+          <mxGeometry x="-0.1419" y="-6" relative="1" as="geometry">
+            <mxPoint y="-16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-244" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.11;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-93" target="NCMBcJRMP1_jPOXvUPL3-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="690" y="1150" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="170" y="1150" />
+              <mxPoint x="570" y="1150" />
+              <mxPoint x="570" y="1050" />
+              <mxPoint x="606" y="1050" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-247" value="Listens" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-244">
+          <mxGeometry x="0.0431" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-248" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-92" target="NCMBcJRMP1_jPOXvUPL3-143">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1030" y="850" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="20" y="706" />
+              <mxPoint x="20" y="1210" />
+              <mxPoint x="810" y="1210" />
+              <mxPoint x="810" y="907" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-249" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="NCMBcJRMP1_jPOXvUPL3-134">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1030" y="770" as="targetPoint" />
+            <mxPoint x="45" y="710" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="20" y="710" />
+              <mxPoint x="20" y="1210" />
+              <mxPoint x="810" y="1210" />
+              <mxPoint x="810" y="757" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-250" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.001;entryY=0.106;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="862.7200000000003" y="649.9959999999998" as="targetPoint" />
+            <mxPoint x="43" y="706.12" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="18" y="706.12" />
+              <mxPoint x="18" y="1210.12" />
+              <mxPoint x="808" y="1210.12" />
+              <mxPoint x="808" y="650.12" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-256" value="Listens" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-250">
+          <mxGeometry x="-0.0726" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-265" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.013;entryY=0.107;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-96" target="NCMBcJRMP1_jPOXvUPL3-121">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="290" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1" y="857" />
+              <mxPoint x="1" y="410" />
+              <mxPoint y="410" />
+              <mxPoint y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-267" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="NCMBcJRMP1_jPOXvUPL3-125">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="420" as="targetPoint" />
+            <mxPoint x="50" y="703" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="50" y="670" />
+              <mxPoint x="21" y="670" />
+              <mxPoint x="21" y="470" />
+              <mxPoint x="330" y="470" />
+              <mxPoint x="330" y="268" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-268" value="Use" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-267">
+          <mxGeometry x="-0.7263" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-269" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-96" target="NCMBcJRMP1_jPOXvUPL3-117">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="142" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1" y="857" />
+              <mxPoint x="1" y="380" />
+              <mxPoint y="380" />
+              <mxPoint y="272" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-271" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.659;entryY=1.022;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-143" target="NCMBcJRMP1_jPOXvUPL3-109">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="830" y="480" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="831" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-275" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.011;entryY=0.452;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-96" target="NCMBcJRMP1_jPOXvUPL3-113">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="60" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1" y="857" />
+              <mxPoint x="1" y="111" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-276" value="Use" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="NCMBcJRMP1_jPOXvUPL3-275">
+          <mxGeometry x="0.0571" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NCMBcJRMP1_jPOXvUPL3-281" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.269;entryY=1.014;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="NCMBcJRMP1_jPOXvUPL3-96" target="NCMBcJRMP1_jPOXvUPL3-109">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="490" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1" y="857" />
+              <mxPoint x="1" y="490" />
+              <mxPoint x="718" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
