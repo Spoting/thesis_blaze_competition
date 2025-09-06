@@ -43,10 +43,6 @@ down: ## Stop the docker hub
 php-bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
 	@$(PHP_CONT) bash
 
-test: ## Start tests with phpunit, pass the parameter "c=" to add options. example: make test c="--group e2e --stop-on-failure"
-	@$(eval c ?=)
-	@$(DOCKER_COMP) exec -e APP_ENV=test php bin/phpunit $(c)
-
 logs: ## Show live logs. You can add argument(s) for specific container(s)
 	@$(DOCKER_COMP) logs --tail=30 --follow $(filter-out $@,$(MAKECMDGOALS))
 

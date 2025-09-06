@@ -176,37 +176,6 @@ services:
     # image: ${IMAGES_PREFIX:-}app-php-worker-email
     command: sh -c "while true; do php bin/console app:capture-competition-stats; sleep 10; done"
 
-  # worker_submission_normal:
-  #   scale: 2
-  #   build:
-  #     context: ./worker
-  #     dockerfile: Dockerfile
-  #   command: >
-  #     celery -A app.celery worker
-  #     -Q submission_normal_queue
-  #     -l info
-  #     --concurrency=2
-  #     --prefetch-multiplier=1
-  #   # environment:
-  #   #   RABBITMQ_HOST: rabbitmq
-  #   #   REDIS_HOST: redis
-  #   #   POSTGRES_HOST: database
-  #   #   POSTGRES_DB: ${POSTGRES_DB:-app}
-  #   #   POSTGRES_USER: ${POSTGRES_USER:-app}
-  #   #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-  #   depends_on:
-  #     - rabbitmq
-  #     - database
-  #     - redis
-  #     - rabbitmq_topology
-  #   volumes:
-  #     - ./worker:/usr/src
-
-  # worker_celery:
-  #   build:
-  #     context: ./worker
-  #     dockerfile: Dockerfile
-
 volumes:
   caddy_data:
   caddy_config:
