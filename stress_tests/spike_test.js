@@ -5,6 +5,7 @@ import { Trend } from 'k6/metrics';
 
 // Define the base URL for the application
 const BASE_URL = 'https://symfony.localhost';
+// const BASE_URL = 'https://blaze-competition.demo';
 const COMPETITION_ID = 323;
 
 // Custom trend metric for measuring end-to-end user journey time
@@ -19,11 +20,11 @@ export let options = {
         spikeTest: {
             executor: 'ramping-vus',
             stages: [
-                { duration: '10s', target: 100 }, // A rapid ramp-up to 200 users
-                { duration: '30s', target: 0 },   // A rapid ramp-down to 0 users
+                { duration: '15s', target: 500 }, // A rapid ramp-up to 100 users
+                { duration: '15s', target: 500 },   // A brief hold at 100 users
+                { duration: '10s', target: 0 },   // A rapid ramp-down
             ],
-            gracefulRampDown: '5s',
-            exec: 'default', // The function to execute for this scenario
+            exec: 'default',
         },
     },
     // A threshold to ensure that all requests must pass with a status of 200

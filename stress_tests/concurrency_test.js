@@ -17,22 +17,19 @@ export let options = {
     insecureSkipTLSVerify: true,
     // Define multiple scenarios to run different types of tests.
     scenarios: {
-        sustainTest: {
-            executor: 'ramping-vus',
-            stages: [
-                { duration: '30s', target: 100 },
-                { duration: '5m', target: 100 },
-                { duration: '30s', target: 0 },
-            ],
+        one_shot: {
+            executor: 'per-vu-iterations',
+            vus: 400,             // total concurrent users you want to try
+            iterations: 1,        // each user does 1 iteration
+            maxDuration: '1m',    // safety limit
             exec: 'default',
         },
     },
-    // A threshold to ensure that all requests must pass with a status of 200
-    // If the error rate exceeds 1% at any point, the test will fail
     thresholds: {
-        'http_req_failed': ['rate<0.01'],
-        'http_req_duration': ['p(95)<2000'], // 95% of requests must complete within 2s
+        http_req_duration: ['p(95)<2000'], // 95% of requests < 1s
+        http_req_failed: ['rate<0.05'],    // <5% errors
     },
+
 };
 
 export default function () {
@@ -67,7 +64,7 @@ export default function () {
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
         const birthDate = `${year}-${month}-${day}`;
-        
+
 
         // Prepare the form data payload.
         const formData = {

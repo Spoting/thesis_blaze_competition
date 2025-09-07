@@ -17,12 +17,12 @@ export let options = {
     insecureSkipTLSVerify: true,
     // Define multiple scenarios to run different types of tests.
     scenarios: {
-        sustainTest: {
+        baselineTest: {
             executor: 'ramping-vus',
             stages: [
-                { duration: '30s', target: 100 },
-                { duration: '5m', target: 100 },
-                { duration: '30s', target: 0 },
+                { duration: '5s', target: 20 },
+                { duration: '30s', target: 20 },
+                { duration: '5s', target: 0 },
             ],
             exec: 'default',
         },
