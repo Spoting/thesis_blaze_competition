@@ -126,11 +126,7 @@ class VerificationController extends AbstractController
             'message' => $message
         ]);
     }
-
-    // TODO:
-    // You'll also need a 'resend token' action, likely on this same page
-    // app_resend_verification_email (implement similar logic to initial submission, but only for existing, unverified entries)
-
+    
     #[Route('/submission-success', name: 'app_submission_success')]
     #[Cache(public: true)]
     public function submissionSuccess(): Response
