@@ -1,4 +1,4 @@
-/frankenphp/certs/*
+#/frankenphp/certs/*
 /.cache/
 
 ###> symfony/framework-bundle ###
