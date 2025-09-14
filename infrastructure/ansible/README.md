@@ -1,20 +1,3 @@
-
-Ansible.cfg
-
-[defaults]
-inventory = ./hosts.yml
-host_key_checking = False
-
-[ssh_connection]
-ssh_args = -o ForwardAgent=yes -o ControlMaster=auto -o ControlPersist=60s
-
-
-
- ~/.ssh/config
-Host <HOST-IP>
-  ForwardAgent yes
-
-
 # Installation
 https://docs.ansible.com/ansible/latest/installation_guide/
 
