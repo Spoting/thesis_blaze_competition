@@ -1,0 +1,92 @@
+---
+- hosts: docker-vm
+
+  tasks:
+
+    - name: Check if Docker is installed
+      shell: docker --version && docker compose version
+      register: docker_version_result
+      ignore_errors: true
+
+    - name: Set Docker installed fact
+      set_fact:
+        docker_installed: "{{ docker_version_result.rc == 0 }}"
+
+    - name: Include install_docker playbook if Docker is not installed
+      include_tasks: install_docker.yaml
+      when: not docker_installed
+
+    - name: Install make package
+      become: true
+      ansible.builtin.package:
+        name: make
+        state: present
+
+    - name: Install mkcert package
+      become: true
+      ansible.builtin.package:
+        name: mkcert
+        state: present
+
+    - name: "Clone the Blaze Competition repository"
+      git:
+        repo: "git@github.com:Spoting/blaze-competition.git"
+        dest: "{{ appdir }}"
+        version: "{{ branch }}"
+        force: yes
+        accept_hostkey: yes
+      
+
+    ## Install mkcert and ssl.
+    - name: Create Certificates
+      ansible.builtin.command:
+        cmd: 'mkcert -cert-file frankenphp/certs/tls.pem -key-file frankenphp/certs/tls.key "{{ server_name }}"'
+        chdir: "{{ appdir }}"
+      become: no
+    
+    - name: Trust Certificates
+      ansible.builtin.command:
+        cmd: 'mkcert -install'
+        chdir: "{{ appdir }}"
+      become: no
+
+    - name: Tear down existing services
+      community.docker.docker_compose_v2:
+        project_src: "{{ appdir }}"
+        state: absent
+      become: no
+
+    - name: Build Custom Image with make command
+      ansible.builtin.command:
+        cmd: make build
+        chdir: "{{ appdir }}"
+      become: no
+
+    - name: Create and start services
+      community.docker.docker_compose_v2:
+        project_src: "{{ appdir }}"
+        build: always
+        state: present
+      # register: output
+      notify: Restart Docker Compose
+      become: no
+    # - debug:
+    #     var: output
+
+    - name: Run fix perms make cmd
+      ansible.builtin.command:
+        cmd: make fix-perms
+        chdir: "{{ appdir }}"
+      become: no
+      notify: Run post install make cmd
+
+  handlers:
+  # - name: Restart Docker Compose
+  #   community.docker.docker_compose_v2:
+  #     project_src: "{{ appdir }}"
+  #     state: restarted
+
+  - name: Run post install make cmd
+    ansible.builtin.command:
+      cmd: make composer c="run-script post-install-cmd"
+      chdir: "{{ appdir }}"

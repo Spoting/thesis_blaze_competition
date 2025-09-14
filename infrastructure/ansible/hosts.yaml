@@ -1,0 +1,7 @@
+appservers:
+  hosts:
+    docker-vm:
+      ansible_host: vm-docker
+    microk8s-install-vm:
+      ansible_host: vm-microk8s-install
+    

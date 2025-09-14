@@ -20,7 +20,7 @@ pipeline {
                 echo "Building image from compose files..."
                 sh "docker compose -f compose.yaml -f compose.prod.yaml build"
 
-                // Tag image pr
+                // Tag image
                 echo "Tagging image as ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
                 sh "docker tag ${IMAGE_NAME}:latest ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
 
@@ -44,10 +44,10 @@ pipeline {
                             git rebase origin/main
                             
                             echo "Updating kustomization.yaml with new tag: ${IMAGE_TAG}"
-                            sed -i "s|newTag: .*|newTag: ${IMAGE_TAG}|" k8s/kustomization.yaml
+                            sed -i "s|newTag: .*|newTag: ${IMAGE_TAG}|" infrastructure/k8s/kustomization.yaml
 
                             echo "Committing manifest changes to Git..."
-                            git add k8s/kustomization.yaml
+                            git add infrastructure/k8s/kustomization.yaml
                             git commit -m "ci: Deploy new image ${IMAGE_TAG}" || echo "No changes to commit"
                             git push origin main
                         '''
@@ -55,7 +55,7 @@ pipeline {
 
                     // -- Apply the manifests to the Kubernetes cluster --
                     echo "Applying manifests to Kubernetes via Kustomize..."
-                    sh "kubectl apply -k k8s/"
+                    sh "kubectl apply -k infrastructure/k8s/"
                 }
             }
         }

@@ -1,0 +1,3 @@
+appdir: "{{ ansible_user_dir }}/blaze-competition"
+branch: "main"
+server_name: "symfony.localhost"

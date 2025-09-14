@@ -1,0 +1,27 @@
+Vagrant.configure("2") do |config| 
+    config.vm.define "vm-kube"
+    config.vm.hostname = "vm-kube"
+    config.vm.box = "debian/bookworm64" 
+    config.vm.network "private_network", ip: "192.168.56.11"
+    config.vm.provider "virtualbox" do |vb|
+      # Customize the amount of memory on the VM:
+      vb.memory = "6144"
+      # Customize the number of CPUs given to the VM:
+      vb.cpus = "6"
+    end
+    config.vm.provision "shell", inline: <<-SHELL
+      # Install systemd-resolved
+      sudo apt-get update
+      sudo apt-get install -y systemd-resolved
+
+      # Enable and start the service
+      sudo systemctl enable systemd-resolved
+      sudo systemctl start systemd-resolved
+
+      # Configure Google DNS
+      sudo sed -i 's/#DNS=/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+
+      # Restart the service to apply changes
+      sudo systemctl restart systemd-resolved
+    SHELL
+end
